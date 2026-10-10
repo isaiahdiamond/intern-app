@@ -30,7 +30,6 @@ class Settings:
     db_path: Path
     model: str
     prompts_dir: Path
-    roles_file: Path
     _env: dict[str, str] = field(default_factory=dict, repr=False)
 
     def get(self, name: str, default: str = "") -> str:
@@ -64,6 +63,5 @@ def settings() -> Settings:
         db_path=db_path,
         model=os.environ.get("INTERN_APP_MODEL") or DEFAULT_MODEL,
         prompts_dir=PROJECT_ROOT / "prompts",
-        roles_file=PROJECT_ROOT / "roles.txt",
         _env=dict(os.environ),
     )

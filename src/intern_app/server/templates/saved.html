@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Your search{% endblock %}
+{% block body %}
+<h1>Your search is set up</h1>
+<p class="step">The dashboard replaces this page in phase 3.</p>
+
+<dl>
+  <dt>School</dt><dd>{{ profile.school }}</dd>
+  <dt>Major</dt><dd>{{ profile.major }}</dd>
+
+  <dt>Roles <span class="hint">what we will search for</span></dt>
+  <dd>
+    <div class="chips">
+      {% for role in profile.roles %}<span class="chip"><span>{{ role }}</span></span>{% endfor %}
+    </div>
+  </dd>
+
+  <dt>Industries <span class="hint">most preferred first</span></dt>
+  <dd>
+    {% if profile.industries %}
+      <ol class="ranked">{% for i in profile.industries %}<li>{{ i }}</li>{% endfor %}</ol>
+    {% else %}
+      <p class="hint">none chosen</p>
+    {% endif %}
+  </dd>
+</dl>
+
+<div class="actions"><a href="/onboarding"><button type="button">Edit answers</button></a></div>
+{% endblock %}

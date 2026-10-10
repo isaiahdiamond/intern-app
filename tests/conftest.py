@@ -1,7 +1,31 @@
 import pytest
 
-from intern_app import db
+from intern_app import config, db
 from intern_app.sources.base import normalize
+
+CREDENTIALS = (
+    "ANTHROPIC_API_KEY",
+    "MUSE_API_KEY",
+    "ADZUNA_APP_ID",
+    "ADZUNA_APP_KEY",
+    "USAJOBS_API_KEY",
+    "USAJOBS_EMAIL",
+)
+
+
+@pytest.fixture(autouse=True)
+def no_real_credentials(monkeypatch):
+    """Blank every credential so no test depends on my own .env.
+
+    Blank rather than deleted: `load_dotenv` does not override a variable that
+    is already present, so setting it empty is what actually keeps the real key
+    out. A test that wants a credential sets it itself afterwards.
+    """
+    for name in CREDENTIALS:
+        monkeypatch.setenv(name, "")
+    config.settings.cache_clear()
+    yield
+    config.settings.cache_clear()
 
 
 @pytest.fixture

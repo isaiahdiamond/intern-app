@@ -2,11 +2,13 @@
 
 Scope right now: **tech roles, one user (me).** Get it working for me first.
 
-**Current phase: 1 — Onboarding**
+**Current phase: 2 — Fetch and store for my roles**
 
 Already built: repo, ruff, pre-commit, CI, the reviewer and verifier agents, the
-source contract (`sources/base.py`), and the SQLite layer — `listings`,
-`api_calls` quota accounting, `llm_calls` cost log.
+source contract (`sources/base.py`), the SQLite layer (`listings`, `api_calls`
+quota accounting, `llm_calls` cost log), and **phase 1 onboarding** — the
+four-question form, `profile` / `profile_roles` / `profile_industries`, the role
+chips, and the LLM-backed Other button.
 
 ## What the user sees
 

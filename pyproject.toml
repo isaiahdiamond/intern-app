@@ -34,6 +34,7 @@ intern-app = "intern_app.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/intern_app"]
+artifacts = ["src/intern_app/server/templates/*.html", "src/intern_app/schema.sql"]
 
 [tool.ruff]
 line-length = 100

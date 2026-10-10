@@ -1,7 +1,8 @@
 """Command line entry point.
 
 `config` shows resolved settings, `status` reports what is stored and what has
-been spent. Later phases add `fetch`, `extract`, `rank`, and `serve`.
+been spent, `serve` runs the local web app. Later phases add `fetch` and
+`extract`.
 """
 
 from __future__ import annotations
@@ -74,6 +75,15 @@ def _cmd_status(_: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(args: argparse.Namespace) -> int:
+    """Run the local web app, which is where onboarding and the dashboard live."""
+    import uvicorn
+
+    print(f"intern-app running at http://{args.host}:{args.port}")
+    uvicorn.run("intern_app.server.app:app", host=args.host, port=args.port, reload=args.reload)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="intern-app", description=__doc__)
     parser.add_argument("--version", action="version", version=__version__)
@@ -84,6 +94,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     status_cmd = sub.add_parser("status", help="show stored listings, quota left, and LLM spend")
     status_cmd.set_defaults(func=_cmd_status)
+
+    serve_cmd = sub.add_parser("serve", help="run the local web app")
+    serve_cmd.add_argument("--host", default="127.0.0.1")
+    serve_cmd.add_argument("--port", type=int, default=8000)
+    serve_cmd.add_argument("--reload", action="store_true", help="restart on code changes")
+    serve_cmd.set_defaults(func=_cmd_serve)
 
     return parser
 

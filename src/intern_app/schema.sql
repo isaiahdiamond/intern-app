@@ -64,3 +64,29 @@ CREATE TABLE IF NOT EXISTS llm_calls (
 
 CREATE INDEX IF NOT EXISTS llm_calls_time_idx ON llm_calls (called_at DESC);
 CREATE INDEX IF NOT EXISTS llm_calls_listing_idx ON llm_calls (listing_id);
+
+-- Onboarding, added in phase 1. One local user for now, so `profile` holds at
+-- most one row and `id` is pinned to 1 by a CHECK.
+CREATE TABLE IF NOT EXISTS profile (
+    id         INTEGER PRIMARY KEY CHECK (id = 1),
+    school     TEXT NOT NULL DEFAULT '',
+    major      TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS profile_roles (
+    id     INTEGER PRIMARY KEY,
+    role   TEXT NOT NULL UNIQUE,
+    source TEXT NOT NULL CHECK (source IN ('chip', 'llm_suggested'))
+);
+
+-- `rank` is the whole point: the order the industries were chosen in is the
+-- preference signal the dashboard sorts on. 1 is most preferred.
+CREATE TABLE IF NOT EXISTS profile_industries (
+    id       INTEGER PRIMARY KEY,
+    industry TEXT    NOT NULL UNIQUE,
+    rank     INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS profile_industries_rank_idx ON profile_industries (rank);
