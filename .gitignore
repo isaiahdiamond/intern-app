@@ -1,0 +1,29 @@
+# secrets
+.env
+*.pem
+token.json
+credentials.json
+
+# database
+*.db
+*.db-journal
+*.sqlite3
+data/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
