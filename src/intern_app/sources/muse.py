@@ -26,6 +26,7 @@ from intern_app.config import settings
 from intern_app.sources import quota
 from intern_app.sources.base import Listing, normalize
 from intern_app.sources.role_match import normalized_words, phrase_in, title_matches_role
+from intern_app.sources.us_filter import is_us_or_remote
 
 SOURCE = "muse"
 ENDPOINT = "https://www.themuse.com/api/public/jobs"
@@ -167,6 +168,11 @@ def fetch_muse(
                     if not any(title_matches_role(title, role) for role in wanted):
                         continue
                     listing = to_listing(job)
+                    # The Muse is worldwide and has no location filter that
+                    # works reliably, so this is where Singapore and London
+                    # roles get dropped.
+                    if not is_us_or_remote(listing["location"]):
+                        continue
                     found.setdefault(listing["url"], listing)
 
                 if page + 1 >= pages:

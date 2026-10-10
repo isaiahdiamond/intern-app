@@ -23,7 +23,7 @@ import html
 import re
 import sqlite3
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import httpx
 
@@ -257,6 +257,79 @@ def parse_json_listings(payload: list[dict]) -> list[dict]:
     return found
 
 
+AGE_IN_DAYS = re.compile(r"^(\d+)\+?\s*d$", re.I)
+AGE_IN_MONTHS = re.compile(r"^(\d+)\s*mo$", re.I)
+AGE_IN_WEEKS = re.compile(r"^(\d+)\s*w$", re.I)
+AGE_IN_HOURS = re.compile(r"^(\d+)\s*h$", re.I)
+DATE_WITH_YEAR = re.compile(r"^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})$")
+DATE_NO_YEAR = re.compile(r"^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2})$")
+
+MONTHS = {
+    name: number
+    for number, name in enumerate(
+        ("jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"), 1
+    )
+}
+
+
+def posted_date(cell: str, today: date | None = None) -> str:
+    """The date a README row was posted, from its age or date column.
+
+    Three formats appear across these repos and all three are handled: a
+    relative age ("1d", "2mo"), a date with a year ("Oct 09, 2026"), and a date
+    without one ("Oct 10"). Without this, 995 listings had no date at all and
+    the "posted within" filter could not see them.
+
+    A date with no year is read as the most recent one that is not in the
+    future, so a December row read in January lands in the previous year.
+    """
+    text = clean_cell(cell)
+    if not text:
+        return ""
+    now = today or datetime.now(UTC).date()
+
+    hours = AGE_IN_HOURS.match(text)
+    if hours:
+        return now.isoformat()
+
+    weeks = AGE_IN_WEEKS.match(text)
+    if weeks:
+        return (now - timedelta(weeks=int(weeks.group(1)))).isoformat()
+
+    days = AGE_IN_DAYS.match(text)
+    if days:
+        return (now - timedelta(days=int(days.group(1)))).isoformat()
+
+    months = AGE_IN_MONTHS.match(text)
+    if months:
+        return (now - timedelta(days=30 * int(months.group(1)))).isoformat()
+
+    full = DATE_WITH_YEAR.match(text)
+    if full:
+        month = MONTHS.get(full.group(1).lower())
+        if month:
+            try:
+                return date(int(full.group(3)), month, int(full.group(2))).isoformat()
+            except ValueError:
+                return ""
+
+    partial = DATE_NO_YEAR.match(text)
+    if partial:
+        month = MONTHS.get(partial.group(1).lower())
+        if month:
+            for year in (now.year, now.year - 1):
+                try:
+                    guess = date(year, month, int(partial.group(2)))
+                except ValueError:
+                    continue
+                # A day of slack: these repos write dates in their own
+                # timezone, so "tomorrow" in UTC is a normal thing to see and
+                # must not roll back a whole year.
+                if guess <= now + timedelta(days=1):
+                    return guess.isoformat()
+    return ""
+
+
 def _epoch_to_date(value: object) -> str:
     """`date_posted` is a unix timestamp in these repos."""
     try:
@@ -278,7 +351,7 @@ def parse_speedyapply(cells: list[str]) -> dict | None:
         "company": clean_cell(cells[0]),
         "location": clean_cell(cells[2]),
         "url": apply_link(cells),
-        "posted_at": "",
+        "posted_at": posted_date(cells[-1]),
     }
 
 
@@ -291,7 +364,7 @@ def parse_jobright(cells: list[str]) -> dict | None:
         "company": clean_cell(cells[0]),
         "location": clean_cell(cells[2]),
         "url": apply_link(cells),
-        "posted_at": "",
+        "posted_at": posted_date(cells[-1]),
     }
 
 
@@ -304,7 +377,7 @@ def parse_zshah(cells: list[str]) -> dict | None:
         "company": clean_cell(cells[0]),
         "location": clean_cell(cells[3]),
         "url": apply_link(cells),
-        "posted_at": "",
+        "posted_at": posted_date(cells[-1]),
     }
 
 
@@ -322,7 +395,7 @@ def parse_resumax(cells: list[str]) -> dict | None:
         "company": clean_cell(cells[0]),
         "location": clean_cell(cells[2]),
         "url": apply_link(cells),
-        "posted_at": "",
+        "posted_at": posted_date(cells[-1]),
     }
 
 

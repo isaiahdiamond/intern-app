@@ -134,3 +134,53 @@ def test_both_internship_and_new_grad_levels_are_queried():
     """New grad roles come from the Entry Level filter."""
     levels = {level for _, level, _ in muse._queries_for(["Software Engineer Intern"], None)}
     assert levels == {"Internship", "Entry Level"}
+
+
+def test_fetch_drops_listings_outside_the_us(conn, monkeypatch):
+    """The Muse is worldwide, so 44 Singapore roles reached the database before
+    this check existed. This fails if the filter is removed."""
+    import httpx
+
+    from intern_app import config
+
+    monkeypatch.setenv("MUSE_API_KEY", "not-a-real-key")
+    config.settings.cache_clear()
+
+    page = {
+        "page_count": 1,
+        "results": [
+            {
+                "name": "Software Engineer Intern",
+                "company": {"name": "Here Inc"},
+                "locations": [{"name": "Austin, TX"}],
+                "refs": {"landing_page": "https://themuse.com/jobs/here"},
+                "contents": "<p>We want Python.</p>",
+                "publication_date": "2026-10-01T00:00:00Z",
+            },
+            {
+                "name": "Software Engineer Intern",
+                "company": {"name": "There Ltd"},
+                "locations": [{"name": "Singapore"}],
+                "refs": {"landing_page": "https://themuse.com/jobs/there"},
+                "contents": "<p>We want Python.</p>",
+                "publication_date": "2026-10-01T00:00:00Z",
+            },
+        ],
+    }
+
+    def fake_get(self, url, **kwargs):
+        return httpx.Response(200, json=page, request=httpx.Request("GET", url))
+
+    monkeypatch.setattr(httpx.Client, "get", fake_get)
+
+    found = muse.fetch_muse(conn, ["Software Engineer Intern"], max_pages=1)
+
+    assert [listing["company"] for listing in found] == ["Here Inc"]
+
+
+def test_ai_spelled_out_matches_a_machine_learning_role():
+    """ "Artificial Intelligence Co-Op/Intern" matched no role at all until the
+    spelled-out form was aliased alongside "ai"."""
+    assert muse.title_matches_role(
+        "Artificial Intelligence Co-Op/Intern - Spring 2027", "Machine Learning Intern"
+    )

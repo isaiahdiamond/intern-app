@@ -1,0 +1,326 @@
+{
+ "mean": 80741.16,
+ "count": 1682,
+ "__CLASS__": "Adzuna::API::Response::JobSearchResults",
+ "results": [
+  {
+   "created": "2026-09-10T02:10:49Z",
+   "salary_min": 59505.61,
+   "longitude": -96.767002,
+   "location": {
+    "display_name": "Dallas, Texas",
+    "area": [
+     "US",
+     "Texas",
+     "Dallas"
+    ],
+    "__CLASS__": "Adzuna::API::Response::Location"
+   },
+   "redirect_url": "https://www.adzuna.com/details/5878076196?utm_medium=api&utm_source=APPIDPLACEHOLDER",
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "description": "JOB DESCRIPTION Change the world. Love your job. As a Software Engineering Intern, you'll become a key contributor where your skills and input make a big difference. In this role, you'll design embedded software and development tools that will be used to test products. You'll write code that tells chips how to operate in revolutionary new ways. And, you'll work closely with business partners and customers, as well as TI's marketing, systems and applications engineering teams, to collaborate and\u2026",
+   "category": {
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "tag": "engineering-jobs",
+    "label": "Engineering Jobs"
+   },
+   "salary_is_predicted": "1",
+   "salary_max": 59505.61,
+   "title": "Software Engineering Intern",
+   "latitude": 32.798895,
+   "company": {
+    "__CLASS__": "Adzuna::API::Response::Company",
+    "display_name": "Texas Instruments"
+   },
+   "contract_type": "contract",
+   "id": "5878076196"
+  },
+  {
+   "redirect_url": "https://www.adzuna.com/land/ad/5917045709?se=nBwh2P7E8RGRs48L_-pA7w&utm_medium=api&utm_source=APPIDPLACEHOLDER&v=02AE98783BA347A74295D89D4EAEAF7E86F652EA",
+   "location": {
+    "area": [
+     "US"
+    ],
+    "display_name": "US",
+    "__CLASS__": "Adzuna::API::Response::Location"
+   },
+   "salary_min": 94336.39,
+   "description": "About Bloom Bloom is an AI-powered career platform that helps software engineers get hired faster. It matches job seekers to roles, tailors their resumes, and auto-applies on their behalf across Greenhouse, Workday, Lever, LinkedIn, and more. We're a small, fast-moving team, and our interns ship code that real users rely on. About the Role We're looking for a Software Engineer Intern to join our product engineering team. You'll work alongside senior engineers on features across our web app, bac\u2026",
+   "id": "5917045709",
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "salary_max": 94336.39,
+   "created": "2026-10-07T08:33:19Z",
+   "title": "Software Engineer Intern",
+   "salary_is_predicted": "1",
+   "category": {
+    "label": "IT Jobs",
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "tag": "it-jobs"
+   },
+   "company": {
+    "__CLASS__": "Adzuna::API::Response::Company",
+    "display_name": "Bloom"
+   }
+  },
+  {
+   "category": {
+    "tag": "it-jobs",
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "label": "IT Jobs"
+   },
+   "salary_is_predicted": "1",
+   "created": "2026-10-06T12:27:23Z",
+   "salary_max": 87660.23,
+   "title": "Software Engineer Intern",
+   "latitude": 42.522869,
+   "company": {
+    "__CLASS__": "Adzuna::API::Response::Company",
+    "display_name": "Meridian"
+   },
+   "salary_min": 87660.23,
+   "longitude": -75.574677,
+   "location": {
+    "area": [
+     "US",
+     "New York"
+    ],
+    "display_name": "New York, US",
+    "__CLASS__": "Adzuna::API::Response::Location"
+   },
+   "redirect_url": "https://www.adzuna.com/land/ad/5914042782?se=nBwh2P7E8RGRs48L_-pA7w&utm_medium=api&utm_source=APPIDPLACEHOLDER&v=622248C5CD697C306AC2EA51A97FF9B4EA3A3A50",
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "id": "5914042782",
+   "description": "Company Description Meridian brings context-aware AI agents to industries that have traditionally been overlooked in technology adoption such as supply chain, manufacturing, staffing and more. The company works closely with sector experts to automate operations, enhance decision-making, and unlock new efficiencies through applied AI. Meridian is backed by leading investors, including Sunflower Capital, Pear VC, SV Angel, and angels from Anthropic. Team members join a fast-moving environment whe\u2026"
+  },
+  {
+   "created": "2026-10-02T15:55:48Z",
+   "salary_min": 47434.36,
+   "longitude": -71.166143,
+   "location": {
+    "__CLASS__": "Adzuna::API::Response::Location",
+    "area": [
+     "US",
+     "Massachusetts",
+     "Norfolk County",
+     "Dedham"
+    ],
+    "display_name": "Dedham, Norfolk County"
+   },
+   "redirect_url": "https://www.adzuna.com/details/5908677459?utm_medium=api&utm_source=APPIDPLACEHOLDER",
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "description": "Responsibilities for this Position Software Engineering Intern ID: 2026-74993 US-MA-Dedham Required Clearance: Secret Posted Date: 9/16/2026 Category: Engineering-Other Employment Type: Intern Hiring Company: General Dynamics Mission Systems, Inc. Basic Qualifications Candidates should demonstrate a thorough understanding of engineering technology. Engineering Interns must be enrolled in an accredited degree program in Computer Engineering, Systems Engineering, Software Engineering, Electrical \u2026",
+   "category": {
+    "label": "Engineering Jobs",
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "tag": "engineering-jobs"
+   },
+   "salary_is_predicted": "1",
+   "title": "Software Engineering Intern",
+   "salary_max": 47434.36,
+   "latitude": 42.241192,
+   "company": {
+    "display_name": "General Dynamics",
+    "__CLASS__": "Adzuna::API::Response::Company"
+   },
+   "contract_type": "contract",
+   "id": "5908677459"
+  },
+  {
+   "contract_type": "contract",
+   "id": "5890870678",
+   "salary_is_predicted": "1",
+   "category": {
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "tag": "engineering-jobs",
+    "label": "Engineering Jobs"
+   },
+   "salary_max": 68228.34,
+   "title": "Software Engineering Intern",
+   "latitude": 37.798085,
+   "company": {
+    "__CLASS__": "Adzuna::API::Response::Company",
+    "display_name": "Oshkosh Corporation"
+   },
+   "longitude": -122.466538,
+   "salary_min": 68228.34,
+   "location": {
+    "area": [
+     "US",
+     "California",
+     "San Francisco"
+    ],
+    "display_name": "San Francisco, California",
+    "__CLASS__": "Adzuna::API::Response::Location"
+   },
+   "redirect_url": "https://www.adzuna.com/details/5890870678?utm_medium=api&utm_source=APPIDPLACEHOLDER",
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "description": "About JLG, an Oshkosh company JLG began in 1969, when our founder, John L. Grove set out to resolve growing safety concerns in the construction industry. Since then we have been committed to understanding the challenges and delivering innovative solutions to the access market. We partner with customers to provide quality equipment, training opportunities and trusted support within the access industry. We are a global company, and our products-including mobile elevating work platforms, telehandl\u2026",
+   "created": "2026-09-19T13:33:01Z"
+  },
+  {
+   "salary_max": 56589.93,
+   "title": "Software Engineering Intern",
+   "category": {
+    "label": "IT Jobs",
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "tag": "it-jobs"
+   },
+   "salary_is_predicted": "1",
+   "company": {
+    "display_name": "Appian",
+    "__CLASS__": "Adzuna::API::Response::Company"
+   },
+   "latitude": 38.97,
+   "contract_time": "full_time",
+   "contract_type": "contract",
+   "id": "5820384619",
+   "created": "2026-07-29T19:04:47Z",
+   "redirect_url": "https://www.adzuna.com/details/5820384619?utm_medium=api&utm_source=APPIDPLACEHOLDER",
+   "location": {
+    "__CLASS__": "Adzuna::API::Response::Location",
+    "area": [
+     "US",
+     "Virginia",
+     "Fairfax County",
+     "Mc Lean"
+    ],
+    "display_name": "Mc Lean, Fairfax County"
+   },
+   "salary_min": 56589.93,
+   "longitude": -77.23,
+   "description": "Here at Appian, our values of Intensity and Excellence define who we are. We set high standards and live up to them, ensuring that everything we do is done with care and quality. We approach every challenge with ambition and commitment, holding ourselves and each other accountable to achieve the best results. When you join Appian, you'll be part of a passionate team dedicated to accomplishing hard things, together. Appian Engineering spans the full depth of our platform-from foundational system\u2026",
+   "__CLASS__": "Adzuna::API::Response::Job"
+  },
+  {
+   "location": {
+    "__CLASS__": "Adzuna::API::Response::Location",
+    "area": [
+     "US",
+     "Maryland",
+     "Howard County",
+     "Columbia"
+    ],
+    "display_name": "Columbia, Howard County"
+   },
+   "redirect_url": "https://www.adzuna.com/details/5908130135?utm_medium=api&utm_source=APPIDPLACEHOLDER",
+   "longitude": -76.883626,
+   "salary_min": 42577.79,
+   "description": "L3Harris is dedicated to recruiting and developing high-performing talent who are passionate about what they do. Our employees are unified in a shared dedication to our customers' mission and quest for professional growth. L3Harris provides an inclusive, engaging environment designed to empower employees and promote work-life success. Fundamental to our culture is an unwavering focus on values, dedication to our communities, and commitment to excellence in everything we do. L3Harris is the Trus\u2026",
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "created": "2026-10-02T09:47:03Z",
+   "contract_type": "contract",
+   "id": "5908130135",
+   "salary_max": 42577.79,
+   "title": "Software Engineer Intern",
+   "salary_is_predicted": "1",
+   "category": {
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "tag": "it-jobs",
+    "label": "IT Jobs"
+   },
+   "company": {
+    "__CLASS__": "Adzuna::API::Response::Company",
+    "display_name": "L3Harris"
+   },
+   "latitude": 39.206658
+  },
+  {
+   "redirect_url": "https://www.adzuna.com/details/5865840662?utm_medium=api&utm_source=APPIDPLACEHOLDER",
+   "location": {
+    "area": [
+     "US",
+     "Minnesota",
+     "Scott County",
+     "Shakopee"
+    ],
+    "display_name": "Shakopee, Scott County",
+    "__CLASS__": "Adzuna::API::Response::Location"
+   },
+   "salary_min": 57811.28,
+   "longitude": -93.526899,
+   "description": "JOB DESCRIPTION In This Role, Your Responsibilities Will Be: Apply technical expertise, commensurate with formal training and job experience in the design and development of embedded firmware Prepare detailed plans, generally spanning several weeks to months, necessary to complete assignments. Troubleshoot and debug the Software using unit tests, Emulators, Simulators, IDE, and bench testing Provide process improvements & recommendations Work with internal cross-functional teams to understand f\u2026",
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "created": "2026-09-01T19:57:09Z",
+   "contract_type": "contract",
+   "id": "5865840662",
+   "salary_max": 57811.28,
+   "title": "Software Engineering Intern",
+   "category": {
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "tag": "it-jobs",
+    "label": "IT Jobs"
+   },
+   "salary_is_predicted": "1",
+   "company": {
+    "__CLASS__": "Adzuna::API::Response::Company",
+    "display_name": "Emerson"
+   },
+   "latitude": 44.798019,
+   "contract_time": "full_time"
+  },
+  {
+   "category": {
+    "__CLASS__": "Adzuna::API::Response::Category",
+    "tag": "it-jobs",
+    "label": "IT Jobs"
+   },
+   "salary_is_predicted": "1",
+   "salary_max": 59607.96,
+   "created": "2026-10-06T12:30:35Z",
+   "title": "Software Engineer Intern",
+   "latitude": 26.34941,
+   "company": {
+    "__CLASS__": "Adzuna::API::Response::Company",
+    "display_name": "ModMed"
+   },
+   "salary_min": 59607.96,
+   "longitude": -80.2154,
+   "redirect_url": "https://www.adzuna.com/land/ad/5914073517?se=nBwh2P7E8RGRs48L_-pA7w&utm_medium=api&utm_source=APPIDPLACEHOLDER&v=908F61AD28BC4CE5E8A9F7C05483697959BA2846",
+   "location": {
+    "display_name": "Boca Raton, Palm Beach County",
+    "area": [
+     "US",
+     "Florida",
+     "Palm Beach County",
+     "Boca Raton"
+    ],
+    "__CLASS__": "Adzuna::API::Response::Location"
+   },
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "id": "5914073517",
+   "description": "Join the Team Modernizing Medicine At ModMed , we\u2019re not just building software\u2014we\u2019re reimagining the healthcare experience. Founded in 2010 by a practicing physician and a successful tech entrepreneur, we took a radically different approach: we hired doctors and taught them how to code. This \"for doctors, by doctors\" philosophy has allowed us to create an AI-enabled, specialty-specific cloud platform that places patients at the center of care. ModMed 's Product Development team eagerly welcome\u2026"
+  },
+  {
+   "category": {
+    "label": "Engineering Jobs",
+    "tag": "engineering-jobs",
+    "__CLASS__": "Adzuna::API::Response::Category"
+   },
+   "salary_is_predicted": "1",
+   "salary_max": 84994.66,
+   "title": "Software Engineering Intern",
+   "created": "2026-10-06T20:29:39Z",
+   "latitude": 37.34901,
+   "company": {
+    "display_name": "Texas Instruments Incorporated",
+    "__CLASS__": "Adzuna::API::Response::Company"
+   },
+   "salary_min": 84994.66,
+   "longitude": -121.93915,
+   "location": {
+    "display_name": "Santa Clara, Santa Clara County",
+    "area": [
+     "US",
+     "California",
+     "Santa Clara County",
+     "Santa Clara"
+    ],
+    "__CLASS__": "Adzuna::API::Response::Location"
+   },
+   "redirect_url": "https://www.adzuna.com/land/ad/5914501488?se=nBwh2P7E8RGRs48L_-pA7w&utm_medium=api&utm_source=APPIDPLACEHOLDER&v=74D2ACA557EE2FC5DCA2394CEE00E8F3C2A90016",
+   "__CLASS__": "Adzuna::API::Response::Job",
+   "id": "5914501488",
+   "description": "Job Description Change the world. Love your job. As a Software Engineering Intern, you'll become a key contributor where your skills and input make a big difference. In this role, you'll design embedded software and development tools that will be used to test products. You'll write code that tells chips how to operate in revolutionary new ways. And, you'll work closely with business partners and customers, as well as TI's marketing, systems and applications engineering teams, to collaborate and\u2026"
+  }
+ ]
+}

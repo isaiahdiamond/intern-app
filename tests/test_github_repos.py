@@ -240,3 +240,32 @@ def test_eu_hosted_greenhouse_boards_are_recognised():
         "greenhouse",
         "imc",
     )
+
+
+@pytest.mark.parametrize(
+    ("cell", "expected"),
+    [
+        ("0d", "2026-10-10"),
+        ("3d", "2026-10-07"),
+        ("2mo", "2026-08-11"),
+        ("Oct 09, 2026", "2026-10-09"),
+        ("Oct 10", "2026-10-10"),
+        # A December row read in October belongs to the previous year.
+        ("Dec 15", "2025-12-15"),
+        ("", ""),
+        ("garbage", ""),
+    ],
+)
+def test_posted_dates_are_read_from_the_age_column(cell, expected):
+    """Three formats appear across these repos. Without reading them, 995
+    listings had no date and the posted-within filter could not see them."""
+    from datetime import date
+
+    assert gh.posted_date(cell, date(2026, 10, 10)) == expected
+
+
+@pytest.mark.parametrize("repo", [r for r in gh.REPOS if r.kind != "json"], ids=lambda r: r.name)
+def test_every_readme_repo_yields_dates(repo):
+    rows = gh.parse_readme(fixture_for(repo).read_text(), repo)
+    dated = [row for row in rows if row["posted_at"]]
+    assert len(dated) > len(rows) * 0.8, f"{repo.name}: only {len(dated)}/{len(rows)} dated"

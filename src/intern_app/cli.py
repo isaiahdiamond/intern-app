@@ -11,7 +11,7 @@ import argparse
 
 from intern_app import __version__, db, profile
 from intern_app.config import MissingConfigError, settings
-from intern_app.sources import github_repos, linkedin_mail, muse, quota, usajobs
+from intern_app.sources import adzuna, github_repos, linkedin_mail, muse, quota, usajobs
 
 
 def _cmd_config(_: argparse.Namespace) -> int:
@@ -112,6 +112,17 @@ def _cmd_fetch(args: argparse.Namespace) -> int:
             except MissingConfigError as exc:
                 print(f"usajobs: skipped — {exc}")
 
+        if args.source in ("all", "adzuna"):
+            try:
+                discovered = adzuna.fetch_adzuna(conn, roles)
+                inserted, updated = db.upsert_listings(conn, discovered)
+                print(f"adzuna: {len(discovered)} matched, {inserted} new, {updated} already seen")
+                print(f"adzuna: {quota.remaining(conn, adzuna.SOURCE)} calls left in budget")
+            except quota.QuotaExceededError as exc:
+                print(f"adzuna: skipped — {exc}")
+            except MissingConfigError as exc:
+                print(f"adzuna: skipped — {exc}")
+
         if args.source in ("all", "mail"):
             try:
                 alerted = linkedin_mail.fetch_linkedin_mail(conn)
@@ -205,7 +216,7 @@ def build_parser() -> argparse.ArgumentParser:
     fetch_cmd = sub.add_parser("fetch", help="pull listings for my profile roles")
     fetch_cmd.add_argument(
         "--source",
-        choices=("all", "muse", "repos", "usajobs", "mail"),
+        choices=("all", "muse", "repos", "usajobs", "mail", "adzuna"),
         default="all",
         help="which sources to pull from (default all)",
     )

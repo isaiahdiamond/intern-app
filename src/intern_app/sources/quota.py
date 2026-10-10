@@ -39,7 +39,7 @@ class Limit:
 # the tightest accounting. The board endpoints publish no limit; we self-impose
 # a 3-hour floor. The Muse and USAJobs are generous but not unlimited.
 LIMITS: dict[str, Limit] = {
-    "adzuna": Limit(per_month=1000, per_day=50, reserve=25),
+    "adzuna": Limit(per_month=1000, per_day=50, min_interval_hours=6.0, reserve=25),
     "muse": Limit(per_day=500, min_interval_hours=1.0, reserve=10),
     "usajobs": Limit(per_day=500, min_interval_hours=1.0, reserve=10),
     "greenhouse": Limit(min_interval_hours=3.0),

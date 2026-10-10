@@ -24,7 +24,8 @@ def test_a_fresh_source_may_call_and_sees_its_budget(conn):
 
 
 def test_the_reserve_blocks_before_the_real_limit(conn):
-    backdate_calls(conn, "adzuna", 25, hours_ago=1)
+    # Backdated past adzuna's 6-hour floor, so this tests the budget alone.
+    backdate_calls(conn, "adzuna", 25, hours_ago=7)
 
     assert quota.remaining(conn, "adzuna") == 0
     with pytest.raises(quota.QuotaExceededError, match="calls left in budget"):
@@ -39,7 +40,7 @@ def test_the_monthly_ceiling_binds_even_when_today_is_quiet(conn):
 
 
 def test_needed_is_respected(conn):
-    backdate_calls(conn, "adzuna", 20, hours_ago=1)
+    backdate_calls(conn, "adzuna", 20, hours_ago=7)
 
     quota.check(conn, "adzuna", needed=5)
     with pytest.raises(quota.QuotaExceededError, match="6 needed"):
@@ -66,7 +67,7 @@ def test_a_paginating_run_skips_the_clock_but_never_the_budget(conn):
     quota.check(conn, "greenhouse", check_interval=False)
     assert quota.may_call(conn, "greenhouse") is False
 
-    backdate_calls(conn, "adzuna", 25, hours_ago=1)
+    backdate_calls(conn, "adzuna", 25, hours_ago=7)
     with pytest.raises(quota.QuotaExceededError, match="calls left in budget"):
         quota.check(conn, "adzuna", check_interval=False)
 
@@ -78,6 +79,15 @@ def test_an_old_call_stops_counting_against_the_budget(conn):
 
     assert db.calls_in_last(conn, "adzuna", days=30) == 0
     assert quota.remaining(conn, "adzuna") == 25
+
+
+def test_a_repeated_run_is_refused_by_the_poll_floor(conn):
+    """One run costs a call per role, so two runs in an hour nearly drained
+    adzuna's spendable daily budget before the floor was added."""
+    db.record_api_call(conn, source="adzuna")
+
+    with pytest.raises(quota.QuotaExceededError, match=r"floor is 6\.0h"):
+        quota.check(conn, "adzuna")
 
 
 def test_failed_calls_still_spend_quota(conn):

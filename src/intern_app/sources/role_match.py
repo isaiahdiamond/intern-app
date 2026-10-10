@@ -61,6 +61,10 @@ ALIASES: tuple[tuple[str, str], ...] = (
     ("sde", "software engineer"),
     ("ml", "machine learning"),
     ("ai", "machine learning"),
+    # Spelled out as well as abbreviated: "Artificial Intelligence Co-Op/Intern"
+    # matched no role at all until this was added.
+    ("artificial intelligence", "machine learning"),
+    ("deep learning", "machine learning"),
     ("developer", "engineer"),
     ("programmer", "engineer"),
     ("quant", "quantitative"),
