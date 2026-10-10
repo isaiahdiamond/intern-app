@@ -58,4 +58,5 @@ USAJobs requires my registered email as the `User-Agent`.
 
 - One branch per phase, one PR per branch, CI green before merge.
 - `ruff check` and `ruff format` clean; `pytest` green.
-- Run the `reviewer` subagent before every commit.
+- Before every commit, run the reviewer agent on the diff, then the verifier
+  agent on the current task. Fix all FAIL items before committing.

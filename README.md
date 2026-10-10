@@ -4,6 +4,9 @@ Aggregates internship and entry-level listings from job APIs, extracts the skill
 each posting actually requires using Claude, ranks them against my profile, and
 serves the result on a local dashboard.
 
+Role-first: I manage a list of role title variants in `roles.txt` and nothing
+else. Company job boards are discovered automatically and never user-managed.
+
 No scraping. Every listing comes from a documented API, a public job-board
 endpoint, or a job-alert email in my own inbox.
 
@@ -24,10 +27,10 @@ intern-app config        # shows which credentials are set
 
 | Source | Key | Full text | Notes |
 |---|---|---|---|
-| The Muse | free | yes | filtered to Internship / Entry Level, multi-industry |
-| Greenhouse / Lever / Ashby | none | yes | public board endpoints, slugs in `companies.txt` |
-| Adzuna | free, ~1k calls/month | no | discovery only — descriptions are truncated |
-| USAJobs | free | yes | federal only |
+| The Muse | free | yes | queried per role variant, Internship / Entry Level |
+| Greenhouse / Lever / Ashby | none | yes | internal: slugs auto-discovered into `ats_boards` |
+| Adzuna | free, ~1k calls/month | no | queried per role variant, discovery only |
+| USAJobs | free | yes | queried per role variant, federal only |
 | Gmail job alerts | OAuth, read-only | no | LinkedIn alert emails; title/company/location/url only |
 
 Only listings with `full_text=True` are sent to skill extraction. Adzuna results
@@ -36,6 +39,7 @@ carry the required "Jobs by Adzuna" attribution wherever they are displayed.
 ## Layout
 
 ```
+roles.txt          role title variants — the only targeting setting
 src/intern_app/
   config.py        environment and settings
   sources/         one module per source, shared contract in base.py
@@ -67,8 +71,12 @@ Logged here as each eval lands.
 ## Build status
 
 - [x] Phase 0 — repo, tooling, CI, source contract
-- [ ] Phase 1 — SQLite storage, quota tracking, LLM call log
-- [ ] Phase 2 — sources
-- [ ] Phase 3 — skill extraction and evals
-- [ ] Phase 4 — profile and ranking
-- [ ] Phase 5 — dashboard
+- [x] Phase 1 — SQLite storage, quota tracking, LLM call log
+- [ ] Phase 2 — role variants and The Muse
+- [ ] Phase 3 — Adzuna
+- [ ] Phase 4 — USAJobs
+- [ ] Phase 5 — ATS board discovery and pulling
+- [ ] Phase 6 — Gmail LinkedIn alerts
+- [ ] Phase 7 — skill extraction and evals
+- [ ] Phase 8 — profile and ranking
+- [ ] Phase 9 — dashboard

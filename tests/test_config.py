@@ -12,7 +12,7 @@ def make_settings(**env) -> Settings:
         db_path=Path("data/test.db"),
         model=DEFAULT_MODEL,
         prompts_dir=Path("prompts"),
-        companies_file=Path("companies.txt"),
+        roles_file=Path("roles.txt"),
         _env=env,
     )
 
