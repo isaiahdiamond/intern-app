@@ -48,11 +48,13 @@ select = [
     "UP",   # pyupgrade
     "B",    # bugbear
     "SIM",  # simplify
+    "N",    # pep8-naming — enforces snake_case
     "S",    # bandit — catches hardcoded secrets and unsafe calls
     "RUF",
 ]
 ignore = [
-    "E501",  # line length is enforced by the formatter
+    "E501",    # line length is enforced by the formatter
+    "SIM108",  # a plain if/else reads better than a ternary
 ]
 
 [tool.ruff.lint.per-file-ignores]

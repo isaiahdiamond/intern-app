@@ -14,7 +14,7 @@ from datetime import UTC, datetime, timedelta
 from intern_app import db
 
 
-class QuotaExceeded(RuntimeError):
+class QuotaExceededError(RuntimeError):
     """A source has no remaining budget, or was polled too recently."""
 
 
@@ -79,7 +79,7 @@ def check(
     needed: int = 1,
     check_interval: bool = True,
 ) -> None:
-    """Raise `QuotaExceeded` unless `source` may make `needed` more calls now.
+    """Raise `QuotaExceededError` unless `source` may make `needed` more calls now.
 
     The minimum-interval floor gates a *run*, not each request: call this once
     before a source starts, with `needed` set to the number of calls the run
@@ -96,14 +96,14 @@ def check(
             wait = timedelta(hours=limit.min_interval_hours) - elapsed
             if wait > timedelta(0):
                 minutes = int(wait.total_seconds() // 60) + 1
-                raise QuotaExceeded(
+                raise QuotaExceededError(
                     f"{source} was polled {int(elapsed.total_seconds() // 60)} min ago; "
                     f"its floor is {limit.min_interval_hours}h — wait {minutes} min."
                 )
 
     left = remaining(conn, source)
     if left is not None and left < needed:
-        raise QuotaExceeded(
+        raise QuotaExceededError(
             f"{source} has {left} calls left in budget (reserve {limit.reserve} held back); "
             f"{needed} needed. Skipping."
         )
@@ -119,6 +119,6 @@ def may_call(
     """Non-raising form, for a collector that skips a source and keeps going."""
     try:
         check(conn, source, needed=needed, check_interval=check_interval)
-    except QuotaExceeded:
+    except QuotaExceededError:
         return False
     return True

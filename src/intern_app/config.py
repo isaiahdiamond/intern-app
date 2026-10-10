@@ -21,7 +21,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL = "claude-opus-5-5"
 
 
-class MissingConfig(RuntimeError):
+class MissingConfigError(RuntimeError):
     """A required environment variable is unset."""
 
 
@@ -30,7 +30,7 @@ class Settings:
     db_path: Path
     model: str
     prompts_dir: Path
-    companies_file: Path
+    roles_file: Path
     _env: dict[str, str] = field(default_factory=dict, repr=False)
 
     def get(self, name: str, default: str = "") -> str:
@@ -44,7 +44,9 @@ class Settings:
         """
         value = self._env.get(name)
         if not value:
-            raise MissingConfig(f"{name} is not set. Add it to .env (see .env.example) and retry.")
+            raise MissingConfigError(
+                f"{name} is not set. Add it to .env (see .env.example) and retry."
+            )
         return value
 
     def has(self, *names: str) -> bool:
@@ -62,6 +64,6 @@ def settings() -> Settings:
         db_path=db_path,
         model=os.environ.get("INTERN_APP_MODEL") or DEFAULT_MODEL,
         prompts_dir=PROJECT_ROOT / "prompts",
-        companies_file=PROJECT_ROOT / "companies.txt",
+        roles_file=PROJECT_ROOT / "roles.txt",
         _env=dict(os.environ),
     )
