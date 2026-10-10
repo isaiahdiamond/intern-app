@@ -195,3 +195,65 @@ def test_a_step_two_post_is_trusted_so_unticking_sticks(client):
     # ` checked>` is the rendered attribute; the CSS rule `input:checked` is not
     # a match for it, so this is a real check that nothing is pre-ticked.
     assert " checked>" not in step_two.text
+
+
+def test_saving_with_no_roles_is_refused_with_a_message(client):
+    """The first real click-through saved a profile with zero roles, which made
+    is_onboarded false and bounced the user back to step one with no
+    explanation."""
+    response = client.post(
+        "/onboarding/save",
+        data={
+            "school": "University of Florida",
+            "major": "Applied Math & CS",
+            "industry_order": "Gaming",
+        },
+    )
+
+    assert response.status_code == 400
+    assert "Pick at least one role" in response.text
+
+    from intern_app import db, profile
+
+    conn = db.connect()
+    try:
+        assert profile.is_onboarded(conn) is False
+    finally:
+        conn.close()
+
+
+def test_industries_fall_back_to_checkbox_order_without_javascript(client):
+    """The click-order field is filled by a script. If it never runs, the
+    checkboxes still post and the order degrades rather than vanishing."""
+    client.post(
+        "/onboarding/save",
+        data={
+            "school": "University of Florida",
+            "major": "Applied Math & CS",
+            "roles": ["Software Engineer Intern"],
+            "industries": ["Gaming", "Consulting"],
+        },
+    )
+
+    from intern_app import db, profile
+
+    conn = db.connect()
+    try:
+        assert profile.load_industry_ranking(conn) == ["Gaming", "Consulting"]
+    finally:
+        conn.close()
+
+
+def test_roles_and_industries_post_from_one_form(client):
+    """They used to live in separate forms, with a script copying the roles
+    across on submit."""
+    step_two = client.post(
+        "/onboarding/roles",
+        data={"school": "University of Florida", "major": "Applied Math & CS"},
+    )
+
+    page = step_two.text
+    # One opening <form> tag for the whole step, not two.
+    assert page.count('<form method="post"') == 1
+    assert 'name="roles"' in page
+    assert 'name="industries"' in page

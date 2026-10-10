@@ -4,11 +4,16 @@
 <h1>Pick your roles</h1>
 <p class="step">Step 2 of 2 &middot; {{ major }}</p>
 
-<form method="post" action="/onboarding/roles" id="main">
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+{# One form, two buttons. `formaction` sends each button to its own endpoint, so
+   the roles and the industries post together without any JavaScript. An earlier
+   version split this across two forms and copied the ticked roles over with a
+   script on submit — which silently saved a profile with no roles at all. #}
+<form method="post" action="/onboarding/save">
   <input type="hidden" name="school" value="{{ school }}">
   <input type="hidden" name="major" value="{{ major }}">
   <input type="hidden" name="from_step2" value="1">
-  <input type="hidden" name="industry_order" id="carry_industries">
 
   <label>Roles <span class="hint">most common for your major first &middot; pick as many as fit</span></label>
   <div class="chips">
@@ -40,7 +45,8 @@
     <textarea id="interests" name="interests" rows="2"
               placeholder="I want to work on ML infrastructure, ideally something with real-time data"></textarea>
     <div class="actions">
-      <button type="submit" name="action" value="suggest" {% if not llm_available %}disabled{% endif %}>
+      <button type="submit" name="action" value="suggest" formaction="/onboarding/roles"
+              {% if not llm_available %}disabled{% endif %}>
         Suggest roles
       </button>
       {% if not llm_available %}
@@ -49,58 +55,43 @@
     </div>
   </div>
 
-  {% if error %}<p class="error">{{ error }}</p>{% endif %}
-</form>
-
-<form method="post" action="/onboarding/save" id="save">
-  <input type="hidden" name="school" value="{{ school }}">
-  <input type="hidden" name="major" value="{{ major }}">
-  <div id="role-carrier"></div>
-
   <label>Industries <span class="hint">click in order of preference &mdash; your first click is your top choice</span></label>
   <div class="chips">
     {% for industry in industries %}
       <label class="chip">
-        <input type="checkbox" class="industry" value="{{ industry }}"{% if industry in ranked %} checked{% endif %}>
+        <input type="checkbox" name="industries" value="{{ industry }}"{% if industry in ranked %} checked{% endif %}>
         <span>{{ industry }}</span>
       </label>
     {% endfor %}
   </div>
   <ol class="ranked" id="ranked"></ol>
-  <input type="hidden" name="industry_order" id="industry_order">
+  <input type="hidden" name="industry_order" id="industry_order" value="{{ ranked | join('|') }}">
 
   <div class="actions">
-    <button class="primary" type="submit">Save and continue</button>
+    <button class="primary" type="submit" name="action" value="save">Save and continue</button>
   </div>
 </form>
 
 <script>
-  // Industry rank is click order, so the first industry clicked is the top
-  // preference. Without JS the hidden field stays empty and the server saves no
-  // industries rather than saving a wrong order.
-  // Seeded from the saved profile so editing keeps the previous ranking, and so
-  // pressing "Suggest roles" does not lose industries already clicked.
+  // Industry rank is click order, so the first one clicked is the top choice.
+  // If this script does not run, the checkboxes still post as `industries` and
+  // the server falls back to their on-screen order — the ranking degrades, but
+  // nothing is lost.
   const picked = {{ ranked | tojson }};
   const ranked = document.getElementById("ranked");
   const orderField = document.getElementById("industry_order");
 
   function redraw() {
     ranked.innerHTML = "";
-    for (const name of picked) {
-      const li = document.createElement("li");
-      li.textContent = name;
-      ranked.appendChild(li);
-    }
+    picked.forEach((name, at) => {
+      const item = document.createElement("li");
+      item.textContent = name;
+      ranked.appendChild(item);
+    });
     orderField.value = picked.join("|");
-    carry.value = picked.join("|");
   }
 
-  redraw();
-
-  // Carry the current ranking into the suggest round-trip.
-  const carry = document.getElementById("carry_industries");
-
-  for (const box of document.querySelectorAll("input.industry")) {
+  for (const box of document.querySelectorAll('input[name="industries"]')) {
     box.addEventListener("change", () => {
       const at = picked.indexOf(box.value);
       if (box.checked && at === -1) picked.push(box.value);
@@ -109,18 +100,6 @@
     });
   }
 
-  // The role checkboxes live in the first form, so copy the ticked ones into
-  // the save form on submit.
-  document.getElementById("save").addEventListener("submit", () => {
-    const carrier = document.getElementById("role-carrier");
-    carrier.innerHTML = "";
-    for (const box of document.querySelectorAll('#main input[name="roles"]:checked')) {
-      const hidden = document.createElement("input");
-      hidden.type = "hidden";
-      hidden.name = "roles";
-      hidden.value = box.value;
-      carrier.appendChild(hidden);
-    }
-  });
+  redraw();
 </script>
 {% endblock %}

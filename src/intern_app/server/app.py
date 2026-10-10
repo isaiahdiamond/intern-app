@@ -248,26 +248,53 @@ async def show_step_two(request: Request):
 
 @app.post("/onboarding/save")
 async def save_onboarding(request: Request):
-    """Write the profile and go to the answers page."""
+    """Write the profile and go to the dashboard.
+
+    A profile with no roles cannot drive a fetch, so saving one is refused with
+    a message rather than accepted and then bounced back to step one — which is
+    exactly what happened the first time a real person used this.
+    """
     form = await read_form(request)
     major = first_value(form, "major")
+    school = first_value(form, "school")
     chips = set(roles.roles_for_major(major))
     chosen = [value.strip() for value in form.get("roles", []) if value.strip()]
+
+    # Click order when the script ran, otherwise the on-screen order of whatever
+    # was ticked. The ranking degrades without JavaScript; nothing is lost.
+    ordered = [
+        name.strip() for name in first_value(form, "industry_order").split("|") if name.strip()
+    ]
+    if not ordered:
+        ordered = [value.strip() for value in form.get("industries", []) if value.strip()]
+
+    if not chosen:
+        return TEMPLATES.TemplateResponse(
+            request=request,
+            name="step2.html",
+            context={
+                "school": school,
+                "major": major,
+                "chips": list(chips) and list(roles.roles_for_major(major)),
+                "suggested": [v.strip() for v in form.get("suggested", []) if v.strip()],
+                "industries": roles.INDUSTRIES,
+                "selected": [],
+                "ranked": ordered,
+                "error": "Pick at least one role — that is what we search for.",
+                "llm_available": client.have_api_key(),
+            },
+            status_code=400,
+        )
 
     conn = open_db()
     try:
         profile.save_profile(
             conn,
-            school=first_value(form, "school"),
+            school=school,
             major=major,
             # A role not in this major's chip list came from the LLM.
             roles=[(role, "chip" if role in chips else "llm_suggested") for role in chosen],
-            # Click order is the preference order; the hidden field carries it.
-            industries=[
-                name.strip()
-                for name in first_value(form, "industry_order").split("|")
-                if name.strip()
-            ],
+            industries=ordered,
         )
     finally:
         conn.close()
