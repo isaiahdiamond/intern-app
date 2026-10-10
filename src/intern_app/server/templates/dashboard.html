@@ -1,41 +1,125 @@
 {% extends "base.html" %}
-{% from "_job.html" import card %}
+{% from "_job.html" import queue, pager, triage_keys, triage_script, ordinal %}
 {% block title %}New jobs{% endblock %}
 {% block bodyclass %}wide{% endblock %}
 {% block body %}
+
+{% set shown = listings | length %}
+{% set full_postings = listings | selectattr("full_text") | list | length %}
+
 <h1>New jobs</h1>
-<p class="step">
-  {{ listings | length }} waiting &middot; {{ profile.roles | length }} roles &middot;
-  ordered by your industry preference, then newest
+<p class="lede">
+  <span class="figure">{{ "{:,}".format(total) }}</span> listings you have not acted on yet,
+  across {{ profile.roles | length }} roles{% if chosen_industry %}, in {{ chosen_industry }}{% endif %}.
+  {% if full_postings %}
+    {{ full_postings }} on this page {{ 'has' if full_postings == 1 else 'have' }} the posting text stored;
+    the rest are a title and a link.
+  {% elif shown %}
+    Every one on this page is a title and a link, with no posting text stored.
+  {% endif %}
 </p>
 
-<form method="get" action="/" class="filters">
-  <div>
-    <label for="industry">Industry</label><br>
-    <select id="industry" name="industry" onchange="this.form.submit()">
-      <option value="">all industries</option>
-      {% for name in industries %}
-        <option value="{{ name }}" {% if name == chosen_industry %}selected{% endif %}>{{ name }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div>
-    <label for="days">Posted within</label><br>
-    <select id="days" name="days" onchange="this.form.submit()">
-      {% for value, label in [(0, 'any time'), (14, '2 weeks'), (30, '30 days'), (90, '90 days'), (180, '6 months')] %}
+{# Sorting by rank means the top choice fills page after page, so the rail is
+   how the second and third choice get reached, with the size of each pile. #}
+{% if profile.industries %}
+<nav class="rail" aria-label="Your industry order">
+  {% for industry in profile.industries %}
+    <a href="/?industry={{ industry | urlencode }}&amp;days={{ chosen_days }}"
+       class="{{ 'on' if industry == chosen_industry }}"
+       {% if industry == chosen_industry %}aria-current="true"{% endif %}>
+      <span class="rank">{{ loop.index }}</span> {{ industry }}
+      <span class="n">{{ "{:,}".format(industry_counts.get(industry, 0)) }}</span>
+    </a>
+  {% endfor %}
+  <a href="/?days={{ chosen_days }}" class="every {{ 'on' if not chosen_industry }}">
+    Every industry <span class="n">{{ "{:,}".format(industry_counts.values() | sum) }}</span>
+  </a>
+</nav>
+{% endif %}
+
+<form method="get" action="/" class="toolbar">
+  <input type="hidden" name="industry" value="{{ chosen_industry }}">
+  <div class="field">
+    <label for="days">Posted within</label>
+    <select id="days" name="days">
+      {% for value, label in [(0, 'any time'), (14, 'two weeks'), (30, '30 days'), (90, '90 days'), (180, 'six months')] %}
         <option value="{{ value }}" {% if value == chosen_days %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
   </div>
-  <div><button type="submit">Apply</button></div>
+  <div class="field"><button type="submit">Narrow the list</button></div>
+  <div class="spacer"></div>
+  <div class="field grow">{{ triage_keys() }}</div>
 </form>
 
+{% set others = [] %}
+{% for name in industries if name not in profile.industries %}
+  {% set _ = others.append({"name": name, "count": industry_counts.get(name, 0)}) %}
+{% endfor %}
+{% if others %}
+<details class="all-industries">
+  <summary>The industries you did not rank, biggest pile first</summary>
+  <ul>
+    {% for other in others | sort(attribute="count", reverse=true) %}
+      <li>
+        <a href="/?industry={{ other.name | urlencode }}&amp;days={{ chosen_days }}">{{ other.name }}</a>
+        <span class="n">{{ "{:,}".format(other.count) }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</details>
+{% endif %}
+
 {% if listings %}
-  {% for job in listings %}{{ card(job, '/', statuses) }}{% endfor %}
+  {# Sections follow the sort, so grouping neighbours is enough to split the
+     queue by industry rank without sorting anything a second time. #}
+  {% set sections = [] %}
+  {% for job in listings %}
+    {% if sections and sections[-1].rank == job.industry_rank and sections[-1].rank < 999 %}
+      {% set _ = sections[-1].jobs.append(job) %}
+    {% elif sections and sections[-1].rank >= 999 and job.industry_rank >= 999 %}
+      {% set _ = sections[-1].jobs.append(job) %}
+    {% else %}
+      {% set _ = sections.append({
+        "rank": job.industry_rank,
+        "name": job.industry or "Not classified yet",
+        "jobs": [job],
+      }) %}
+    {% endif %}
+  {% endfor %}
+
+  {% for section in sections %}
+    <section class="section">
+      <h2>
+        <span class="named">
+          {% if section.rank < 999 %}
+            <span class="rank">{{ section.rank }}</span> {{ section.name }}
+          {% else %}
+            <span class="rank unranked">&ndash;</span> Industries you did not rank
+          {% endif %}
+        </span>
+        <span class="count">
+          {{ section.jobs | length }} listing{{ '' if section.jobs | length == 1 else 's' }}{% if section.rank < 999 %}, your {{ ordinal(section.rank) }} choice{% endif %}
+        </span>
+      </h2>
+      {{ queue(section.jobs, '/?industry=' ~ chosen_industry ~ '&days=' ~ chosen_days, ['saved', 'applied'], show_rank=False) }}
+    </section>
+  {% endfor %}
+
+  {{ pager('/', {'industry': chosen_industry, 'days': chosen_days}, page, per_page, total, has_more, shown_from, shown_to) }}
 {% else %}
-  <p class="empty">
-    Nothing here. Run <code>intern-app fetch</code> to pull listings for your roles,
-    then <code>intern-app classify</code> to tag their industries.
-  </p>
+  <div class="nothing">
+    <h2>Nothing in the queue</h2>
+    <p>
+      {% if chosen_industry or chosen_days %}
+        No new listings match this filter. Widen the date, or show every industry.
+      {% else %}
+        Run <code>intern-app fetch</code> to pull listings for your roles, then
+        <code>intern-app classify</code> to work out which industry each company is in.
+      {% endif %}
+    </p>
+  </div>
 {% endif %}
 {% endblock %}
+
+{% block scripts %}{{ triage_script() }}{% endblock %}

@@ -162,8 +162,7 @@ against the labeled set, with the numbers logged in README.
 
 Not built now, listed so they are not forgotten: a `concepts` table and concept
 merging, requirement depth levels, embedding-based clustering of statements,
-non-tech roles, multi-user. Still deferred: Adzuna (needs ADZUNA_APP_ID and
-ADZUNA_APP_KEY), Gmail LinkedIn alerts (needs an OAuth client secret),
+non-tech roles, multi-user. Still deferred: Adzuna,
 scoring and ranking, the "save this job" bookmarklet.
 
 **Pulling full descriptions from the discovered ATS boards is next and not yet

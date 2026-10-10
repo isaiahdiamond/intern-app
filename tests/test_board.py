@@ -122,3 +122,94 @@ def test_counts_feed_the_tab_badges(board_data):
 
     assert counts["new"] == 2
     assert counts["saved"] == 1
+
+
+def test_the_same_opening_posted_twice_shows_as_one_card(conn, listing):
+    """SpaceX posts the same Redmond role four times, each with its own url
+    hash. The board shows one, preferring the copy with a description."""
+    db.upsert_listings(
+        conn,
+        [
+            listing(
+                "https://x.com/dup-a",
+                company="SpaceX",
+                title="New Grad Engineer",
+                location="Redmond, WA",
+                full_text=False,
+            ),
+            listing(
+                "https://x.com/dup-b",
+                company="SpaceX",
+                title="New Grad Engineer",
+                location="Redmond, WA",
+            ),
+            listing(
+                "https://x.com/dup-c",
+                company="spacex",
+                title="new grad engineer",
+                location="redmond, wa",
+                full_text=False,
+            ),
+        ],
+    )
+
+    rows = [r for r in board.list_new(conn) if r["company"].lower() == "spacex"]
+
+    assert len(rows) == 1
+    # The surviving card is the one with the full description.
+    assert rows[0]["url"] == "https://x.com/dup-b"
+    assert rows[0]["copies"] == 3
+
+
+def test_the_same_title_in_a_different_city_is_not_a_duplicate(conn, listing):
+    """RWS lists "General AI Data Annotator" in California, Dallas and New
+    Jersey. All three are real openings."""
+    db.upsert_listings(
+        conn,
+        [
+            listing(
+                "https://x.com/ca",
+                company="RWS",
+                title="General AI Data Annotator",
+                location="California",
+                full_text=False,
+            ),
+            listing(
+                "https://x.com/tx",
+                company="RWS",
+                title="General AI Data Annotator",
+                location="Dallas, TX",
+                full_text=False,
+            ),
+            listing(
+                "https://x.com/nj",
+                company="RWS",
+                title="General AI Data Annotator",
+                location="New Jersey",
+                full_text=False,
+            ),
+        ],
+    )
+
+    rows = [r for r in board.list_new(conn) if r["company"] == "RWS"]
+
+    assert len(rows) == 3
+
+
+def test_search_still_reaches_every_copy(conn, listing):
+    """Collapsing is a board concern. Nothing is deleted, and Search covers
+    every url."""
+    db.upsert_listings(
+        conn,
+        [
+            listing(
+                "https://x.com/one", company="SpaceX", title="New Grad", location="Redmond, WA"
+            ),
+            listing(
+                "https://x.com/two", company="SpaceX", title="New Grad", location="Redmond, WA"
+            ),
+        ],
+    )
+
+    assert len(board.list_new(conn)) == 1
+    assert len([r for r in board.search_listings(conn) if r["company"] == "SpaceX"]) == 2

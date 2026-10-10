@@ -64,6 +64,7 @@ REPOS: tuple[Repo, ...] = (
         "main",
         "zshah",
     ),
+    Repo("resumax/tech-internships", "main", "resumax"),
 )
 
 JSON_PATH = ".github/scripts/listings.json"
@@ -211,6 +212,7 @@ EXPECTED_HEADERS = {
     "speedyapply": ("company", "position", "location"),
     "jobright": ("company", "job title", "location"),
     "zshah": ("company", "role", "apply", "location"),
+    "resumax": ("company", "role", "location", "apply"),
 }
 
 
@@ -306,10 +308,29 @@ def parse_zshah(cells: list[str]) -> dict | None:
     }
 
 
+def parse_resumax(cells: list[str]) -> dict | None:
+    """| Company | Role | Location | Apply | Tailor | Age |
+
+    The company cell links to resumax.ai rather than the employer, and the
+    Tailor cell is a marketing link, so the apply URL is found by scanning from
+    the second cell on — which lands on the real board link.
+    """
+    if len(cells) < 4:
+        return None
+    return {
+        "title": clean_cell(cells[1]),
+        "company": clean_cell(cells[0]),
+        "location": clean_cell(cells[2]),
+        "url": apply_link(cells),
+        "posted_at": "",
+    }
+
+
 ROW_PARSERS = {
     "speedyapply": parse_speedyapply,
     "jobright": parse_jobright,
     "zshah": parse_zshah,
+    "resumax": parse_resumax,
 }
 
 

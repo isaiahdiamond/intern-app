@@ -1,23 +1,87 @@
-{% macro card(job, back, statuses, show_status=False) %}
-<div class="job">
-  <h3><a href="{{ job.url }}" target="_blank" rel="noopener">{{ job.title }}</a></h3>
-  <div class="meta">
-    <strong>{{ job.company }}</strong>
-    {% if job.location %}<span>{{ job.location }}</span>{% endif %}
-    {% if job.posted_at %}<span>posted {{ job.posted_at[:10] }}</span>{% endif %}
-    {% if job.industry %}<span class="tag">{{ job.industry }}</span>{% endif %}
-    {% if job.industry_rank < 999 %}<span class="tag">#{{ job.industry_rank }} industry</span>{% endif %}
-    <span class="tag">{{ job.source }}</span>
-    {% if show_status %}<span class="status">{{ job.status }}</span>{% endif %}
+{# One queue row, plus the helpers that keep raw database strings off the page. #}
+
+{% set SOURCE_NAMES = {
+  "muse": "The Muse",
+  "usajobs": "USAJobs",
+  "adzuna": "Jobs by Adzuna",
+  "github_repos:simplifyjobs": "Simplify list",
+  "github_repos:speedyapply": "SpeedyApply list",
+  "github_repos:vanshb03": "Vansh's list",
+  "github_repos:jobright-ai": "Jobright list",
+} %}
+
+{% set MOVE_LABELS = {
+  "saved": "Save",
+  "applied": "Applied",
+  "interviewing": "Interviewing",
+  "rejected": "Rejected",
+  "offer": "Offer",
+  "hidden": "Hide",
+} %}
+
+{% macro source_name(source) %}
+{#- A source is stored as `github_repos:simplifyjobs`. That is a database key,
+    not something to read, so anything unmapped loses the prefix at least. -#}
+{{ SOURCE_NAMES.get(source, source.split(":")[-1] | replace("-", " ") | title) }}
+{%- endmacro %}
+
+{% macro ordinal(rank) %}
+{{- {1: "1st", 2: "2nd", 3: "3rd"}.get(rank, rank ~ "th") -}}
+{% endmacro %}
+
+
+{% macro age(job) %}
+{%- if job.days_in_status == 0 -%}today
+{%- elif job.days_in_status == 1 -%}yesterday
+{%- else -%}{{ job.days_in_status }} days ago
+{%- endif -%}
+{% endmacro %}
+
+
+{% macro row(job, back, moves, show_status=False, history=[], show_rank=True, labels={}) %}
+<article class="row{{ '' if show_rank else ' flush' }}" data-id="{{ job.id }}" tabindex="-1"
+         aria-label="{{ job.title }} at {{ job.company }}">
+  {#- Where a list mixes industries, each row says which rank put it there.
+      Where a whole section shares one rank, the heading says it once. -#}
+  {% if show_rank %}
+    {% if job.industry_rank < 999 %}
+      <span class="rank" title="{{ job.industry }}, your {{ ordinal(job.industry_rank) }} choice">{{ job.industry_rank }}</span>
+    {% else %}
+      <span class="rank unranked" title="{{ job.industry or 'Industry not classified yet' }}, not in your ranking">&ndash;</span>
+    {% endif %}
+  {% endif %}
+
+  <h3><a href="{{ job.url }}" target="_blank" rel="noopener" title="{{ job.title }}">{{ job.title }}</a></h3>
+
+  <div class="who">
+    <span class="firm">{{ job.company }}</span>
+    {% if job.location %}<span class="where" title="{{ job.location }}">{{ job.location }}</span>{% endif %}
+    {% if job.posted_at %}<time datetime="{{ job.posted_at[:10] }}">posted {{ job.posted_at[:10] }}</time>{% endif %}
+    {% if job.copies and job.copies > 1 %}
+      <span title="The same posting under {{ job.copies }} apply links, collapsed to one row">{{ job.copies }} apply links</span>
+    {% endif %}
+    {% if show_status %}<span class="state state-{{ job.status }}">{{ job.status }}</span>{% endif %}
   </div>
-  <div class="acts">
-    {% for name in statuses %}
+
+  {# Only 101 of 3,955 listings carry a description. Saying so is better than a
+     row that looks broken. #}
+  <div class="provenance">
+    {% if job.full_text %}
+      <span class="depth" title="The whole posting is stored, so requirements can be read from it">full posting</span>
+    {% else %}
+      <span class="depth thin" title="This source publishes a title and a link only">link only</span>
+    {% endif %}
+    {{ source_name(job.source) }}
+  </div>
+
+  <div class="moves">
+    {% for name in moves %}
       {% if name != job.status %}
       <form method="post" action="/status">
         <input type="hidden" name="listing_id" value="{{ job.id }}">
         <input type="hidden" name="status" value="{{ name }}">
         <input type="hidden" name="back" value="{{ back }}">
-        <button type="submit">{{ name }}</button>
+        <button type="submit" data-move="{{ name }}">{{ labels.get(name) or MOVE_LABELS.get(name, name) }}</button>
       </form>
       {% endif %}
     {% endfor %}
@@ -25,8 +89,162 @@
       <input type="hidden" name="listing_id" value="{{ job.id }}">
       <input type="hidden" name="status" value="hidden">
       <input type="hidden" name="back" value="{{ back }}">
-      <button type="submit">hide</button>
+      <button type="submit" data-move="hidden">Hide</button>
     </form>
+    <a class="button open" href="{{ job.url }}" target="_blank" rel="noopener" data-move="open">Open posting</a>
   </div>
+
+  {% if job.days_in_status is defined and job.status != 'new' %}
+    {#- An application sitting three weeks without a reply is the one thing on
+        the tracker that wants chasing, so it is the one thing coloured. -#}
+    <p class="trail">
+      <span class="{{ 'stale' if job.status == 'applied' and job.days_in_status >= 21 }}">
+        {{ job.status }} {{ age(job) }}
+      </span>
+      {% if history | length > 1 %}
+        <span class="steps">
+          {% for step in history %}{{ step.status }} {{ step.changed_at[:10] }}{% if not loop.last %} &rarr; {% endif %}{% endfor %}
+        </span>
+      {% endif %}
+    </p>
+  {% endif %}
+
+</article>
+{% endmacro %}
+
+
+{% macro queue(listings, back, moves, show_status=False, histories={}, show_rank=True) %}
+<div class="queue">
+  {% for job in listings %}
+    {{ row(job, back, moves, show_status, histories.get(job.id, []), show_rank) }}
+  {% endfor %}
 </div>
+{% endmacro %}
+
+
+{% macro pager(action, params, page, per_page, total, has_more, shown_from, shown_to, unit="listings") %}
+{#- Seventy-nine pages is too many to list, so the pager turns one page at a
+    time and lets you jump straight to a number. It is a plain GET form, so it
+    works with the keyboard, without JavaScript, and in a bookmark. -#}
+{% set pages = ((total / per_page) | round(0, 'ceil') | int) or 1 %}
+{% set query %}{% for name, value in params.items() if value %}{{ name }}={{ value | urlencode }}&amp;{% endfor %}{% endset %}
+<nav class="pager" aria-label="Pages">
+  <p class="range">
+    {{ shown_from }}&ndash;{{ shown_to }} of {{ "{:,}".format(total) }} {{ unit }}, page {{ page }} of {{ pages }}
+  </p>
+  <div class="turn">
+    {% if page > 1 %}
+      <a class="button" rel="prev" href="{{ action }}?{{ query }}page={{ page - 1 }}">Previous</a>
+    {% else %}
+      <span class="button off" aria-disabled="true">Previous</span>
+    {% endif %}
+    <form method="get" action="{{ action }}">
+      {% for name, value in params.items() if value %}
+        <input type="hidden" name="{{ name }}" value="{{ value }}">
+      {% endfor %}
+      <label for="jump">Jump to page</label>
+      <input type="number" id="jump" name="page" value="{{ page }}" min="1" max="{{ pages }}">
+      <button type="submit">Go</button>
+    </form>
+    {% if has_more %}
+      <a class="button" rel="next" href="{{ action }}?{{ query }}page={{ page + 1 }}">Next</a>
+    {% else %}
+      <span class="button off" aria-disabled="true">Next</span>
+    {% endif %}
+  </div>
+</nav>
+{% endmacro %}
+
+
+{% macro triage_keys() %}
+<p class="keys">
+  Keyboard: <kbd>j</kbd> <kbd>k</kbd> move, <kbd>s</kbd> save, <kbd>a</kbd> applied,
+  <kbd>h</kbd> hide, <kbd>o</kbd> open the posting, <kbd>n</kbd> <kbd>p</kbd> turn the page.
+</p>
+{% endmacro %}
+
+
+{% macro triage_script() %}
+<script>
+  // Triage is the main loop: read a row, decide, move on. It works from the
+  // keyboard so a page can be cleared without reaching for the mouse. Each
+  // button carries a data-move name, and a key press clicks the matching one,
+  // which submits the ordinary form a mouse click would have submitted.
+  (function () {
+    const PLACE = "triage:" + location.pathname;
+    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let current = null;
+
+    function rows() {
+      return Array.from(document.querySelectorAll(".row"));
+    }
+
+    function mark(row) {
+      if (current) current.classList.remove("current");
+      current = row;
+      current.classList.add("current");
+    }
+
+    function goTo(index, scroll) {
+      const all = rows();
+      if (!all.length) return;
+      mark(all[Math.max(0, Math.min(all.length - 1, index))]);
+      if (!scroll) return;
+      current.scrollIntoView({ block: "center", behavior: smooth ? "smooth" : "auto" });
+      current.focus({ preventScroll: true });
+    }
+
+    function step(by) {
+      const at = rows().indexOf(current);
+      goTo(at < 0 ? 0 : at + by, true);
+    }
+
+    function move(name) {
+      if (!current) return;
+      const control = current.querySelector('[data-move="' + name + '"]');
+      if (control) control.click();
+    }
+
+    function turn(which) {
+      const link = document.querySelector('.pager a[rel="' + which + '"]');
+      if (link) link.click();
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      if (event.target.closest("input, textarea, select")) return;
+
+      const moves = { s: "saved", a: "applied", h: "hidden", o: "open" };
+      if (event.key === "j") { step(1); }
+      else if (event.key === "k") { step(-1); }
+      else if (event.key === "n") { turn("next"); }
+      else if (event.key === "p") { turn("prev"); }
+      else if (moves[event.key]) { move(moves[event.key]); }
+      else { return; }
+      event.preventDefault();
+    });
+
+    // A row clicked with the mouse becomes the one the keys act on, so the two
+    // ways of working never disagree about where you are.
+    document.addEventListener("click", (event) => {
+      const row = event.target.closest(".row");
+      if (row && row !== current) mark(row);
+    });
+
+    // Acting on a row reloads the page, and landing back at the top after every
+    // decision is what makes a queue feel slow. The place is remembered
+    // instead: the acted-on row has gone, so the same position now holds the
+    // next job.
+    document.addEventListener("submit", (event) => {
+      const row = event.target.closest(".row");
+      if (row) sessionStorage.setItem(PLACE, rows().indexOf(row));
+    });
+
+    const back = sessionStorage.getItem(PLACE);
+    if (back !== null) {
+      sessionStorage.removeItem(PLACE);
+      goTo(Number(back), true);
+    }
+  })();
+</script>
 {% endmacro %}

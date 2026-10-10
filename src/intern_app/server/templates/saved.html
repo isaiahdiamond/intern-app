@@ -1,29 +1,42 @@
 {% extends "base.html" %}
-{% block title %}Your search{% endblock %}
+{% block title %}Profile{% endblock %}
 {% block body %}
+
 <h1>Profile</h1>
-<p class="step">Your onboarding answers. Editing them changes what gets fetched.</p>
+<p class="lede">Your four answers. Changing them changes what gets fetched and the order it arrives in.</p>
 
-<dl>
-  <dt>School</dt><dd>{{ profile.school }}</dd>
-  <dt>Major</dt><dd>{{ profile.major }}</dd>
+<dl class="answers">
+  <dt>School</dt>
+  <dd>{{ profile.school }}</dd>
 
-  <dt>Roles <span class="hint">what we will search for</span></dt>
+  <dt>Major</dt>
+  <dd>{{ profile.major }}</dd>
+
+  <dt>Roles we search for</dt>
   <dd>
     <div class="chips">
       {% for role in profile.roles %}<span class="chip"><span>{{ role }}</span></span>{% endfor %}
     </div>
   </dd>
 
-  <dt>Industries <span class="hint">most preferred first</span></dt>
+  <dt>Industry order</dt>
   <dd>
     {% if profile.industries %}
-      <ol class="ranked">{% for i in profile.industries %}<li>{{ i }}</li>{% endfor %}</ol>
+      <ol class="ranked">
+        {% for industry in profile.industries %}
+          <li><span class="rank">{{ loop.index }}</span> {{ industry }}</li>
+        {% endfor %}
+      </ol>
+      <p class="quiet">
+        A listing in an industry you did not rank still shows up, at the bottom of the queue.
+      </p>
     {% else %}
-      <p class="hint">none chosen</p>
+      <p class="quiet">None ranked yet, so new jobs arrive newest first.</p>
     {% endif %}
   </dd>
 </dl>
 
-<div class="actions"><a href="/onboarding"><button type="button">Edit answers</button></a></div>
+<div class="actions">
+  <a class="button" href="/onboarding">Change my answers</a>
+</div>
 {% endblock %}

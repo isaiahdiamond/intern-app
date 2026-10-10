@@ -51,6 +51,9 @@ LIMITS: dict[str, Limit] = {
     # day. Twice daily is what the repos themselves refresh at, so polling more
     # often only wastes bandwidth.
     "github_repos": Limit(per_day=40, min_interval_hours=12.0, reserve=5),
+    # One IMAP session reads every recent alert, so this is about politeness to
+    # the mail server rather than a published limit.
+    "linkedin_mail": Limit(per_day=24, min_interval_hours=1.0, reserve=2),
 }
 
 DEFAULT_LIMIT = Limit(min_interval_hours=1.0)

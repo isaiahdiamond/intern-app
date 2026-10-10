@@ -219,3 +219,24 @@ def test_storing_repo_listings_records_their_boards(conn):
 
     db.upsert_listings(conn, [gh.to_listing(r, "x/y") for r in rows if r["url"]])
     assert conn.execute("SELECT COUNT(*) FROM listings").fetchone()[0] > 0
+
+
+def test_resumax_rows_find_the_apply_link_not_the_marketing_link():
+    """Its company cell links to resumax.ai and its Tailor cell is a marketing
+    link, so only the Apply cell holds the real board url."""
+    repo = next(r for r in gh.REPOS if r.kind == "resumax")
+    rows = gh.parse_readme(fixture_for(repo).read_text(), repo)
+
+    assert rows
+    linked = [row for row in rows if row["url"].startswith("http")]
+    assert len(linked) > len(rows) * 0.9
+    assert not any("resumax.ai" in row["url"] for row in linked)
+
+
+def test_eu_hosted_greenhouse_boards_are_recognised():
+    """resumax lists IMC on job-boards.eu.greenhouse.io, which the original
+    pattern missed."""
+    assert board_and_slug("https://job-boards.eu.greenhouse.io/imc/jobs/123") == (
+        "greenhouse",
+        "imc",
+    )
