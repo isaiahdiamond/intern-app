@@ -32,7 +32,7 @@ PRICES: dict[str, Price] = {
 }
 
 
-class UnknownModel(KeyError):
+class UnknownModelError(KeyError):
     """No price on file for this model, so cost cannot be computed honestly."""
 
 
@@ -46,13 +46,13 @@ def cost_usd(
 ) -> float:
     """Dollar cost of one call.
 
-    Raises `UnknownModel` rather than guessing: a silently wrong cost in the log
+    Raises `UnknownModelError` rather than guessing: a silently wrong cost in the log
     is worse than a loud failure, because the log is what the spend report reads.
     """
     try:
         price = PRICES[model]
     except KeyError as exc:
-        raise UnknownModel(
+        raise UnknownModelError(
             f"No price on file for {model!r}. Add it to llm.pricing.PRICES."
         ) from exc
 

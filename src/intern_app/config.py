@@ -21,7 +21,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL = "claude-opus-5-5"
 
 
-class MissingConfig(RuntimeError):
+class MissingConfigError(RuntimeError):
     """A required environment variable is unset."""
 
 
@@ -44,7 +44,9 @@ class Settings:
         """
         value = self._env.get(name)
         if not value:
-            raise MissingConfig(f"{name} is not set. Add it to .env (see .env.example) and retry.")
+            raise MissingConfigError(
+                f"{name} is not set. Add it to .env (see .env.example) and retry."
+            )
         return value
 
     def has(self, *names: str) -> bool:

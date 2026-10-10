@@ -54,6 +54,27 @@ prompt strings inline in Python. Changing a prompt is a reviewable diff.
 Adzuna results must be shown with "Jobs by Adzuna" wherever they surface.
 USAJobs requires my registered email as the `User-Agent`.
 
+## Code style
+
+Written to be read by someone new to the codebase. Clear beats clever, and clear
+beats short.
+
+- **PEP 8, enforced by ruff.** `snake_case` for variables and functions,
+  `UPPER_CASE` for module constants, `CapWords` for the few classes.
+- **Functions are named for what they do** — `load_roles`, `fetch_muse`,
+  `match_title`. A function whose name is a noun is usually a value in disguise.
+- **Names are whole words, no padding.** `role`, not `r`, and not
+  `role_title_variant_string`. One or two words is the target.
+- **No code golf.** A triple-nested comprehension, a walrus that saves one line,
+  or a clever one-liner that needs a comment to decode: write the plain loop
+  instead. Shortest is not the goal.
+- **Comments say why, not what.** If a line needs a comment explaining what it
+  does, rename something instead.
+- **Each source is one plain function** — see the source contract above.
+- **No new dependency without asking first.**
+- **Tests earn their place.** One test per distinct failure that could really
+  happen. No test that restates another one with different data.
+
 ## Workflow
 
 - One branch per phase, one PR per branch, CI green before merge.
