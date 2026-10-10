@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Pick your roles{% endblock %}
 {% block body %}
+
 <h1>Pick your roles</h1>
-<p class="step">Step 2 of 2 &middot; {{ major }}</p>
+<p class="lede">Two questions left, for {{ major }}. Pick every role you would actually apply to.</p>
 
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
 
@@ -15,7 +16,7 @@
   <input type="hidden" name="major" value="{{ major }}">
   <input type="hidden" name="from_step2" value="1">
 
-  <label>Roles <span class="hint">most common for your major first &middot; pick as many as fit</span></label>
+  <label>Roles <span class="hint">most common for your major first</span></label>
   <div class="chips">
     {% for role in chips %}
       <label class="chip">
@@ -26,7 +27,7 @@
   </div>
 
   {% if suggested %}
-    <label>Suggested for you <span class="hint">from what you described</span></label>
+    <label>Suggested from what you described</label>
     <div class="chips">
       {% for role in suggested %}
         <label class="chip">
@@ -39,7 +40,7 @@
   {% endif %}
 
   <div class="other">
-    <label for="interests">Other &mdash; none of these fit?
+    <label for="interests">None of these fit?
       <span class="hint">say what you are looking for and we will suggest some</span>
     </label>
     <textarea id="interests" name="interests" rows="2"
@@ -55,7 +56,9 @@
     </div>
   </div>
 
-  <label>Industries <span class="hint">click in order of preference &mdash; your first click is your top choice</span></label>
+  <label>Industries, in order
+    <span class="hint">click your favourite first; the order sets what surfaces first, it never hides anything</span>
+  </label>
   <div class="chips">
     {% for industry in industries %}
       <label class="chip">
@@ -68,7 +71,7 @@
   <input type="hidden" name="industry_order" id="industry_order" value="{{ ranked | join('|') }}">
 
   <div class="actions">
-    <button class="primary" type="submit" name="action" value="save">Save and continue</button>
+    <button class="primary" type="submit" name="action" value="save">Save and start triaging</button>
   </div>
 </form>
 
@@ -85,7 +88,11 @@
     ranked.innerHTML = "";
     picked.forEach((name, at) => {
       const item = document.createElement("li");
-      item.textContent = name;
+      const number = document.createElement("span");
+      number.className = "rank";
+      number.textContent = at + 1;
+      item.appendChild(number);
+      item.append(" " + name);
       ranked.appendChild(item);
     });
     orderField.value = picked.join("|");

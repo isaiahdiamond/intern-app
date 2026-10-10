@@ -1,23 +1,64 @@
 {% extends "base.html" %}
-{% from "_job.html" import card %}
+{% from "_job.html" import row, triage_script, age %}
 {% block title %}Tracker{% endblock %}
 {% block bodyclass %}wide{% endblock %}
 {% block body %}
+
+{# Five stages side by side, so the question "what is actually live right now"
+   is answered by looking, not by reading a list and sorting it in your head. #}
+{# Each stage offers only the moves that follow it, so a card carries three
+   buttons rather than the whole status list. #}
+{% set STAGES = [
+  ("saved", "Saved", "Worth applying to.", ["applied", "rejected"]),
+  ("applied", "Applied", "Waiting to hear.", ["interviewing", "offer", "rejected"]),
+  ("interviewing", "Interviewing", "Live right now.", ["offer", "rejected"]),
+  ("offer", "Offer", "Decide.", ["rejected"]),
+  ("rejected", "Closed", "Keep for the record.", ["saved"]),
+] %}
+{# Moving a closed application back to saved is reopening it, not saving it. #}
+{% set REOPEN = {"saved": "Reopen"} %}
+
 <h1>Tracker</h1>
-<p class="step">
-  {% for name in statuses %}{{ counts.get(name, 0) }} {{ name }}{% if not loop.last %} &middot; {% endif %}{% endfor %}
+<p class="lede">
+  {% set live = counts.get('interviewing', 0) %}
+  {% if live %}
+    <span class="figure">{{ live }}</span>
+    {{ 'interview' if live == 1 else 'interviews' }} in progress, and
+    {{ counts.get('applied', 0) }} applications waiting on a reply.
+  {% elif counts.get('applied', 0) %}
+    {{ counts.get('applied', 0) }} applications waiting on a reply, no interviews yet.
+  {% else %}
+    Every listing you have acted on, by where it stands.
+  {% endif %}
 </p>
 
 {% if rows %}
-  {% for job in rows %}
-    {{ card(job, '/tracker', statuses, show_status=True) }}
-    {% if histories[job.id] | length > 1 %}
-      <p class="meta" style="margin: -.4rem 0 .9rem .6rem;">
-        {% for step in histories[job.id] %}{{ step.status }} {{ step.changed_at[:10] }}{% if not loop.last %} &rarr; {% endif %}{% endfor %}
-      </p>
-    {% endif %}
+<div class="pipeline">
+  {% for name, heading, note, moves in STAGES %}
+    {% set stage_rows = rows | selectattr("status", "equalto", name) | list %}
+    <section class="stage {{ 'done' if name == 'rejected' }}">
+      <h2>{{ heading }} <span class="count">{{ stage_rows | length }}</span></h2>
+      {% if stage_rows %}
+        <div class="queue">
+          {% for job in stage_rows %}
+            {{ row(job, '/tracker', moves, False, histories.get(job.id, []), False, REOPEN if name == 'rejected' else {}) }}
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="none">{{ note }}</p>
+      {% endif %}
+    </section>
   {% endfor %}
+</div>
 {% else %}
-  <p class="empty">Nothing tracked yet. Save or apply to something on the New jobs tab.</p>
+  <div class="nothing">
+    <h2>Nothing tracked yet</h2>
+    <p>
+      Open <a href="/">New jobs</a> and press <kbd>s</kbd> on something worth applying to.
+      Anything you save, apply to or hear back from shows up here, with the dates it moved.
+    </p>
+  </div>
 {% endif %}
 {% endblock %}
+
+{% block scripts %}{{ triage_script() }}{% endblock %}

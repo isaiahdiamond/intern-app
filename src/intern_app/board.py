@@ -20,18 +20,58 @@ ACTIVE = ("saved", "applied", "interviewing", "rejected", "offer")
 # Any industry not in the profile's ranking sorts after every ranked one.
 UNRANKED = 999
 
+# One row per opening. The same job is sometimes posted several times under
+# different urls — four SpaceX "New Graduate Engineer, Software Security" rows
+# in Redmond, each with its own url hash — so the board shows one of them and
+# prefers the copy that has a full description. Nothing is deleted: every url
+# stays in `listings`, and the Search tab still reaches all of them.
+#
+# Note that the same title at a *different* location is a different opening, not
+# a duplicate: RWS lists "General AI Data Annotator" in California, Dallas and
+# New Jersey, and all three are real.
 SELECT_LISTINGS = """
+    WITH ranked_listings AS (
+        SELECT l.*,
+               ROW_NUMBER() OVER (
+                   PARTITION BY lower(l.company), lower(l.title), lower(l.location)
+                   ORDER BY l.full_text DESC, l.id
+               ) AS copy_number,
+               COUNT(*) OVER (
+                   PARTITION BY lower(l.company), lower(l.title), lower(l.location)
+               ) AS copies
+        FROM listings l
+    )
     SELECT l.id, l.title, l.company, l.location, l.url, l.posted_at, l.source,
-           l.full_text, l.first_seen,
-           COALESCE(c.industry, '') AS industry,
+           l.full_text, l.first_seen, l.copies,
+           COALESCE(NULLIF(c.industry, 'Unknown'), '') AS industry,
            COALESCE(pi.rank, :unranked) AS industry_rank,
            COALESCE(t.status, 'new') AS status,
-           COALESCE(t.notes, '') AS notes
-    FROM listings l
+           COALESCE(t.notes, '') AS notes,
+           t.updated_at AS status_changed_at,
+           CAST(julianday('now') - julianday(t.updated_at) AS INTEGER) AS days_in_status
+    FROM ranked_listings l
     LEFT JOIN companies c ON c.name = l.company
-    LEFT JOIN profile_industries pi ON pi.industry = c.industry
+    LEFT JOIN profile_industries pi
+           ON pi.industry = NULLIF(c.industry, 'Unknown')
     LEFT JOIN tracker t ON t.listing_id = l.id
 """
+
+
+DEFAULT_PER_PAGE = 50
+
+
+def _new_filters(industry: str, days: int) -> tuple[list[str], dict[str, object]]:
+    """The WHERE clauses and parameters shared by the list and its count."""
+    where = ["COALESCE(t.status, 'new') = 'new'", "l.copy_number = 1"]
+    params: dict[str, object] = {"unranked": UNRANKED}
+
+    if industry:
+        where.append("COALESCE(NULLIF(c.industry, 'Unknown'), '') = :industry")
+        params["industry"] = industry
+    if days:
+        where.append("l.posted_at >= date('now', :cutoff)")
+        params["cutoff"] = f"-{int(days)} days"
+    return where, params
 
 
 def list_new(
@@ -39,30 +79,74 @@ def list_new(
     *,
     industry: str = "",
     days: int = 0,
-    limit: int = 200,
+    page: int = 1,
+    per_page: int = DEFAULT_PER_PAGE,
 ) -> list[sqlite3.Row]:
-    """Listings I have not acted on yet, best-matching industry first.
+    """One page of listings I have not acted on, best-matching industry first.
+
+    Paging is not a nicety here. Ordering puts the top-ranked industry first,
+    and there are over a thousand listings in it, so a single capped page could
+    never reach the user's second or third choice at all.
 
     `days` limits to recently posted when set, which matters because a source
     will happily return a posting from last year.
     """
-    where = ["COALESCE(t.status, 'new') = 'new'"]
-    params: dict[str, object] = {"unranked": UNRANKED, "limit": limit}
-
-    if industry:
-        where.append("COALESCE(c.industry, '') = :industry")
-        params["industry"] = industry
-    if days:
-        where.append("l.posted_at >= date('now', :cutoff)")
-        params["cutoff"] = f"-{int(days)} days"
+    where, params = _new_filters(industry, days)
+    params["limit"] = max(1, per_page)
+    params["offset"] = max(0, (max(1, page) - 1) * max(1, per_page))
 
     sql = f"""
         {SELECT_LISTINGS}
         WHERE {" AND ".join(where)}
         ORDER BY industry_rank, l.posted_at DESC, l.id DESC
-        LIMIT :limit
+        LIMIT :limit OFFSET :offset
     """
     return conn.execute(sql, params).fetchall()
+
+
+def count_new(conn: sqlite3.Connection, *, industry: str = "", days: int = 0) -> int:
+    """How many listings match, so the pager knows where it ends."""
+    where, params = _new_filters(industry, days)
+    sql = f"""
+        {SELECT_LISTINGS}
+        WHERE {" AND ".join(where)}
+    """
+    # Suppression is justified: every clause in `where` is a literal written
+    # above, and every user value is bound as a named parameter.
+    return conn.execute(f"SELECT COUNT(*) FROM ({sql})", params).fetchone()[0]  # noqa: S608
+
+
+def new_counts_by_industry(conn: sqlite3.Connection) -> dict[str, int]:
+    """Unacted listings per industry, for the rank rail and the backlog line.
+
+    An unclassified industry is counted under "" rather than being dropped.
+    """
+    sql = f"""
+        {SELECT_LISTINGS}
+        WHERE COALESCE(t.status, 'new') = 'new' AND l.copy_number = 1
+    """
+    rows = conn.execute(
+        f"SELECT industry, COUNT(*) AS n FROM ({sql}) GROUP BY industry",  # noqa: S608
+        {"unranked": UNRANKED},
+    ).fetchall()
+    return {row["industry"]: row["n"] for row in rows}
+
+
+def _search_filters(text: str, industry: str, status: str) -> tuple[list[str], dict[str, object]]:
+    """The WHERE clauses and parameters shared by the search and its count."""
+    where = ["1 = 1"]
+    params: dict[str, object] = {"unranked": UNRANKED}
+
+    if text:
+        where.append("(l.title LIKE :text OR l.company LIKE :text OR l.location LIKE :text)")
+        params["text"] = f"%{text}%"
+    if industry:
+        where.append("COALESCE(NULLIF(c.industry, 'Unknown'), '') = :industry")
+        params["industry"] = industry
+    if status:
+        where.append("COALESCE(t.status, 'new') = :status")
+        params["status"] = status
+    return where, params
 
 
 def search_listings(
@@ -71,29 +155,37 @@ def search_listings(
     text: str = "",
     industry: str = "",
     status: str = "",
-    limit: int = 200,
+    page: int = 1,
+    per_page: int = DEFAULT_PER_PAGE,
 ) -> list[sqlite3.Row]:
-    """Every stored listing, filtered. This is what the Search tab reads."""
-    where = ["1 = 1"]
-    params: dict[str, object] = {"unranked": UNRANKED, "limit": limit}
+    """One page of every stored listing, filtered. The Search tab reads this.
 
-    if text:
-        where.append("(l.title LIKE :text OR l.company LIKE :text OR l.location LIKE :text)")
-        params["text"] = f"%{text}%"
-    if industry:
-        where.append("COALESCE(c.industry, '') = :industry")
-        params["industry"] = industry
-    if status:
-        where.append("COALESCE(t.status, 'new') = :status")
-        params["status"] = status
+    Unlike the dashboard this does not collapse duplicate postings: searching is
+    how you reach a specific apply link, so every copy stays visible.
+    """
+    where, params = _search_filters(text, industry, status)
+    params["limit"] = max(1, per_page)
+    params["offset"] = max(0, (max(1, page) - 1) * max(1, per_page))
 
     sql = f"""
         {SELECT_LISTINGS}
         WHERE {" AND ".join(where)}
         ORDER BY industry_rank, l.posted_at DESC, l.id DESC
-        LIMIT :limit
+        LIMIT :limit OFFSET :offset
     """
     return conn.execute(sql, params).fetchall()
+
+
+def count_search(
+    conn: sqlite3.Connection, *, text: str = "", industry: str = "", status: str = ""
+) -> int:
+    """How many listings the search matches in total, not just on this page."""
+    where, params = _search_filters(text, industry, status)
+    sql = f"""
+        {SELECT_LISTINGS}
+        WHERE {" AND ".join(where)}
+    """
+    return conn.execute(f"SELECT COUNT(*) FROM ({sql})", params).fetchone()[0]  # noqa: S608
 
 
 def list_tracked(conn: sqlite3.Connection) -> list[sqlite3.Row]:
@@ -101,6 +193,7 @@ def list_tracked(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     sql = f"""
         {SELECT_LISTINGS}
         WHERE t.status IN ({",".join(f"'{name}'" for name in ACTIVE)})
+          AND l.copy_number = 1
         ORDER BY CASE t.status
                      WHEN 'offer' THEN 1
                      WHEN 'interviewing' THEN 2
@@ -169,7 +262,7 @@ def known_industries(conn: sqlite3.Connection) -> list[str]:
         """
         SELECT DISTINCT c.industry FROM listings l
         JOIN companies c ON c.name = l.company
-        WHERE c.industry IS NOT NULL AND c.industry <> ''
+        WHERE c.industry IS NOT NULL AND c.industry NOT IN ('', 'Unknown')
         ORDER BY c.industry
         """
     ).fetchall()

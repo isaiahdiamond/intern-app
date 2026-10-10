@@ -5,55 +5,354 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}intern-app{% endblock %}</title>
   <style>
-    :root { color-scheme: light dark; --line: #8884; --accent: #2563eb; }
-    body { font: 16px/1.5 system-ui, sans-serif; max-width: 42rem; margin: 0 auto; padding: 2rem 1rem 4rem; }
-    h1 { font-size: 1.5rem; margin-bottom: .25rem; }
-    .step { color: #8889; font-size: .875rem; margin-bottom: 1.5rem; }
-    label { display: block; font-weight: 600; margin: 1.25rem 0 .375rem; }
-    input[type=text] { width: 100%; padding: .55rem .7rem; font: inherit; border: 1px solid var(--line); border-radius: .5rem; background: transparent; color: inherit; }
-    textarea { width: 100%; padding: .55rem .7rem; font: inherit; border: 1px solid var(--line); border-radius: .5rem; background: transparent; color: inherit; }
-    button { font: inherit; padding: .55rem 1.1rem; border-radius: .5rem; border: 1px solid var(--line); background: transparent; color: inherit; cursor: pointer; }
-    button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-    .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+    /* Palette: the student's own school. Blue #0021A5 carries rank, the
+       current row and links; the orange is rationed to one meaning, "this
+       needs you". Light is written first and dark redefines the same names,
+       so no rule below ever names a raw colour. */
+    :root {
+      color-scheme: light dark;
+      --paper: #ffffff;
+      --ink: #000000;
+      --ink-soft: #4b5260;
+      --rule: #cfd4dc;
+      --rule-faint: #e8eaef;
+      --blue: #0021a5;
+      --blue-wash: #e9ecfa;
+      --on-blue: #ffffff;
+      --flame: #c8380f;
+      --display: "Iowan Old Style", Charter, Georgia, "Times New Roman", serif;
+      --sans: "Helvetica Neue", Inter, system-ui, -apple-system, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #0b0f1c;
+        --ink: #f3f5fa;
+        --ink-soft: #9ba4ba;
+        --rule: #2a3250;
+        --rule-faint: #1a2137;
+        --blue: #93a9ff;
+        --blue-wash: #161f3a;
+        --on-blue: #0b0f1c;
+        --flame: #ff8057;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    /* `display: grid` on a row would otherwise beat the browser's own rule for
+       the hidden attribute, which is how the queue folds itself down. */
+    [hidden] { display: none !important; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font: 16px/1.55 var(--sans);
+      background: var(--paper);
+      color: var(--ink);
+      max-width: 40rem;
+      margin: 0 auto;
+      padding: 0 1.1rem 5rem;
+    }
+    body.wide { max-width: 76rem; }
+    a { color: var(--blue); }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+    h1, h2, h3, .figure { font-family: var(--display); font-weight: 600; }
+    h1 { font-size: 2.1rem; line-height: 1.1; letter-spacing: -.01em; margin: 0 0 .3rem; }
+    h2 { font-size: 1.15rem; margin: 0; }
+    p { margin: 0 0 .75rem; max-width: 66ch; }
+    .lede { color: var(--ink-soft); font-size: .95rem; margin: 0 0 1.4rem; }
+    .lede .figure { color: var(--flame); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+    .quiet { color: var(--ink-soft); font-size: .875rem; }
+    .warn { color: var(--flame); }
+    code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .85em; }
+
+    /* Controls. Radius says "you can operate this": zero on content,
+       2px on buttons and fields, a full pill on the onboarding chips. */
+    label { display: block; font-weight: 600; margin: 1.3rem 0 .35rem; }
+    input[type=text], input[type=search], input[type=number], textarea, select {
+      width: 100%;
+      padding: .5rem .6rem;
+      font: inherit;
+      color: inherit;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+    }
+    button, .button {
+      font: .9rem/1.5 var(--sans);
+      padding: .4rem .85rem;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      background: var(--paper);
+      color: var(--ink);
+      text-decoration: none;
+      cursor: pointer;
+    }
+    button:hover, .button:hover { border-color: var(--blue); color: var(--blue); }
+    button.primary {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: var(--on-blue);
+      font-weight: 600;
+      padding: .5rem 1.1rem;
+    }
+    button.primary:hover { color: var(--on-blue); opacity: .9; }
+    button[disabled], button[disabled]:hover { opacity: .45; cursor: not-allowed; border-color: var(--rule); color: var(--ink-soft); }
+    .actions { margin-top: 1.8rem; display: flex; gap: .7rem; align-items: center; flex-wrap: wrap; }
+    .error { color: var(--flame); font-weight: 600; margin: .75rem 0 0; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .5rem; }
+    /* A chip is a label, so the block rule above would give each one a
+       1.3rem top margin and break the rows apart. */
+    .chips .chip { display: inline-flex; margin: 0; font-weight: 400; }
     .chip input { position: absolute; opacity: 0; width: 0; }
-    .chip span { display: inline-block; padding: .4rem .8rem; border: 1px solid var(--line); border-radius: 2rem; cursor: pointer; }
-    .chip input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .chip input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .hint { color: #8889; font-size: .875rem; font-weight: 400; }
-    .error { color: #dc2626; margin-top: .75rem; }
-    .actions { margin-top: 2rem; display: flex; gap: .75rem; align-items: center; }
-    .other { margin-top: 1rem; padding: 1rem; border: 1px solid var(--line); border-radius: .5rem; }
-    ol.ranked { padding-left: 1.25rem; }
-    dt { font-weight: 600; margin-top: 1rem; }
-    nav { display: flex; gap: .25rem; border-bottom: 1px solid var(--line); margin-bottom: 1.5rem; flex-wrap: wrap; }
-    nav a { padding: .55rem .9rem; text-decoration: none; color: inherit; border-bottom: 2px solid transparent; }
-    nav a.on { border-bottom-color: var(--accent); font-weight: 600; }
-    nav .badge { font-size: .75rem; color: #8889; }
-    .job { border: 1px solid var(--line); border-radius: .6rem; padding: .85rem 1rem; margin-bottom: .6rem; }
-    .job h3 { font-size: 1rem; margin: 0 0 .15rem; }
-    .job h3 a { color: inherit; }
-    .meta { font-size: .85rem; color: #8889; display: flex; gap: .5rem; flex-wrap: wrap; }
-    .tag { border: 1px solid var(--line); border-radius: 1rem; padding: 0 .55rem; font-size: .75rem; }
-    .acts { display: flex; gap: .35rem; margin-top: .6rem; flex-wrap: wrap; }
-    .acts button { padding: .25rem .6rem; font-size: .8rem; }
-    .acts form { display: inline; }
-    .filters { display: flex; gap: .6rem; align-items: end; flex-wrap: wrap; margin-bottom: 1.25rem; }
-    .filters select, .filters input { padding: .45rem .6rem; font: inherit; border: 1px solid var(--line); border-radius: .4rem; background: transparent; color: inherit; }
-    .filters label { margin: 0 0 .25rem; font-size: .8rem; }
-    .empty { color: #8889; padding: 2rem 0; }
-    .status { font-weight: 600; font-size: .8rem; }
-    body.wide { max-width: 58rem; }
+    .chip span {
+      display: inline-block;
+      padding: .35rem .8rem;
+      border: 1px solid var(--rule);
+      border-radius: 2rem;
+      cursor: pointer;
+      font-size: .92rem;
+    }
+    .chip input:checked + span { background: var(--blue); border-color: var(--blue); color: var(--on-blue); }
+    .chip input:focus-visible + span { outline: 2px solid var(--blue); outline-offset: 2px; }
+    .hint { color: var(--ink-soft); font-size: .875rem; font-weight: 400; }
+    .other { margin-top: 1.2rem; padding: 1rem; border: 1px solid var(--rule); }
+
+    /* Tabs. Chat is in the plan but unbuilt, so it is inert text, not a link
+       that goes nowhere. */
+    nav {
+      display: flex;
+      align-items: baseline;
+      gap: 1.2rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--rule);
+      padding: 1rem 0 0;
+      margin-bottom: 1.6rem;
+    }
+    nav a, nav .soon {
+      padding: 0 0 .7rem;
+      margin-bottom: -1px;
+      text-decoration: none;
+      color: var(--ink-soft);
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+    nav a:hover { color: var(--ink); }
+    nav a.on { color: var(--ink); font-weight: 600; border-bottom-color: var(--blue); }
+    nav .soon { color: var(--rule); cursor: default; }
+    nav .tally { font-variant-numeric: tabular-nums; font-weight: 400; font-size: .8rem; color: var(--ink-soft); }
+    nav a.on .tally { color: var(--blue); }
+
+    /* The rank rail: the student's own industry order, and the quickest way to
+       reach a choice the 200-row page cannot reach on its own. The numerals are
+       the ranking itself, which is why they are numerals. */
+    .rail { display: flex; flex-wrap: wrap; gap: 0; margin: 0 0 1.5rem; border-top: 1px solid var(--rule); }
+    .rail a {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .6rem .9rem .6rem 0;
+      margin-right: .9rem;
+      text-decoration: none;
+      color: var(--ink-soft);
+      border-bottom: 2px solid transparent;
+      border-right: 1px solid var(--rule-faint);
+    }
+    .rail a:last-child { border-right: 0; }
+    .rail a:hover { color: var(--ink); }
+    .rail a.on { color: var(--ink); font-weight: 600; border-bottom-color: var(--blue); }
+    .rail a.on .rank { background: var(--blue); border-color: var(--blue); color: var(--on-blue); }
+    .rail a.every { color: var(--ink-soft); }
+
+    .toolbar { display: flex; gap: .9rem; align-items: end; flex-wrap: wrap; margin: 0 0 1.3rem; }
+    .toolbar .field { flex: 0 1 12rem; }
+    .toolbar .field.grow { flex: 1 1 16rem; }
+    .toolbar label { margin: 0 0 .25rem; font: 600 .82rem/1.3 var(--display); color: var(--ink-soft); }
+    .toolbar .spacer { flex: 1 1 auto; }
+    details.all-industries { margin: -.6rem 0 1.3rem; font-size: .85rem; }
+    details.all-industries summary { cursor: pointer; color: var(--ink-soft); }
+    details.all-industries ul { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem .9rem; padding: .5rem 0 0; margin: 0; }
+
+    /* A section of the queue: one industry you ranked, or everything you did
+       not. The count sits right, where the eye expects a total. */
+    .section { margin: 0 0 1.9rem; }
+    .section > h2 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: .75rem;
+      padding-bottom: .35rem;
+      border-bottom: 2px solid var(--ink);
+    }
+    .section > h2 .named { display: flex; align-items: center; gap: .55rem; min-width: 0; }
+    .section > h2 .count { font-family: var(--sans); font-weight: 400; font-size: .82rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+    /* The queue itself: ruled rows with a numeral gutter. The numeral is the
+       answer to "why is this row here" — it is the industry's rank. */
+    .queue { border-bottom: 1px solid var(--rule-faint); }
+    .row {
+      display: grid;
+      grid-template-columns: 1.9rem minmax(0, 1fr) auto;
+      gap: .2rem .75rem;
+      padding: .7rem 0;
+      border-top: 1px solid var(--rule-faint);
+    }
+    .row:first-child { border-top: 1px solid var(--rule); }
+    .row.current { background: var(--blue-wash); box-shadow: -.45rem 0 0 var(--blue-wash), .45rem 0 0 var(--blue-wash); }
+    .rank {
+      grid-row: 1 / span 3;
+      width: 1.9rem;
+      height: 1.9rem;
+      display: grid;
+      place-items: center;
+      font: 600 .95rem/1 var(--sans);
+      font-variant-numeric: tabular-nums;
+      color: var(--blue);
+      border: 1px solid var(--blue);
+    }
+    .rank.unranked { color: var(--ink-soft); border-color: var(--rule); border-style: dashed; }
+    .row.current .rank { background: var(--blue); border-color: var(--blue); color: var(--on-blue); }
+    .row h3 {
+      grid-column: 2;
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin: 0;
+      /* 160-character titles are real in this data. Two lines, then clamp,
+         with the whole thing still in the link's title for hover and for a
+         screen reader. */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .row h3 a { color: var(--ink); text-decoration: none; }
+    .row h3 a:hover { text-decoration: underline; }
+    .row .who { grid-column: 2; display: flex; flex-wrap: wrap; gap: .1rem .9rem; font-size: .875rem; color: var(--ink-soft); }
+    .row .who .firm { color: var(--ink); font-weight: 600; }
+    .row .who .where { max-width: 24rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row .who time { font-variant-numeric: tabular-nums; }
+    .row .provenance {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+      text-align: right;
+      font-size: .78rem;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+    .row .provenance .depth { display: block; color: var(--blue); font-weight: 600; }
+    .row .provenance .depth.thin { color: var(--ink-soft); font-weight: 400; }
+    .row .moves { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; margin-top: .4rem; }
+    .row .moves form { display: contents; }
+    .row .moves button { padding: .22rem .6rem; font-size: .82rem; }
+    .row .moves .open { padding: .22rem .6rem; font-size: .82rem; border-color: var(--blue); color: var(--blue); font-weight: 600; }
+    .row .state { font-weight: 600; font-size: .8rem; }
+    .state-saved { color: var(--blue); }
+    .state-applied { color: var(--ink); }
+    .state-interviewing { color: var(--flame); }
+    .state-offer { color: var(--blue); }
+    .state-rejected { color: var(--ink-soft); }
+    .trail .stale { color: var(--flame); font-weight: 600; }
+    .trail .steps { display: block; color: var(--ink-soft); }
+    .trail { grid-column: 2 / -1; font-size: .78rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; margin-top: .3rem; }
+
+    .row.flush { grid-template-columns: minmax(0, 1fr) auto; }
+    .row.flush h3, .row.flush .who { grid-column: 1; }
+    .row.flush .provenance { grid-column: 2; grid-row: 1 / span 2; }
+    .row.flush .moves, .row.flush .trail { grid-column: 1 / -1; }
+
+    @media (max-width: 34rem) {
+      h1 { font-size: 1.7rem; }
+      .row.flush .provenance { grid-column: 1; grid-row: auto; }
+      .row { grid-template-columns: 1.6rem minmax(0, 1fr); }
+      .rank { width: 1.6rem; height: 1.6rem; grid-row: 1 / span 2; font-size: .85rem; }
+      .row .provenance { grid-column: 2; grid-row: auto; text-align: left; }
+      .row .provenance .depth { display: inline; }
+      .row .provenance .depth::after { content: ","; }
+      .row .moves button, .row .moves .open { padding: .45rem .8rem; }
+      .section > h2 { font-size: 1rem; }
+      .pager .turn { width: 100%; }
+      .pager form { order: 2; flex: 1 0 100%; }
+      .keys { display: none; }
+    }
+
+    /* The pager: one page at a time, plus a jump, because there are 79 of them. */
+    .pager {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      border-top: 2px solid var(--ink);
+      margin-top: 1.2rem;
+      padding-top: .7rem;
+    }
+    .pager .range { margin: 0; font-size: .85rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+    .pager .turn { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+    .pager form { display: flex; align-items: center; gap: .4rem; }
+    .pager label { margin: 0; font: .85rem/1.4 var(--sans); font-weight: 400; color: var(--ink-soft); }
+    .pager input { width: 4.5rem; padding: .3rem .4rem; font-variant-numeric: tabular-nums; }
+    .pager .button { padding: .35rem .8rem; font-weight: 600; }
+    .pager .button.off { color: var(--rule); border-color: var(--rule-faint); cursor: default; }
+
+    /* Tracker: five ruled stages, side by side on a desk, stacked on a phone. */
+    .pipeline { display: grid; gap: 1.6rem; grid-template-columns: 1fr; }
+    @media (min-width: 62rem) {
+      .pipeline { grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; gap: 1.2rem; }
+      .pipeline .row.flush { grid-template-columns: minmax(0, 1fr); }
+      .pipeline .row.flush .provenance { grid-column: 1; grid-row: auto; text-align: left; }
+      .pipeline .row.flush .provenance .depth { display: inline; }
+      .pipeline .row.flush .provenance .depth::after { content: ","; }
+      .pipeline .row h3 { font-size: .95rem; -webkit-line-clamp: 3; }
+    }
+    /* In a stage column the move is the point, so the posting link steps back. */
+    .pipeline .row .moves .open { border-color: transparent; padding-left: 0; }
+    .pipeline .row .moves .open:hover { border-color: transparent; text-decoration: underline; }
+    .stage > h2 { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; border-bottom: 2px solid var(--ink); padding-bottom: .3rem; }
+    .stage.done > h2 { border-bottom-color: var(--rule); color: var(--ink-soft); }
+    .stage > h2 .count { font-family: var(--sans); font-weight: 400; font-size: .82rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+    .stage .none { font-size: .85rem; color: var(--ink-soft); padding: .7rem 0; }
+
+    .nothing { border-top: 2px solid var(--ink); padding: 1.4rem 0 0; max-width: 46ch; }
+    .nothing h2 { margin-bottom: .4rem; }
+
+    .keys { font-size: .82rem; color: var(--ink-soft); }
+    .keys kbd {
+      font: 600 .75rem/1.4 var(--sans);
+      border: 1px solid var(--rule);
+      border-bottom-width: 2px;
+      padding: 0 .3rem;
+      color: var(--ink);
+    }
+    dl.answers { margin: 0; }
+    dl.answers dt { font: 600 .9rem/1.4 var(--display); color: var(--ink-soft); margin-top: 1.4rem; }
+    dl.answers dd { margin: .2rem 0 0; font-size: 1.05rem; }
+    ol.ranked { list-style: none; padding: 0; margin: .4rem 0 0; }
+    ol.ranked li { display: flex; align-items: center; gap: .6rem; padding: .35rem 0; border-top: 1px solid var(--rule-faint); }
+    ol.ranked li:first-child { border-top: 0; }
+    ol.ranked .rank { grid-row: auto; }
+    .skip { position: absolute; left: -9999px; }
+    .skip:focus { left: .5rem; top: .5rem; background: var(--paper); padding: .5rem; z-index: 10; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   </style>
 </head>
 <body class="{% block bodyclass %}{% endblock %}">
+<a class="skip" href="#main">Skip to the list</a>
 {% if tab %}
-<nav>
-  <a href="/" class="{{ 'on' if tab == 'dashboard' }}">New jobs <span class="badge">{{ counts.get('new', 0) }}</span></a>
-  <a href="/tracker" class="{{ 'on' if tab == 'tracker' }}">Tracker <span class="badge">{{ (counts.get('saved',0) + counts.get('applied',0) + counts.get('interviewing',0) + counts.get('offer',0)) }}</span></a>
-  <a href="/search" class="{{ 'on' if tab == 'search' }}">Search</a>
-  <a href="/profile" class="{{ 'on' if tab == 'profile' }}">Profile</a>
+<nav aria-label="Sections">
+  <a href="/" class="{{ 'on' if tab == 'dashboard' }}" {% if tab == 'dashboard' %}aria-current="page"{% endif %}>New jobs
+    <span class="tally">{{ "{:,}".format(counts.get('new', 0)) }}</span></a>
+  <a href="/tracker" class="{{ 'on' if tab == 'tracker' }}" {% if tab == 'tracker' %}aria-current="page"{% endif %}>Tracker
+    <span class="tally">{{ counts.get('saved', 0) + counts.get('applied', 0) + counts.get('interviewing', 0) + counts.get('offer', 0) }}</span></a>
+  <a href="/search" class="{{ 'on' if tab == 'search' }}" {% if tab == 'search' %}aria-current="page"{% endif %}>Search</a>
+  <span class="soon" aria-disabled="true" title="Resume feedback. Not built yet.">Chat, soon</span>
+  <a href="/profile" class="{{ 'on' if tab == 'profile' }}" {% if tab == 'profile' %}aria-current="page"{% endif %}>Profile</a>
 </nav>
 {% endif %}
+<main id="main">
 {% block body %}{% endblock %}
+</main>
+{% block scripts %}{% endblock %}
 </body>
 </html>

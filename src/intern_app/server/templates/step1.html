@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Set up your search{% endblock %}
 {% block body %}
+
 <h1>Set up your search</h1>
-<p class="step">Step 1 of 2 &middot; this is a one-time thing, editable later</p>
+<p class="lede">Four questions, once. You can change any of them later from Profile.</p>
 
 <form method="post" action="/onboarding/roles">
   <label for="school">School</label>
-  <input type="text" id="school" name="school" value="{{ school }}" required autofocus>
+  <input type="text" id="school" name="school" value="{{ school }}" required autofocus
+         placeholder="University of Florida">
 
   <label for="major">Major
-    <span class="hint">your roles are suggested from this</span>
+    <span class="hint">your role suggestions come from this</span>
   </label>
   <input type="text" id="major" name="major" value="{{ major }}" required
          placeholder="Applied Mathematics and Computer Science">
 
-  <div class="actions"><button class="primary" type="submit">Next</button></div>
+  <div class="actions"><button class="primary" type="submit">Next, pick your roles</button></div>
 </form>
 {% endblock %}

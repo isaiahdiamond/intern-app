@@ -51,24 +51,46 @@ def open_db() -> sqlite3.Connection:
 
 
 @app.get("/", response_class=HTMLResponse)
-def show_dashboard(request: Request, industry: str = "", days: int = 0):
-    """New listings for my roles, best-matching industry first."""
+def show_dashboard(
+    request: Request,
+    industry: str = "",
+    days: int = 0,
+    page: int = 1,
+    per_page: int = board.DEFAULT_PER_PAGE,
+):
+    """New listings for my roles, best-matching industry first.
+
+    Paged, because ordering by industry rank with a thousand listings in the
+    top-ranked industry meant a single capped page could never reach the
+    second or third choice.
+    """
     conn = open_db()
     try:
         if not profile.is_onboarded(conn):
             return RedirectResponse("/onboarding")
+
+        page = max(1, page)
+        total = board.count_new(conn, industry=industry, days=days)
+        listings = board.list_new(conn, industry=industry, days=days, page=page, per_page=per_page)
         return TEMPLATES.TemplateResponse(
             request=request,
             name="dashboard.html",
             context={
                 "tab": "dashboard",
-                "listings": board.list_new(conn, industry=industry, days=days),
+                "listings": listings,
                 "industries": board.known_industries(conn),
+                "industry_counts": board.new_counts_by_industry(conn),
                 "counts": board.status_counts(conn),
                 "chosen_industry": industry,
                 "chosen_days": days,
                 "statuses": board.ACTIVE,
                 "profile": profile.load_profile(conn),
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+                "has_more": page * per_page < total,
+                "shown_from": (page - 1) * per_page + 1 if listings else 0,
+                "shown_to": (page - 1) * per_page + len(listings),
             },
         )
     finally:
@@ -97,22 +119,40 @@ def show_tracker(request: Request):
 
 
 @app.get("/search", response_class=HTMLResponse)
-def show_search(request: Request, q: str = "", industry: str = "", status: str = ""):
+def show_search(
+    request: Request,
+    q: str = "",
+    industry: str = "",
+    status: str = "",
+    page: int = 1,
+    per_page: int = board.DEFAULT_PER_PAGE,
+):
     """Search every stored listing, not just the new ones."""
     conn = open_db()
     try:
+        page = max(1, page)
+        total = board.count_search(conn, text=q, industry=industry, status=status)
+        listings = board.search_listings(
+            conn, text=q, industry=industry, status=status, page=page, per_page=per_page
+        )
         return TEMPLATES.TemplateResponse(
             request=request,
             name="search.html",
             context={
                 "tab": "search",
-                "listings": board.search_listings(conn, text=q, industry=industry, status=status),
+                "listings": listings,
                 "industries": board.known_industries(conn),
                 "counts": board.status_counts(conn),
                 "q": q,
                 "chosen_industry": industry,
                 "chosen_status": status,
                 "statuses": board.ACTIVE,
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+                "has_more": page * per_page < total,
+                "shown_from": (page - 1) * per_page + 1 if listings else 0,
+                "shown_to": (page - 1) * per_page + len(listings),
             },
         )
     finally:

@@ -15,7 +15,7 @@ from intern_app.db import utcnow
 
 # board name -> patterns that carry the slug in an apply URL.
 PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    ("greenhouse", re.compile(r"(?:boards|job-boards)\.greenhouse\.io/([^/?#]+)")),
+    ("greenhouse", re.compile(r"(?:boards|job-boards)(?:\.eu)?\.greenhouse\.io/([^/?#]+)")),
     ("greenhouse", re.compile(r"greenhouse\.io/embed/job_board\?for=([^&/?#]+)")),
     ("lever", re.compile(r"jobs\.(?:eu\.)?lever\.co/([^/?#]+)")),
     ("ashby", re.compile(r"jobs\.ashbyhq\.com/([^/?#]+)")),
