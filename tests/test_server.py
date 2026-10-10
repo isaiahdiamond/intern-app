@@ -46,11 +46,16 @@ def test_the_whole_flow_saves_and_shows_my_answers(client):
         follow_redirects=True,
     )
 
+    # Saving lands on the dashboard, which is empty until a fetch runs.
     assert save.status_code == 200
-    assert "Your search is set up" in save.text
-    assert "Software Engineer Intern" in save.text
-    # Industries render in preference order, most preferred first.
-    assert save.text.index("Finance &amp; Trading") < save.text.index("Software &amp; Internet")
+    assert "New jobs" in save.text
+    assert "intern-app fetch" in save.text
+
+    # The answers themselves live on the Profile tab, industries in preference
+    # order, most preferred first.
+    page = client.get("/profile").text
+    assert "Software Engineer Intern" in page
+    assert page.index("Finance &amp; Trading") < page.index("Software &amp; Internet")
 
 
 def test_the_suggest_button_is_disabled_without_a_key(client):

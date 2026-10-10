@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_job.html" import card %}
+{% block title %}Search{% endblock %}
+{% block bodyclass %}wide{% endblock %}
+{% block body %}
+<h1>Search</h1>
+<p class="step">Every listing stored, whatever its status</p>
+
+<form method="get" action="/search" class="filters">
+  <div>
+    <label for="q">Title, company, or location</label><br>
+    <input type="text" id="q" name="q" value="{{ q }}" placeholder="machine learning" autofocus>
+  </div>
+  <div>
+    <label for="industry">Industry</label><br>
+    <select id="industry" name="industry">
+      <option value="">all</option>
+      {% for name in industries %}
+        <option value="{{ name }}" {% if name == chosen_industry %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label for="status">Status</label><br>
+    <select id="status" name="status">
+      <option value="">any</option>
+      {% for name in ['new'] + statuses | list %}
+        <option value="{{ name }}" {% if name == chosen_status %}selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div><button class="primary" type="submit">Search</button></div>
+</form>
+
+<p class="step">{{ listings | length }} result{{ '' if listings | length == 1 else 's' }}</p>
+{% for job in listings %}{{ card(job, '/search?q=' ~ q, statuses, show_status=True) }}{% endfor %}
+{% if not listings %}<p class="empty">No listings match.</p>{% endif %}
+{% endblock %}

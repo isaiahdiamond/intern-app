@@ -1,0 +1,32 @@
+{% macro card(job, back, statuses, show_status=False) %}
+<div class="job">
+  <h3><a href="{{ job.url }}" target="_blank" rel="noopener">{{ job.title }}</a></h3>
+  <div class="meta">
+    <strong>{{ job.company }}</strong>
+    {% if job.location %}<span>{{ job.location }}</span>{% endif %}
+    {% if job.posted_at %}<span>posted {{ job.posted_at[:10] }}</span>{% endif %}
+    {% if job.industry %}<span class="tag">{{ job.industry }}</span>{% endif %}
+    {% if job.industry_rank < 999 %}<span class="tag">#{{ job.industry_rank }} industry</span>{% endif %}
+    <span class="tag">{{ job.source }}</span>
+    {% if show_status %}<span class="status">{{ job.status }}</span>{% endif %}
+  </div>
+  <div class="acts">
+    {% for name in statuses %}
+      {% if name != job.status %}
+      <form method="post" action="/status">
+        <input type="hidden" name="listing_id" value="{{ job.id }}">
+        <input type="hidden" name="status" value="{{ name }}">
+        <input type="hidden" name="back" value="{{ back }}">
+        <button type="submit">{{ name }}</button>
+      </form>
+      {% endif %}
+    {% endfor %}
+    <form method="post" action="/status">
+      <input type="hidden" name="listing_id" value="{{ job.id }}">
+      <input type="hidden" name="status" value="hidden">
+      <input type="hidden" name="back" value="{{ back }}">
+      <button type="submit">hide</button>
+    </form>
+  </div>
+</div>
+{% endmacro %}

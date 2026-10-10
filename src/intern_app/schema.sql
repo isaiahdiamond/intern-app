@@ -90,3 +90,49 @@ CREATE TABLE IF NOT EXISTS profile_industries (
 );
 
 CREATE INDEX IF NOT EXISTS profile_industries_rank_idx ON profile_industries (rank);
+
+-- Phase 2/3. Industry is a property of the company, not the posting, so it is
+-- classified once per company and cached here. The Muse gives no industry at
+-- all (its `categories` field is a job function), so this is where it comes
+-- from. `industry` is NULL until classified.
+CREATE TABLE IF NOT EXISTS companies (
+    id            INTEGER PRIMARY KEY,
+    name          TEXT NOT NULL UNIQUE,
+    industry      TEXT,
+    classified_at TEXT
+);
+
+-- The board. One row per listing I act on; status starts at 'new'.
+CREATE TABLE IF NOT EXISTS tracker (
+    id         INTEGER PRIMARY KEY,
+    listing_id INTEGER NOT NULL UNIQUE REFERENCES listings (id) ON DELETE CASCADE,
+    status     TEXT    NOT NULL DEFAULT 'new',
+    notes      TEXT    NOT NULL DEFAULT '',
+    created_at TEXT    NOT NULL,
+    updated_at TEXT    NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS tracker_status_idx ON tracker (status);
+
+-- One row per status change, which is the history.
+CREATE TABLE IF NOT EXISTS tracker_history (
+    id         INTEGER PRIMARY KEY,
+    listing_id INTEGER NOT NULL REFERENCES listings (id) ON DELETE CASCADE,
+    status     TEXT    NOT NULL,
+    changed_at TEXT    NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS tracker_history_listing_idx ON tracker_history (listing_id);
+
+-- ATS boards discovered from apply links, never user-managed. A slug is added
+-- whenever a listing's url points at greenhouse.io, lever.co, or ashbyhq.com,
+-- which is how the app finds company boards without anyone curating a list.
+CREATE TABLE IF NOT EXISTS ats_boards (
+    id         INTEGER PRIMARY KEY,
+    board      TEXT NOT NULL CHECK (board IN ('greenhouse', 'lever', 'ashby')),
+    slug       TEXT NOT NULL,
+    company    TEXT NOT NULL DEFAULT '',
+    found_at   TEXT NOT NULL,
+    last_pulled TEXT NOT NULL DEFAULT '',
+    UNIQUE (board, slug)
+);

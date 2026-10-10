@@ -2,7 +2,9 @@
 
 Scope right now: **tech roles, one user (me).** Get it working for me first.
 
-**Current phase: 2 — Fetch and store for my roles**
+**Current phase: 4 — Requirements extraction**
+
+Phases 1, 2 and 3 are complete and verified.
 
 Already built: repo, ruff, pre-commit, CI, the reviewer and verifier agents, the
 source contract (`sources/base.py`), the SQLite layer (`listings`, `api_calls`
@@ -87,21 +89,41 @@ logged like any other. Removes `roles.txt` and with it `roles_file` from
 my saved school, major, roles, and ranked industries, all editable; the real
 Dashboard replaces that page in phase 3.
 
-### 2. Fetch and store for my roles
-The Muse first, queried per role, as one plain function. Adds the `intern-app
-fetch` command and an `industry` column on `listings`, mapped from the Muse
-category — via an explicit migration, because `schema.sql` is all
-`CREATE TABLE IF NOT EXISTS` and cannot alter a table that already exists on
-disk. Saves one real Muse response to `tests/fixtures/`, which is also what
-confirms the category field exists. Quota-checked, deduped on url.
-**done means:** `intern-app fetch` stores listings for my roles in `listings`
-with their industry set, a second run adds no duplicate rows, and an existing
-phase-1 database gains the column without losing a row.
+### 2. Fetch and store for my roles — COMPLETE
+The Muse, queried per role. Two things the live API forced:
 
-### 3. Dashboard and tracker
-New jobs for my roles, the status lifecycle with history, the industry filter.
-Tables: `tracker` (one row per listing I act on, carrying current status) and
-`tracker_history` (one row per status change, which is the history).
+- **No keyword search.** A `q` parameter is silently ignored and returns the
+  whole corpus, so a role title cannot be sent as a query. Roles map to Muse's
+  fixed category list and are title-matched here instead.
+- **No industry.** Muse's `categories` field is a job function, not an industry.
+  Industry is a property of the company, so it is classified once per company by
+  the LLM and cached in a `companies` table — `intern-app classify`.
+
+Levels queried are Internship and Entry Level, which covers internships and
+new-grad roles.
+
+**GitHub internship repos** are the second source, as discovery only
+(`full_text=False`). Eight repos: four publish `.github/scripts/listings.json`
+and share one schema, which is preferred where it exists; four publish only
+README pipe tables, in three different column layouts. US and remote only,
+closed listings skipped, deduped across repos on company plus title plus
+location, and role-filtered — the repos list every discipline, so without that
+filter a run stores eight thousand rows. Polled at most twice a day.
+
+Apply links are where **ATS boards** come from: any link on greenhouse.io,
+lever.co or ashbyhq.com has its slug recorded in `ats_boards`, so board
+discovery is a side effect of ordinary collection rather than a curated list.
+**done means:** `intern-app fetch` stores listings for my roles in `listings`,
+each resolving to an industry through its company, a second run adds no
+duplicate rows, and an existing phase-1 database gains the new tables without
+losing a row. Industry is a column on `companies`, not on `listings`: it is a
+property of the employer, so one classification covers every listing they post.
+
+### 3. Dashboard and tracker — COMPLETE
+Four tabs: New jobs, Tracker, Search, Profile. Listings ordered by the profile's
+industry ranking then newest, with an unranked or unknown industry sorting last
+rather than being hidden. `tracker` plus `tracker_history`, and a posted-within
+date filter, because a source will return a posting from last year.
 **done means:** new listings for my roles show at localhost ordered by my
 industry preference, I can move one to `applied` and it survives a restart, and
 the industry filter narrows the list.
@@ -140,8 +162,16 @@ against the labeled set, with the numbers logged in README.
 
 Not built now, listed so they are not forgotten: a `concepts` table and concept
 merging, requirement depth levels, embedding-based clustering of statements,
-non-tech roles, multi-user. Also deferred: Adzuna, USAJobs, ATS board discovery,
-Gmail LinkedIn alerts, scoring and ranking, the "save this job" bookmarklet.
+non-tech roles, multi-user. Also deferred: Adzuna, Gmail LinkedIn alerts,
+scoring and ranking, the "save this job" bookmarklet.
+
+**Pulling full descriptions from the discovered ATS boards is next and not yet
+built.** The slugs are collected — 348 boards from one repo run — but nothing
+fetches a description from the Greenhouse, Lever or Ashby APIs yet, so every
+repo listing stays `full_text=False` and out of requirement extraction.
+
+USAJobs is ready to build but blocked: `USAJOBS_EMAIL` has to be set, because
+the API requires the registered address as its User-Agent.
 
 The CIP-SOC crosswalk and O*NET title files were verified to exist and parse
 (figures in git history on branch `plan-onboarding`); they can seed the

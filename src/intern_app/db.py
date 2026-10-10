@@ -37,6 +37,9 @@ def connect(db_path: str | Path | None = None) -> sqlite3.Connection:
     conn = sqlite3.connect(target, isolation_level=None)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA_PATH.read_text())
+    # schema.sql sets this too, but a PRAGMA inside executescript's transaction
+    # is ignored, so the ON DELETE CASCADE clauses would never fire.
+    conn.execute("PRAGMA foreign_keys = ON")
     return conn
 
 
@@ -87,6 +90,8 @@ def upsert_listings(conn: sqlite3.Connection, listings: Iterable[Listing]) -> tu
         # two apart (SQLite reports 1 for an insert and 1 for an upsert update),
         # and comparing first_seen to last_seen fails when a re-sight lands in
         # the same second as the insert.
+        remember_company(conn, listing["company"])
+
         if existing is None:
             inserted += 1
         else:
@@ -266,6 +271,42 @@ def llm_spend(conn: sqlite3.Connection, *, days: int | None = None) -> dict[str,
         params,
     ).fetchone()
     return dict(row)
+
+
+def remember_company(conn: sqlite3.Connection, name: str) -> None:
+    """Make sure a company has a row, so it can be classified later."""
+    if name.strip():
+        conn.execute("INSERT OR IGNORE INTO companies (name) VALUES (?)", (name.strip(),))
+
+
+def companies_needing_industry(conn: sqlite3.Connection) -> list[str]:
+    """Companies we hold listings for that have no industry yet."""
+    # Driven from `listings`, not from `companies`: a listing stored before this
+    # table existed has no company row, and deriving the list from the listings
+    # themselves means no backfill step can be forgotten.
+    rows = conn.execute(
+        """
+        SELECT DISTINCT l.company AS name
+        FROM listings l
+        LEFT JOIN companies c ON c.name = l.company
+        WHERE l.company <> '' AND (c.industry IS NULL)
+        ORDER BY l.company
+        """
+    ).fetchall()
+    return [row["name"] for row in rows]
+
+
+def set_company_industry(conn: sqlite3.Connection, name: str, industry: str) -> None:
+    """Store a company's industry, creating its row if this is the first time."""
+    conn.execute(
+        """
+        INSERT INTO companies (name, industry, classified_at) VALUES (?, ?, ?)
+        ON CONFLICT (name) DO UPDATE SET
+            industry = excluded.industry,
+            classified_at = excluded.classified_at
+        """,
+        (name.strip(), industry, utcnow()),
+    )
 
 
 def source_counts(conn: sqlite3.Connection) -> Sequence[sqlite3.Row]:

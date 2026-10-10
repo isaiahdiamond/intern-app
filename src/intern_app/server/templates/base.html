@@ -25,9 +25,35 @@
     .other { margin-top: 1rem; padding: 1rem; border: 1px solid var(--line); border-radius: .5rem; }
     ol.ranked { padding-left: 1.25rem; }
     dt { font-weight: 600; margin-top: 1rem; }
+    nav { display: flex; gap: .25rem; border-bottom: 1px solid var(--line); margin-bottom: 1.5rem; flex-wrap: wrap; }
+    nav a { padding: .55rem .9rem; text-decoration: none; color: inherit; border-bottom: 2px solid transparent; }
+    nav a.on { border-bottom-color: var(--accent); font-weight: 600; }
+    nav .badge { font-size: .75rem; color: #8889; }
+    .job { border: 1px solid var(--line); border-radius: .6rem; padding: .85rem 1rem; margin-bottom: .6rem; }
+    .job h3 { font-size: 1rem; margin: 0 0 .15rem; }
+    .job h3 a { color: inherit; }
+    .meta { font-size: .85rem; color: #8889; display: flex; gap: .5rem; flex-wrap: wrap; }
+    .tag { border: 1px solid var(--line); border-radius: 1rem; padding: 0 .55rem; font-size: .75rem; }
+    .acts { display: flex; gap: .35rem; margin-top: .6rem; flex-wrap: wrap; }
+    .acts button { padding: .25rem .6rem; font-size: .8rem; }
+    .acts form { display: inline; }
+    .filters { display: flex; gap: .6rem; align-items: end; flex-wrap: wrap; margin-bottom: 1.25rem; }
+    .filters select, .filters input { padding: .45rem .6rem; font: inherit; border: 1px solid var(--line); border-radius: .4rem; background: transparent; color: inherit; }
+    .filters label { margin: 0 0 .25rem; font-size: .8rem; }
+    .empty { color: #8889; padding: 2rem 0; }
+    .status { font-weight: 600; font-size: .8rem; }
+    body.wide { max-width: 58rem; }
   </style>
 </head>
-<body>
+<body class="{% block bodyclass %}{% endblock %}">
+{% if tab %}
+<nav>
+  <a href="/" class="{{ 'on' if tab == 'dashboard' }}">New jobs <span class="badge">{{ counts.get('new', 0) }}</span></a>
+  <a href="/tracker" class="{{ 'on' if tab == 'tracker' }}">Tracker <span class="badge">{{ (counts.get('saved',0) + counts.get('applied',0) + counts.get('interviewing',0) + counts.get('offer',0)) }}</span></a>
+  <a href="/search" class="{{ 'on' if tab == 'search' }}">Search</a>
+  <a href="/profile" class="{{ 'on' if tab == 'profile' }}">Profile</a>
+</nav>
+{% endif %}
 {% block body %}{% endblock %}
 </body>
 </html>

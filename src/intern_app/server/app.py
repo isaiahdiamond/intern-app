@@ -20,7 +20,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 
-from intern_app import db, profile, roles
+from intern_app import board, db, profile, roles
 from intern_app.llm import client, suggest
 
 TEMPLATES = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
@@ -51,8 +51,77 @@ def open_db() -> sqlite3.Connection:
 
 
 @app.get("/", response_class=HTMLResponse)
-def show_home(request: Request):
-    """The saved answers, or onboarding when there are none yet."""
+def show_dashboard(request: Request, industry: str = "", days: int = 0):
+    """New listings for my roles, best-matching industry first."""
+    conn = open_db()
+    try:
+        if not profile.is_onboarded(conn):
+            return RedirectResponse("/onboarding")
+        return TEMPLATES.TemplateResponse(
+            request=request,
+            name="dashboard.html",
+            context={
+                "tab": "dashboard",
+                "listings": board.list_new(conn, industry=industry, days=days),
+                "industries": board.known_industries(conn),
+                "counts": board.status_counts(conn),
+                "chosen_industry": industry,
+                "chosen_days": days,
+                "statuses": board.ACTIVE,
+                "profile": profile.load_profile(conn),
+            },
+        )
+    finally:
+        conn.close()
+
+
+@app.get("/tracker", response_class=HTMLResponse)
+def show_tracker(request: Request):
+    """Everything I have acted on, grouped by where it is in the pipeline."""
+    conn = open_db()
+    try:
+        rows = board.list_tracked(conn)
+        return TEMPLATES.TemplateResponse(
+            request=request,
+            name="tracker.html",
+            context={
+                "tab": "tracker",
+                "rows": rows,
+                "histories": {row["id"]: board.history_for(conn, row["id"]) for row in rows},
+                "counts": board.status_counts(conn),
+                "statuses": board.ACTIVE,
+            },
+        )
+    finally:
+        conn.close()
+
+
+@app.get("/search", response_class=HTMLResponse)
+def show_search(request: Request, q: str = "", industry: str = "", status: str = ""):
+    """Search every stored listing, not just the new ones."""
+    conn = open_db()
+    try:
+        return TEMPLATES.TemplateResponse(
+            request=request,
+            name="search.html",
+            context={
+                "tab": "search",
+                "listings": board.search_listings(conn, text=q, industry=industry, status=status),
+                "industries": board.known_industries(conn),
+                "counts": board.status_counts(conn),
+                "q": q,
+                "chosen_industry": industry,
+                "chosen_status": status,
+                "statuses": board.ACTIVE,
+            },
+        )
+    finally:
+        conn.close()
+
+
+@app.get("/profile", response_class=HTMLResponse)
+def show_profile(request: Request):
+    """My onboarding answers, with a link back to edit them."""
     conn = open_db()
     try:
         if not profile.is_onboarded(conn):
@@ -60,10 +129,30 @@ def show_home(request: Request):
         return TEMPLATES.TemplateResponse(
             request=request,
             name="saved.html",
-            context={"profile": profile.load_profile(conn)},
+            context={
+                "tab": "profile",
+                "profile": profile.load_profile(conn),
+                "counts": board.status_counts(conn),
+            },
         )
     finally:
         conn.close()
+
+
+@app.post("/status")
+async def change_status(request: Request):
+    """Move a listing to a new status, then return to where the click came from."""
+    form = await read_form(request)
+    listing_id = int(first_value(form, "listing_id") or 0)
+    status = first_value(form, "status")
+    back = first_value(form, "back") or "/"
+
+    conn = open_db()
+    try:
+        board.set_status(conn, listing_id, status)
+    finally:
+        conn.close()
+    return RedirectResponse(back, status_code=303)
 
 
 @app.get("/onboarding", response_class=HTMLResponse)

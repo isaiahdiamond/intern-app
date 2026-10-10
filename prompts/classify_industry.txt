@@ -1,0 +1,14 @@
+Classify each company into exactly one industry from the list below.
+
+Industries:
+{industries}
+
+Companies:
+{companies}
+
+Rules:
+- Use the company's primary business, not the team a job might sit in. A bank
+  that writes software is still Finance & Trading.
+- Pick the single closest industry from the list. Do not invent a new one.
+- If a company is genuinely unrecognizable, use "Unknown".
+- Return one entry per company, using the company name exactly as given.

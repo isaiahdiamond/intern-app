@@ -47,6 +47,10 @@ LIMITS: dict[str, Limit] = {
     "ashby": Limit(min_interval_hours=3.0),
     "gmail": Limit(per_day=200, min_interval_hours=1.0, reserve=10),
     "jsearch": Limit(per_month=200, reserve=10),
+    # raw.githubusercontent.com has no published limit for a handful of files a
+    # day. Twice daily is what the repos themselves refresh at, so polling more
+    # often only wastes bandwidth.
+    "github_repos": Limit(per_day=40, min_interval_hours=12.0, reserve=5),
 }
 
 DEFAULT_LIMIT = Limit(min_interval_hours=1.0)
