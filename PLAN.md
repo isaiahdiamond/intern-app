@@ -162,7 +162,8 @@ against the labeled set, with the numbers logged in README.
 
 Not built now, listed so they are not forgotten: a `concepts` table and concept
 merging, requirement depth levels, embedding-based clustering of statements,
-non-tech roles, multi-user. Also deferred: Adzuna, Gmail LinkedIn alerts,
+non-tech roles, multi-user. Still deferred: Adzuna (needs ADZUNA_APP_ID and
+ADZUNA_APP_KEY), Gmail LinkedIn alerts (needs an OAuth client secret),
 scoring and ranking, the "save this job" bookmarklet.
 
 **Pulling full descriptions from the discovered ATS boards is next and not yet
@@ -170,8 +171,18 @@ built.** The slugs are collected — 348 boards from one repo run — but nothin
 fetches a description from the Greenhouse, Lever or Ashby APIs yet, so every
 repo listing stays `full_text=False` and out of requirement extraction.
 
-USAJobs is ready to build but blocked: `USAJOBS_EMAIL` has to be set, because
-the API requires the registered address as its User-Agent.
+**USAJobs is built.** Federal student and new-grad postings, `full_text=True`.
+The whole relevant pool is 159 rows and the API returns 500 per page, so one
+request fetches all of it and titles are matched locally — their keyword search
+is loose enough to return a Smithsonian Computer Engineer for "software engineer
+intern". Descriptions come from `JobSummary` + `MajorDuties` +
+`QualificationSummary`, and `MajorDuties` is a list. The `User-Agent` must be
+the registered email address.
+
+The role chips for applied maths and computer science were widened to match the
+federal titles that actually exist — Mechanical Engineer, Mathematician,
+Computer Scientist, Operations Research Analyst, Electronics Engineer, Survey
+Statistician. That took the federal yield from 1 posting to 14.
 
 The CIP-SOC crosswalk and O*NET title files were verified to exist and parse
 (figures in git history on branch `plan-onboarding`); they can seed the

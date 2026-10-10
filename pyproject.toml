@@ -24,6 +24,8 @@ gmail = [
 ]
 dev = [
     "pytest>=8.4.2",
+    # Dev only, for driving the local UI in a real browser during design work.
+    "playwright>=1.56.0",
     "ruff>=0.14.0",
     "pre-commit>=4.3.0",
     "respx>=0.22.0",

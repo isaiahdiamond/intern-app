@@ -10,8 +10,8 @@ from __future__ import annotations
 import argparse
 
 from intern_app import __version__, db, profile
-from intern_app.config import settings
-from intern_app.sources import github_repos, muse, quota
+from intern_app.config import MissingConfigError, settings
+from intern_app.sources import github_repos, muse, quota, usajobs
 
 
 def _cmd_config(_: argparse.Namespace) -> int:
@@ -100,6 +100,16 @@ def _cmd_fetch(args: argparse.Namespace) -> int:
             except quota.QuotaExceededError as exc:
                 print(f"muse: skipped — {exc}")
 
+        if args.source in ("all", "usajobs"):
+            try:
+                federal = usajobs.fetch_usajobs(conn, roles)
+                inserted, updated = db.upsert_listings(conn, federal)
+                print(f"usajobs: {len(federal)} matched, {inserted} new, {updated} already seen")
+            except quota.QuotaExceededError as exc:
+                print(f"usajobs: skipped — {exc}")
+            except MissingConfigError as exc:
+                print(f"usajobs: skipped — {exc}")
+
         if args.source in ("all", "repos"):
             try:
                 found = github_repos.fetch_github_repos(conn, roles)
@@ -181,7 +191,7 @@ def build_parser() -> argparse.ArgumentParser:
     fetch_cmd = sub.add_parser("fetch", help="pull listings for my profile roles")
     fetch_cmd.add_argument(
         "--source",
-        choices=("all", "muse", "repos"),
+        choices=("all", "muse", "repos", "usajobs"),
         default="all",
         help="which sources to pull from (default all)",
     )

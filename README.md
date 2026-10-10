@@ -32,7 +32,7 @@ intern-app config        # shows which credentials are set
 | GitHub internship repos | none | no | 8 repos, US + remote, role-filtered, twice daily |
 | Greenhouse / Lever / Ashby | none | yes | slugs auto-discovered from apply links |
 | Adzuna | free, ~1k calls/month | no | queried per role variant, discovery only |
-| USAJobs | free | yes | queried per role variant, federal only |
+| USAJobs | free | yes | whole student/grad pool in one call, federal only |
 | Gmail job alerts | OAuth, read-only | no | LinkedIn alert emails; title/company/location/url only |
 
 Only listings with `full_text=True` are sent to skill extraction. Adzuna results
