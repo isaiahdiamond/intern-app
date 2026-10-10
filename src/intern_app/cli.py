@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import argparse
 
-from intern_app import __version__, db
+from intern_app import __version__, db, profile
 from intern_app.config import settings
-from intern_app.sources import quota
+from intern_app.sources import github_repos, muse, quota
 
 
 def _cmd_config(_: argparse.Namespace) -> int:
@@ -75,6 +75,89 @@ def _cmd_status(_: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_fetch(args: argparse.Namespace) -> int:
+    """Pull listings for my profile roles and store them."""
+    conn = db.connect()
+    try:
+        roles = profile.load_role_names(conn)
+        if not roles:
+            print("No roles yet. Run `intern-app serve` and complete onboarding first.")
+            return 1
+
+        print(f"Fetching for {len(roles)} roles: {', '.join(roles)}")
+
+        if args.source in ("all", "muse"):
+            try:
+                listings = muse.fetch_muse(conn, roles, max_pages=args.max_pages)
+                inserted, updated = db.upsert_listings(conn, listings)
+                print(f"muse: {len(listings)} matched, {inserted} new, {updated} already seen")
+                left = quota.remaining(conn, muse.SOURCE)
+                print(
+                    f"muse: {db.calls_in_last(conn, muse.SOURCE, days=1)} calls today, {left} left"
+                )
+                if left == 0:
+                    print("muse: budget spent, so this run stopped early. Try again tomorrow.")
+            except quota.QuotaExceededError as exc:
+                print(f"muse: skipped — {exc}")
+
+        if args.source in ("all", "repos"):
+            try:
+                found = github_repos.fetch_github_repos(conn, roles)
+                inserted, updated = db.upsert_listings(conn, found)
+                print(f"repos: {len(found)} US/remote, {inserted} new, {updated} already seen")
+                boards = conn.execute("SELECT COUNT(*) FROM ats_boards").fetchone()[0]
+                print(f"repos: {boards} ATS boards known")
+            except quota.QuotaExceededError as exc:
+                print(f"repos: skipped — {exc}")
+    finally:
+        conn.close()
+    return 0
+
+
+def _cmd_classify(args: argparse.Namespace) -> int:
+    """Give every company we hold listings for an industry."""
+    from intern_app.llm import classify, client
+
+    if not client.have_api_key():
+        print("ANTHROPIC_API_KEY is not set. Add it to .env to classify industries.")
+        return 1
+
+    conn = db.connect()
+    try:
+        pending = db.companies_needing_industry(conn)
+        if not pending:
+            print("Every company already has an industry.")
+            return 0
+
+        # $0.0163 per batch of 25 on the default model, measured over 49 real
+        # calls that classified 1,219 companies for $0.7986. An earlier figure
+        # of $0.011 came from a 6-company batch and under-quoted a full run by a
+        # third, so this is taken from batches of the size actually sent.
+        # Printed up front because a repo fetch can bring in a thousand new
+        # companies at once.
+        batches = -(-len(pending) // classify.BATCH_SIZE)
+        estimate = batches * 0.0165
+        print(f"{len(pending)} companies to classify: {batches} calls, about ${estimate:.2f}")
+        if not args.yes and estimate > 0.10:
+            answer = input("Continue? [y/N] ").strip().lower()
+            if answer not in ("y", "yes"):
+                print("Nothing classified.")
+                return 0
+
+        print(f"Classifying {len(pending)} companies...")
+        assigned = classify.classify_companies(conn, pending)
+        for name, industry in sorted(assigned.items())[:15]:
+            print(f"  {industry:<28} {name}")
+        if len(assigned) > 15:
+            print(f"  ... and {len(assigned) - 15} more")
+
+        spend = db.llm_spend(conn, days=1)
+        print(f"\ncost today: ${spend['cost_usd']:.4f} over {spend['calls']} calls")
+    finally:
+        conn.close()
+    return 0
+
+
 def _cmd_serve(args: argparse.Namespace) -> int:
     """Run the local web app, which is where onboarding and the dashboard live."""
     import uvicorn
@@ -94,6 +177,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     status_cmd = sub.add_parser("status", help="show stored listings, quota left, and LLM spend")
     status_cmd.set_defaults(func=_cmd_status)
+
+    fetch_cmd = sub.add_parser("fetch", help="pull listings for my profile roles")
+    fetch_cmd.add_argument(
+        "--source",
+        choices=("all", "muse", "repos"),
+        default="all",
+        help="which sources to pull from (default all)",
+    )
+    fetch_cmd.add_argument(
+        "--max-pages",
+        type=int,
+        default=8,
+        help="pages to read per category and level, 20 listings each (default 8)",
+    )
+    fetch_cmd.set_defaults(func=_cmd_fetch)
+
+    classify_cmd = sub.add_parser("classify", help="assign an industry to each company")
+    classify_cmd.add_argument("--yes", action="store_true", help="skip the cost confirmation")
+    classify_cmd.set_defaults(func=_cmd_classify)
 
     serve_cmd = sub.add_parser("serve", help="run the local web app")
     serve_cmd.add_argument("--host", default="127.0.0.1")

@@ -1,0 +1,791 @@
+[
+ {
+  "date_updated": 1771427003,
+  "sponsorship": "Offers Sponsorship",
+  "active": true,
+  "degrees": [],
+  "url": "https://grnh.se/7pt3sv7q2us",
+  "company_name": "Airtable",
+  "title": "Software Engineer, New Grad (2026)",
+  "locations": [
+   "San Francisco, CA",
+   "New York, NY"
+  ],
+  "category": "Software Engineering",
+  "source": "CalebJiang-at",
+  "id": "7adbb38b-88b1-45fa-93c4-f1aaa9b98a51",
+  "date_posted": 1770939774,
+  "company_url": "",
+  "is_visible": false
+ },
+ {
+  "source": "Simplify",
+  "category": "AI/ML/Data",
+  "company_name": "One Brief",
+  "id": "f7cf0ea1-5530-43f1-b77d-aaef1130c643",
+  "title": "Outcome Engineer - Early in Career Professional",
+  "active": true,
+  "date_updated": 1770948846,
+  "date_posted": 1770948846,
+  "url": "https://jobs.ashbyhq.com/onebrief/a88e10d4-66d8-4911-99e3-3d20351e73d9/application",
+  "locations": [
+   "Remote in USA"
+  ],
+  "company_url": "https://simplify.jobs/c/One-Brief",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": []
+ },
+ {
+  "source": "Simplify",
+  "category": "AI/ML/Data",
+  "company_name": "WSP",
+  "id": "fca8c004-76a9-436d-a84c-5cf528bd35c3",
+  "title": "Assistant Consultant / Consultant - Air Quality - Basingstoke",
+  "active": true,
+  "date_updated": 1771254685,
+  "date_posted": 1771254685,
+  "url": "https://emit.fa.ca3.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/job/79046",
+  "locations": [
+   "Basingstoke, UK"
+  ],
+  "company_url": "https://simplify.jobs/c/WSP",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Hardware",
+  "company_name": "Astro Mechanica",
+  "id": "e20f6849-08c5-44dc-8dbe-9b211c7e9cc8",
+  "title": "Flight Software Engineer",
+  "active": true,
+  "date_updated": 1771283830,
+  "date_posted": 1771283830,
+  "url": "https://jobs.ashbyhq.com/astro-mechanica/f25cc28c-9932-4e4d-a7e8-53a10a7fbd55/application",
+  "locations": [
+   "SF"
+  ],
+  "company_url": "https://simplify.jobs/c/Astro-Mechanica",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Hardware",
+  "company_name": "Honeywell",
+  "id": "65b6a15a-a5a3-4e40-907d-7022584646f9",
+  "title": "Hardware Engineer 1",
+  "active": true,
+  "date_updated": 1771427708,
+  "date_posted": 1771427708,
+  "url": "https://ibqbjb.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/Honeywell/job/137946",
+  "locations": [
+   "Clearwater, FL",
+   "Minneapolis, MN"
+  ],
+  "company_url": "https://simplify.jobs/c/Honeywell",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's",
+   "Master's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Product",
+  "company_name": "JP Morgan Chase",
+  "id": "a4aad8c4-9986-41fb-a34f-cc96716c834f",
+  "title": "Martech Product Manager",
+  "active": true,
+  "date_updated": 1771456662,
+  "date_posted": 1771456662,
+  "url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210713064",
+  "locations": [
+   "London, UK"
+  ],
+  "company_url": "https://simplify.jobs/c/JP-Morgan-Chase",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "Atria Group",
+  "id": "454b7531-1c3f-4d4c-a1c8-7fdefccc4258",
+  "title": "Entry Level ASP.NET programmer",
+  "active": true,
+  "date_updated": 1771485250,
+  "date_posted": 1771485250,
+  "url": "https://jobs.smartrecruiters.com/AtriaGroupLLC/72190211",
+  "locations": [
+   "Chicago, IL"
+  ],
+  "company_url": "https://simplify.jobs/c/Atria-Group",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": []
+ },
+ {
+  "date_updated": 1771505037,
+  "sponsorship": "Offers Sponsorship",
+  "active": true,
+  "degrees": [],
+  "url": "https://jobs.ashbyhq.com/batoncorporation/bb3ab630-5e59-48b5-9794-00a225879a66",
+  "company_name": "Baton Corporation",
+  "title": "Junior Full Stack Engineer",
+  "locations": [
+   "New York, NY"
+  ],
+  "category": "Software Engineering",
+  "source": "SuhaanCoding",
+  "id": "b3298ec2-a195-4322-b6bc-40539c93421f",
+  "date_posted": 1771505037,
+  "company_url": "",
+  "is_visible": true
+ },
+ {
+  "source": "Simplify",
+  "category": "Hardware",
+  "company_name": "NVIDIA",
+  "id": "7fb2f96e-3662-4a02-a0c2-e7bbd2663ce9",
+  "title": "System Design Engineer \u2013 New College Grad 2026",
+  "active": true,
+  "date_updated": 1771543465,
+  "date_posted": 1771543465,
+  "url": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite/job/US-CA-Santa-Clara/System-Design-Engineer---New-College-Grad-2026_JR2011879",
+  "locations": [
+   "Santa Clara, CA"
+  ],
+  "company_url": "https://simplify.jobs/c/NVIDIA",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's",
+   "Master's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "b95085e2-8361-490f-ab61-0871fb589712",
+  "title": "Entry-Level Java Developer",
+  "active": true,
+  "date_updated": 1771600821,
+  "date_posted": 1771600821,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102098119",
+  "locations": [
+   "Arkansas"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "369aa74a-530a-4869-98e7-46581120d496",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600823,
+  "date_posted": 1771600823,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102104667",
+  "locations": [
+   "United Kingdom"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "2db155f2-6346-4a55-9a65-418f1dcce820",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600820,
+  "date_posted": 1771600820,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102105305",
+  "locations": [
+   "Vermontville, NY"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "ecb0c9cf-1170-4e73-ba89-5eabe76a1168",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600369,
+  "date_posted": 1771600369,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102104086",
+  "locations": [
+   "Ohio"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "e25c595d-2be1-4931-921c-4ed75b55ddfe",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600823,
+  "date_posted": 1771600823,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102105508",
+  "locations": [
+   "SF"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "dfbe8213-3151-43f1-b442-666289345c47",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600821,
+  "date_posted": 1771600821,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102104369",
+  "locations": [
+   "Rockford, IL"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "dc50db1c-86ee-4033-8009-32d814bd11c2",
+  "title": "Entry-Level Java Developer",
+  "active": true,
+  "date_updated": 1771600386,
+  "date_posted": 1771600386,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102099316",
+  "locations": [
+   "United Kingdom"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "cd2ad6a6-1cb1-4f53-aea1-c0ae6c70dc26",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600366,
+  "date_posted": 1771600366,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102105605",
+  "locations": [
+   "Richland Center, WI"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "c9f89689-277d-4507-95e7-eb3646d0581e",
+  "title": "Entry-Level Java Developer",
+  "active": true,
+  "date_updated": 1771600387,
+  "date_posted": 1771600387,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102100676",
+  "locations": [
+   "Richland Center, WI"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "b59910ff-47b9-4815-804b-4b26f7cef040",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600385,
+  "date_posted": 1771600385,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102101287",
+  "locations": [
+   "Pennsylvania"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "aaf52812-d0ae-44a7-988a-4919b6c8e74c",
+  "title": "Entry-Level Java Developer - Java",
+  "active": true,
+  "date_updated": 1771600377,
+  "date_posted": 1771600377,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102098838",
+  "locations": [
+   "Houston, TX"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "9456de54-4372-4974-ba32-7633e24ac927",
+  "title": "Entry Level .NET Developer",
+  "active": true,
+  "date_updated": 1771600368,
+  "date_posted": 1771600368,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102103863",
+  "locations": [
+   "Minnesota"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "89492024-ada7-4360-b431-d46b4822c4a0",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600367,
+  "date_posted": 1771600367,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102103212",
+  "locations": [
+   "New Boston, IL"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "7b32cd72-496a-4768-81e0-88f4990a12b3",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600366,
+  "date_posted": 1771600366,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102103064",
+  "locations": [
+   "Plattsburgh, NY"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "75cc7659-6d2e-4570-b141-133fc30e5e5b",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600366,
+  "date_posted": 1771600366,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102101036",
+  "locations": [
+   "United States"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "570096f7-3b39-43b7-b5ef-6185b47e636d",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600822,
+  "date_posted": 1771600822,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102102985",
+  "locations": [
+   "NYC"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "4443770a-eb73-498d-9946-6976c5cd5984",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600367,
+  "date_posted": 1771600367,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102105408",
+  "locations": [
+   "Washington, PA"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "24653590-27f4-435f-9fb7-92e5dd9a6217",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600366,
+  "date_posted": 1771600366,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102100962",
+  "locations": [
+   "United States"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "1acfb486-e6c9-4b94-9fe4-42bf60d8fb3a",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600365,
+  "date_posted": 1771600365,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/102103542",
+  "locations": [
+   "Kansas"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "DellFor Technologies",
+  "id": "19241068-1a94-421a-8887-c34f2236f365",
+  "title": "Entry Level .Net Developer",
+  "active": true,
+  "date_updated": 1771600369,
+  "date_posted": 1771600369,
+  "url": "https://jobs.smartrecruiters.com/DellforTechnologies/100444785",
+  "locations": [
+   "NYC"
+  ],
+  "company_url": "https://simplify.jobs/c/DellFor-Technologies",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Software",
+  "company_name": "Infojini",
+  "id": "7bde2c71-7e49-4e05-a5b4-6a3d1e651706",
+  "title": "Web Engineer - Entry",
+  "active": true,
+  "date_updated": 1771917254,
+  "date_posted": 1771917254,
+  "url": "https://jobs.smartrecruiters.com/InfojiniInc1/107129288",
+  "locations": [
+   "Columbia, SC"
+  ],
+  "company_url": "https://simplify.jobs/c/Infojini",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "AI/ML/Data",
+  "company_name": "Ohio State University",
+  "id": "cd358cb1-99d6-483b-9099-ed66b506e2ea",
+  "title": "Applied Research Associate Engineer",
+  "active": false,
+  "date_updated": 1770938386,
+  "date_posted": 1770938386,
+  "url": "https://osu.wd1.myworkdayjobs.com/OSUCareers/job/Columbus-Campus/Applied-Research-Associate-Engineer_R145142-1",
+  "locations": [
+   "Massillon, OH"
+  ],
+  "company_url": "https://simplify.jobs/c/Ohio-State-University",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Quant",
+  "company_name": "Sainsbury's",
+  "id": "cb02dd3c-4923-433c-a7ef-a47fa348673f",
+  "title": "Nightshift Trading Assistant - Local",
+  "active": false,
+  "date_updated": 1770938064,
+  "date_posted": 1770938064,
+  "url": "https://hdhe.fa.em3.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/400049232",
+  "locations": [
+   "York, UK"
+  ],
+  "company_url": "https://simplify.jobs/c/Sainsburys",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": []
+ },
+ {
+  "source": "Simplify",
+  "category": "Quant",
+  "company_name": "Sainsbury's",
+  "id": "593a675b-0eb8-4689-87ee-5edfbed25888",
+  "title": "Trading Assistant",
+  "active": false,
+  "date_updated": 1770938059,
+  "date_posted": 1770938059,
+  "url": "https://hdhe.fa.em3.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/400049265",
+  "locations": [
+   "Gloucester, UK"
+  ],
+  "company_url": "https://simplify.jobs/c/Sainsburys",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": []
+ },
+ {
+  "source": "Simplify",
+  "category": "AI/ML/Data",
+  "company_name": "Caterpillar Inc.",
+  "id": "1bf50934-099d-4def-b1c4-59832d7e5940",
+  "title": "Aftermarket Data Scientist 1",
+  "active": false,
+  "date_updated": 1770938587,
+  "date_posted": 1770938587,
+  "url": "https://cat.wd5.myworkdayjobs.com/CaterpillarCareers/job/Chicago-Illinois/Aftermarket-Data-Scientist-I_R0000346205-1",
+  "locations": [
+   "Chicago, IL",
+   "Peoria, IL"
+  ],
+  "company_url": "https://simplify.jobs/c/Caterpillar-Inc",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": []
+ },
+ {
+  "source": "Simplify",
+  "category": "Product",
+  "company_name": "Franklin Templeton",
+  "id": "e7aa78ed-8adb-4444-95e0-a4a266b69402",
+  "title": "Associate AI Enablement - Putnam Equity",
+  "active": false,
+  "date_updated": 1770938383,
+  "date_posted": 1770938383,
+  "url": "https://franklintempleton.wd5.myworkdayjobs.com/Primary-External-1/job/Boston-Massachusetts-United-States-of-America/Associate--AI-Enablement--Putnam-Equity-_866665-1",
+  "locations": [
+   "Boston, MA"
+  ],
+  "company_url": "https://simplify.jobs/c/Franklin-Templeton",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Quant",
+  "company_name": "JP Morgan Chase",
+  "id": "62553e2a-ba53-406f-b15e-c88ea33c0103",
+  "title": "Quant Analytics Associate - HR Product Analytics and Reporting",
+  "active": false,
+  "date_updated": 1770938146,
+  "date_posted": 1770938146,
+  "url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job/210709845",
+  "locations": [
+   "Plano, TX",
+   "Chicago, IL",
+   "Columbus, OH"
+  ],
+  "company_url": "https://simplify.jobs/c/JP-Morgan-Chase",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Quant",
+  "company_name": "Sainsbury's",
+  "id": "332a5f95-fbfa-4a7b-93bc-2f5e60face23",
+  "title": "Trading Assistant - Shift",
+  "active": false,
+  "date_updated": 1770938076,
+  "date_posted": 1770938076,
+  "url": "https://hdhe.fa.em3.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/400049267",
+  "locations": [
+   "Thirsk, UK"
+  ],
+  "company_url": "https://simplify.jobs/c/Sainsburys",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": []
+ },
+ {
+  "source": "Simplify",
+  "category": "Hardware",
+  "company_name": "BTI Solutions",
+  "id": "1afc5fed-5860-459d-ab3b-e760faea7aa4",
+  "title": "Software Tester - Korean Bilingual",
+  "active": false,
+  "date_updated": 1770938349,
+  "date_posted": 1770938349,
+  "url": "https://btisolutions.wd12.myworkdayjobs.com/External/job/Berkeley-Heights-NJ/Software-Tester--Korean-Bilingual--AO7167861_JR101619-1",
+  "locations": [
+   "Berkeley Heights, NJ"
+  ],
+  "company_url": "https://simplify.jobs/c/BTI-Solutions",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "Bachelor's"
+  ]
+ },
+ {
+  "source": "Simplify",
+  "category": "Hardware",
+  "company_name": "Vertiv",
+  "id": "e90da4c8-4470-429d-a247-2279e63b7d5c",
+  "title": "Equipment Installer",
+  "active": false,
+  "date_updated": 1770938112,
+  "date_posted": 1770938112,
+  "url": "https://egup.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/20267035",
+  "locations": [
+   "Atlanta, GA"
+  ],
+  "company_url": "https://simplify.jobs/c/Vertiv",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": []
+ },
+ {
+  "source": "Simplify",
+  "category": "AI/ML/Data",
+  "company_name": "Lawrence Berkeley National Laboratory",
+  "id": "cf1daf52-62d0-4c5a-bb4b-6c0ac8aec1ad",
+  "title": "Postdoctoral Researcher - Ultrafast Science",
+  "active": false,
+  "date_updated": 1770938201,
+  "date_posted": 1770938201,
+  "url": "https://lbl.taleo.net/careersection/5/jobdetail.ftl?job=105931",
+  "locations": [
+   "Berkeley, CA"
+  ],
+  "company_url": "https://simplify.jobs/c/Lawrence-Berkeley-National-Laboratory",
+  "is_visible": true,
+  "sponsorship": "Other",
+  "degrees": [
+   "PhD"
+  ]
+ }
+]

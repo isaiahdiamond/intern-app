@@ -29,7 +29,8 @@ intern-app config        # shows which credentials are set
 | Source | Key | Full text | Notes |
 |---|---|---|---|
 | The Muse | free | yes | queried per role variant, Internship / Entry Level |
-| Greenhouse / Lever / Ashby | none | yes | internal: slugs auto-discovered into `ats_boards` |
+| GitHub internship repos | none | no | 8 repos, US + remote, role-filtered, twice daily |
+| Greenhouse / Lever / Ashby | none | yes | slugs auto-discovered from apply links |
 | Adzuna | free, ~1k calls/month | no | queried per role variant, discovery only |
 | USAJobs | free | yes | queried per role variant, federal only |
 | Gmail job alerts | OAuth, read-only | no | LinkedIn alert emails; title/company/location/url only |
@@ -55,7 +56,15 @@ tests/fixtures/    one real saved response per source
 ```bash
 ruff check . && ruff format --check .
 pytest
-intern-app serve      # onboarding at http://127.0.0.1:8000
+intern-app serve      # onboarding + dashboard at http://127.0.0.1:8000
+intern-app fetch      # pull from The Muse and the GitHub repos
+intern-app classify   # give each company an industry
+```
+
+### Daily use
+
+```bash
+intern-app fetch && intern-app classify && intern-app serve
 ```
 
 CI runs both on every push and pull request. Tests and evals read fixtures and
@@ -76,8 +85,8 @@ Phases follow PLAN.md.
 - [x] Repo, tooling, CI, source contract
 - [x] SQLite storage, quota tracking, LLM call log
 - [x] Phase 1 — onboarding and the profile
-- [ ] Phase 2 — fetch and store for my roles
-- [ ] Phase 3 — dashboard and tracker
+- [x] Phase 2 — fetch and store for my roles (The Muse)
+- [x] Phase 3 — dashboard and tracker
 - [ ] Phase 4 — requirements extraction
 - [ ] Phase 5 — search tab
 - [ ] Phase 6 — resume versions in profile

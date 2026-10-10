@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_job.html" import card %}
+{% block title %}Tracker{% endblock %}
+{% block bodyclass %}wide{% endblock %}
+{% block body %}
+<h1>Tracker</h1>
+<p class="step">
+  {% for name in statuses %}{{ counts.get(name, 0) }} {{ name }}{% if not loop.last %} &middot; {% endif %}{% endfor %}
+</p>
+
+{% if rows %}
+  {% for job in rows %}
+    {{ card(job, '/tracker', statuses, show_status=True) }}
+    {% if histories[job.id] | length > 1 %}
+      <p class="meta" style="margin: -.4rem 0 .9rem .6rem;">
+        {% for step in histories[job.id] %}{{ step.status }} {{ step.changed_at[:10] }}{% if not loop.last %} &rarr; {% endif %}{% endfor %}
+      </p>
+    {% endif %}
+  {% endfor %}
+{% else %}
+  <p class="empty">Nothing tracked yet. Save or apply to something on the New jobs tab.</p>
+{% endif %}
+{% endblock %}
