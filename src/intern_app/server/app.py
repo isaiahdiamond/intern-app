@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from typing import Annotated
 from urllib.parse import parse_qs
 
 import anthropic
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
@@ -57,6 +58,8 @@ def show_dashboard(
     days: int = 0,
     page: int = 1,
     per_page: int = board.DEFAULT_PER_PAGE,
+    sort: str = board.DEFAULT_SORT,
+    role: Annotated[list[str] | None, Query()] = None,
 ):
     """New listings for my roles, best-matching industry first.
 
@@ -70,8 +73,17 @@ def show_dashboard(
             return RedirectResponse("/onboarding")
 
         page = max(1, page)
-        total = board.count_new(conn, industry=industry, days=days)
-        listings = board.list_new(conn, industry=industry, days=days, page=page, per_page=per_page)
+        chosen_roles = [name for name in (role or []) if name.strip()]
+        total = board.count_new(conn, industry=industry, days=days, roles=chosen_roles)
+        listings = board.list_new(
+            conn,
+            industry=industry,
+            days=days,
+            roles=chosen_roles,
+            sort=sort,
+            page=page,
+            per_page=per_page,
+        )
         return TEMPLATES.TemplateResponse(
             request=request,
             name="dashboard.html",
@@ -83,8 +95,12 @@ def show_dashboard(
                 "counts": board.status_counts(conn),
                 "chosen_industry": industry,
                 "chosen_days": days,
+                "chosen_sort": sort if sort in board.SORT_ORDERS else board.DEFAULT_SORT,
+                "chosen_roles": chosen_roles,
+                "sorts": list(board.SORT_ORDERS),
                 "statuses": board.ACTIVE,
                 "profile": profile.load_profile(conn),
+                "all_roles": profile.load_role_names(conn),
                 "page": page,
                 "per_page": per_page,
                 "total": total,

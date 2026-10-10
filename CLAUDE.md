@@ -75,6 +75,22 @@ beats short.
 - **Tests earn their place.** One test per distinct failure that could really
   happen. No test that restates another one with different data.
 
+## Design
+
+DESIGN.md is the source of truth for all UI. Read it before creating or changing
+any frontend file. Use its tokens and components exactly; don't invent new
+colors, sizes or styles. If something isn't covered, ask me.
+
+`designer.md` holds the staged prompts for building the MVP UI, in order.
+
+## Frontend code style
+
+Write code for a human beginner to read. Simple, flat, procedural. Function
+components only, no classes, no custom hooks or abstraction layers unless I ask.
+Short names. No comments that explain what code does. No try/catch except around
+network and file I/O. Use built-ins over custom helpers. No placeholder tests or
+boilerplate.
+
 ## Workflow
 
 - One branch per phase, one PR per branch, CI green before merge.

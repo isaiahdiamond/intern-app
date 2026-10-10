@@ -23,6 +23,14 @@ build/
 .coverage
 htmlcov/
 
+# frontend build, added before npm install so the tree never reaches the index
+node_modules/
+web/node_modules/
+web/dist/
+src/intern_app/server/static/
+*.tsbuildinfo
+.vite/
+
 # os / editor
 .DS_Store
 .idea/

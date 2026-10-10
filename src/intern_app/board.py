@@ -59,8 +59,53 @@ SELECT_LISTINGS = """
 
 DEFAULT_PER_PAGE = 50
 
+# Sort orders the list can be read in. `rank` leads with the most preferred
+# industry, which buries everything else for 23 pages; `newest` is what a daily
+# pass wants. A listing with no date sorts last under `newest` rather than first.
+SORT_ORDERS = {
+    "rank": "industry_rank, l.posted_at DESC, l.id DESC",
+    "newest": "(l.posted_at = '') , l.posted_at DESC, l.id DESC",
+    "company": "l.company COLLATE NOCASE, l.title COLLATE NOCASE",
+}
+DEFAULT_SORT = "rank"
 
-def _new_filters(industry: str, days: int) -> tuple[list[str], dict[str, object]]:
+
+def order_by(sort: str) -> str:
+    """The ORDER BY clause for a sort name, falling back to the default.
+
+    Looked up in a fixed table, never interpolated from the request, so a
+    caller cannot inject SQL through the sort parameter.
+    """
+    return SORT_ORDERS.get(sort, SORT_ORDERS[DEFAULT_SORT])
+
+
+def role_clause(roles: list[str], params: dict) -> str:
+    """A WHERE fragment matching a listing title against any of `roles`.
+
+    Matching is the same stem comparison the sources use, but SQL cannot call
+    it, so this approximates it with a LIKE per meaningful word: a title must
+    contain every word of at least one chosen role. That is stricter than the
+    source-side matcher and so never widens the list beyond what was fetched.
+    """
+    from intern_app.sources.role_match import FILLER, normalized_words
+
+    groups = []
+    for index, role in enumerate(roles):
+        words = [word for word in normalized_words(role) if word not in FILLER]
+        if not words:
+            continue
+        parts = []
+        for position, word in enumerate(words):
+            key = f"role_{index}_{position}"
+            params[key] = f"%{word}%"
+            parts.append(f"lower(l.title) LIKE :{key}")
+        groups.append("(" + " AND ".join(parts) + ")")
+    return "(" + " OR ".join(groups) + ")" if groups else ""
+
+
+def _new_filters(
+    industry: str, days: int, roles: list[str] | None = None
+) -> tuple[list[str], dict[str, object]]:
     """The WHERE clauses and parameters shared by the list and its count."""
     where = ["COALESCE(t.status, 'new') = 'new'", "l.copy_number = 1"]
     params: dict[str, object] = {"unranked": UNRANKED}
@@ -71,6 +116,10 @@ def _new_filters(industry: str, days: int) -> tuple[list[str], dict[str, object]
     if days:
         where.append("l.posted_at >= date('now', :cutoff)")
         params["cutoff"] = f"-{int(days)} days"
+    if roles:
+        clause = role_clause(roles, params)
+        if clause:
+            where.append(clause)
     return where, params
 
 
@@ -79,6 +128,8 @@ def list_new(
     *,
     industry: str = "",
     days: int = 0,
+    roles: list[str] | None = None,
+    sort: str = DEFAULT_SORT,
     page: int = 1,
     per_page: int = DEFAULT_PER_PAGE,
 ) -> list[sqlite3.Row]:
@@ -91,22 +142,28 @@ def list_new(
     `days` limits to recently posted when set, which matters because a source
     will happily return a posting from last year.
     """
-    where, params = _new_filters(industry, days)
+    where, params = _new_filters(industry, days, roles)
     params["limit"] = max(1, per_page)
     params["offset"] = max(0, (max(1, page) - 1) * max(1, per_page))
 
     sql = f"""
         {SELECT_LISTINGS}
         WHERE {" AND ".join(where)}
-        ORDER BY industry_rank, l.posted_at DESC, l.id DESC
+        ORDER BY {order_by(sort)}
         LIMIT :limit OFFSET :offset
     """
     return conn.execute(sql, params).fetchall()
 
 
-def count_new(conn: sqlite3.Connection, *, industry: str = "", days: int = 0) -> int:
+def count_new(
+    conn: sqlite3.Connection,
+    *,
+    industry: str = "",
+    days: int = 0,
+    roles: list[str] | None = None,
+) -> int:
     """How many listings match, so the pager knows where it ends."""
-    where, params = _new_filters(industry, days)
+    where, params = _new_filters(industry, days, roles)
     sql = f"""
         {SELECT_LISTINGS}
         WHERE {" AND ".join(where)}

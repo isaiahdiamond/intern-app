@@ -213,3 +213,85 @@ def test_search_still_reaches_every_copy(conn, listing):
 
     assert len(board.list_new(conn)) == 1
     assert len([r for r in board.search_listings(conn) if r["company"] == "SpaceX"]) == 2
+
+
+def test_sorting_by_newest_puts_undated_listings_last(conn, listing):
+    """Sorting by rank buries everything but the top industry for 23 pages, so
+    a daily pass wants newest first — and a listing with no date must not win."""
+    db.upsert_listings(
+        conn,
+        [
+            # Distinct companies, or the duplicate collapse folds them into
+            # one card and the sort has nothing left to order.
+            listing("https://x.com/old", company="Old Co", posted_at="2025-01-01"),
+            listing("https://x.com/new", company="New Co", posted_at="2026-10-09"),
+            listing("https://x.com/none", company="Undated Co", posted_at=""),
+        ],
+    )
+
+    order = [row["url"] for row in board.list_new(conn, sort="newest")]
+
+    assert order == ["https://x.com/new", "https://x.com/old", "https://x.com/none"]
+
+
+def test_an_unknown_sort_falls_back_rather_than_failing(conn, listing):
+    """The sort name comes from a query string, so it is looked up in a fixed
+    table and never interpolated."""
+    db.upsert_listings(conn, [listing()])
+
+    assert board.order_by("'; DROP TABLE listings; --") == board.SORT_ORDERS["rank"]
+    assert board.list_new(conn, sort="nonsense")
+
+
+def test_filtering_by_role_narrows_to_matching_titles(conn, listing):
+    """11 saved roles with no way to filter by them was the biggest functional
+    gap in the app."""
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/swe", title="Software Engineer Intern"),
+            listing("https://x.com/mech", title="Mechanical Engineering Intern"),
+            listing("https://x.com/data", title="Data Science Intern"),
+        ],
+    )
+
+    titles = [row["title"] for row in board.list_new(conn, roles=["Mechanical Engineer Intern"])]
+
+    assert titles == ["Mechanical Engineering Intern"]
+
+
+def test_several_roles_are_matched_as_any_not_all(conn, listing):
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/swe", title="Software Engineer Intern"),
+            listing("https://x.com/mech", title="Mechanical Engineering Intern"),
+            listing("https://x.com/other", title="Marketing Intern"),
+        ],
+    )
+
+    found = board.list_new(conn, roles=["Software Engineer Intern", "Mechanical Engineer Intern"])
+
+    assert len(found) == 2
+
+
+def test_an_empty_role_filter_changes_nothing(conn, listing):
+    db.upsert_listings(conn, [listing()])
+
+    assert len(board.list_new(conn, roles=[])) == 1
+    assert board.count_new(conn, roles=[]) == 1
+
+
+def test_the_role_filter_counts_match_the_page(conn, listing):
+    """The pager reads the count, so it has to apply the same filters."""
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/a", title="Data Science Intern"),
+            listing("https://x.com/b", title="Data Science Intern (Summer)"),
+            listing("https://x.com/c", title="Software Engineer Intern"),
+        ],
+    )
+
+    assert board.count_new(conn, roles=["Data Science Intern"]) == 2
+    assert len(board.list_new(conn, roles=["Data Science Intern"])) == 2
