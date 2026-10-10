@@ -1,0 +1,15 @@
+A student is setting up an internship search and the role chips we offered did
+not fit. Suggest internship roles that match what they describe.
+
+Their major: {major}
+
+What they said they are looking for:
+{interests}
+
+Rules:
+- Suggest between 4 and 8 roles.
+- Each must be a job title as it would appear on a real posting, and must end
+  in "Intern" — these strings become search queries.
+- Title case, no company names, no seniority above intern, no duplicates.
+- Stay close to what they described. Do not pad the list to reach 8.
+- If what they described is not a real field of work, return an empty list.
