@@ -65,6 +65,9 @@ REPOS: tuple[Repo, ...] = (
         "zshah",
     ),
     Repo("resumax/tech-internships", "main", "resumax"),
+    # Aimed at freshmen and sophomores, and it publishes the shared JSON schema
+    # alongside its README, so the JSON wins.
+    Repo("Jose-Gael-Cruz-Lopez/underclassmen-opportunities", "main", "json"),
 )
 
 JSON_PATH = ".github/scripts/listings.json"

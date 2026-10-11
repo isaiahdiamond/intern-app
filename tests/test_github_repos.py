@@ -269,3 +269,21 @@ def test_every_readme_repo_yields_dates(repo):
     rows = gh.parse_readme(fixture_for(repo).read_text(), repo)
     dated = [row for row in rows if row["posted_at"]]
     assert len(dated) > len(rows) * 0.8, f"{repo.name}: only {len(dated)}/{len(rows)} dated"
+
+
+def test_the_underclassmen_repo_uses_the_shared_json_schema():
+    """It publishes both a listings.json and a README. The JSON wins, per the
+    source rule, and its schema matches the other JSON repos even though it
+    carries extra fields of its own (target_year, opportunity_type)."""
+    repo = next(r for r in gh.REPOS if "underclassmen" in r.name)
+    assert repo.kind == "json"
+
+    payload = json.loads(fixture_for(repo).read_text())
+    assert any("target_year" in entry for entry in payload)
+
+    rows = gh.parse_json_listings(payload)
+    assert rows
+    for row in rows:
+        assert row["title"]
+        assert row["company"]
+        assert row["url"].startswith("http")

@@ -103,7 +103,7 @@ Levels queried are Internship and Entry Level, which covers internships and
 new-grad roles.
 
 **GitHub internship repos** are the second source, as discovery only
-(`full_text=False`). Eight repos: four publish `.github/scripts/listings.json`
+(`full_text=False`). Ten repos: four publish `.github/scripts/listings.json`
 and share one schema, which is preferred where it exists; four publish only
 README pipe tables, in three different column layouts. US and remote only,
 closed listings skipped, deduped across repos on company plus title plus

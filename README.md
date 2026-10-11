@@ -29,7 +29,7 @@ intern-app config        # shows which credentials are set
 | Source | Key | Full text | Notes |
 |---|---|---|---|
 | The Muse | free | yes | queried per role variant, Internship / Entry Level |
-| GitHub internship repos | none | no | 9 repos, US + remote, role-filtered, twice daily |
+| GitHub internship repos | none | no | 10 repos, US + remote, role-filtered, twice daily |
 | Greenhouse / Lever / Ashby | none | yes | slugs auto-discovered from apply links |
 | Adzuna | free, ~1k calls/month | no | queried per role variant, discovery only |
 | USAJobs | free | yes | whole student/grad pool in one call, federal only |
