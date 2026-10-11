@@ -1,65 +1,72 @@
-import { Check, ChevronDown } from "lucide-react"
-
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
-export const statuses = [
-  "new",
-  "interested",
-  "applied",
-  "interviewing",
-  "offer",
-  "rejected",
-] as const
-
-export type Status = (typeof statuses)[number]
-
-export const statusLabel: Record<Status, string> = {
-  new: "New",
-  interested: "Interested",
-  applied: "Applied",
-  interviewing: "Interviewing",
-  offer: "Offer",
-  rejected: "Rejected",
-}
-
-const pillClass: Record<Status, string> = {
-  new: "text-status-new-text bg-status-new-bg",
-  interested: "text-status-interested-text bg-status-interested-bg",
-  applied: "text-status-applied-text bg-status-applied-bg",
-  interviewing: "text-status-interviewing-text bg-status-interviewing-bg",
-  offer: "text-status-offer-text bg-status-offer-bg",
-  rejected: "text-status-rejected-text bg-status-rejected-bg",
-}
+import { status, statuses, tracked } from "@/lib/api"
+import { Check, Chevron } from "./Icon"
 
 export function StatusPill({
-  status,
-  onChange,
+  value,
+  wide,
+  chevron,
+  onClick,
 }: {
-  status: Status
-  onChange: (next: Status) => void
+  value: string
+  wide?: boolean
+  chevron?: boolean
+  onClick?: (event: React.MouseEvent) => void
 }) {
+  const current = status(value)
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        onClick={(event) => event.stopPropagation()}
-        className={`flex h-[22px] shrink-0 items-center gap-1 rounded-pill px-2 text-data ${pillClass[status]}`}
-      >
-        {statusLabel[status]}
-        <ChevronDown className="size-3 opacity-50" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" onClick={(event) => event.stopPropagation()}>
-        {statuses.map((name) => (
-          <DropdownMenuItem key={name} onSelect={() => onChange(name)}>
-            <Check className={`size-3.5 ${name === status ? "opacity-100" : "opacity-0"}`} />
-            {statusLabel[name]}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div
+      onClick={onClick}
+      className="box-border flex h-[22px] items-center gap-1.5 rounded-[11px] px-2.5 text-[12px] font-medium"
+      style={{
+        background: current.bg,
+        color: current.fg,
+        width: wide ? 108 : undefined,
+        cursor: onClick ? "pointer" : "default",
+      }}
+    >
+      <span className="size-1.5 shrink-0 rounded-full" style={{ background: current.dot }} />
+      <span className="truncate">{current.label}</span>
+      {chevron ? (
+        <span className="ml-auto opacity-60">
+          <Chevron />
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+export function StatusMenu({
+  value,
+  includeNew,
+  onPick,
+  style,
+}: {
+  value: string
+  includeNew?: boolean
+  onPick: (next: string) => void
+  style?: React.CSSProperties
+}) {
+  const options = includeNew ? statuses : tracked
+  return (
+    <div
+      onClick={(event) => event.stopPropagation()}
+      className="absolute z-30 w-44 animate-pop rounded-menu border border-line-strong bg-surface p-[5px] shadow-menu"
+      style={style}
+    >
+      {options.map((option) => (
+        <div
+          key={option.key}
+          onClick={(event) => {
+            event.stopPropagation()
+            onPick(option.key)
+          }}
+          className="flex h-7 items-center gap-2.5 rounded-sm px-2.5 text-[12.5px] hover:bg-accent/10"
+        >
+          <span className="size-[7px] rounded-full" style={{ background: option.dot }} />
+          <span>{option.label}</span>
+          <Check on={option.key === value} />
+        </div>
+      ))}
+    </div>
   )
 }
