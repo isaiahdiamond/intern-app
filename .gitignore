@@ -35,3 +35,7 @@ src/intern_app/server/static/
 .DS_Store
 .idea/
 .vscode/
+
+# Reference screenshots for the UI work: inspiration, not the spec, and too
+# large for the repo. The design doc in design/system/*.dc.html is the spec.
+design/system/references/

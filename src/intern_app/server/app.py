@@ -23,10 +23,12 @@ from pydantic import ValidationError
 
 from intern_app import board, db, profile, roles
 from intern_app.llm import client, suggest
+from intern_app.server import api
 
 TEMPLATES = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 app = FastAPI(title="intern-app")
+app.include_router(api.router)
 
 
 async def read_form(request: Request) -> dict[str, list[str]]:

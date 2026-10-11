@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<style>html,body{margin:0;background:#E8E8EC}a{color:#0066CC}a:hover{color:#0066CC}</style>
+</helmet>
+<section style="padding:80px;display:flex;flex-wrap:wrap;gap:80px;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif">
+  <div id="1" data-screen-label="01 Dashboard" style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:15px;font-weight:600;color:#1D1D1F">01 · Dashboard</div>
+    <div style="width:1440px;height:900px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.1)"><dc-import name="Intern App" screen="dashboard" style="width:1440px;height:900px" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div id="2" data-screen-label="02 Detail panel" style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:15px;font-weight:600;color:#1D1D1F">02 · Dashboard with detail panel</div>
+    <div style="width:1440px;height:900px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.1)"><dc-import name="Intern App" screen="detail" style="width:1440px;height:900px" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div id="4" data-screen-label="04 All listings" style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:15px;font-weight:600;color:#1D1D1F">04 · All listings</div>
+    <div style="width:1440px;height:900px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.1)"><dc-import name="Intern App" screen="listings" style="width:1440px;height:900px" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div id="5" data-screen-label="05 Tracker" style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:15px;font-weight:600;color:#1D1D1F">05 · Tracker</div>
+    <div style="width:1440px;height:900px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.1)"><dc-import name="Intern App" screen="tracker" style="width:1440px;height:900px" hint-size="1440px,900px"></dc-import></div>
+  </div>
+  <div id="3" data-screen-label="03 Onboarding roles" style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-size:15px;font-weight:600;color:#1D1D1F">03 · Onboarding: role picker</div>
+    <div style="width:1440px;height:900px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.1)"><dc-import name="Intern App" screen="onboarding" style="width:1440px;height:900px" hint-size="1440px,900px"></dc-import></div>
+  </div>
+</section>
+</x-dc>
+</body>
+</html>
