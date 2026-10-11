@@ -18,7 +18,10 @@ from intern_app import db
 from intern_app.config import settings
 
 # A role list or a requirement list is a short answer. Lowering this from the
-# usual default is deliberate, not a cost guess.
+# usual default is deliberate, not a cost guess. Callers that return one object
+# per input — reading forty titles, say — pass a larger ceiling, because hitting
+# this one truncates the JSON mid-string and the whole batch is lost after being
+# paid for.
 MAX_TOKENS = 2048
 
 
@@ -77,6 +80,19 @@ def usage_of(response: Any) -> dict[str, int]:
     }
 
 
+def json_format(output_model: type[BaseModel]) -> dict:
+    """The response format for a model, as the API's structured outputs want it.
+
+    Pydantic's schema needs `additionalProperties: false` on every object for
+    the API to accept it as strict.
+    """
+    schema = output_model.model_json_schema()
+    for definition in [schema, *schema.get("$defs", {}).values()]:
+        if definition.get("type") == "object":
+            definition["additionalProperties"] = False
+    return {"type": "json_schema", "schema": schema}
+
+
 def call_structured(
     conn: sqlite3.Connection,
     *,
@@ -85,6 +101,7 @@ def call_structured(
     output_model: type[BaseModel],
     listing_id: int | None = None,
     effort: str = "low",
+    max_tokens: int = MAX_TOKENS,
 ) -> BaseModel:
     """Send one prompt, validate the reply against `output_model`, log the call.
 
@@ -101,20 +118,27 @@ def call_structured(
     response = None
 
     try:
-        response = client.messages.parse(
+        # `messages.parse` would validate the reply for us, but it raises before
+        # handing the response back, so a truncated or invalid reply logs zero
+        # tokens and zero cost for a call that was billed in full. Asking for
+        # the JSON and validating it here keeps the usage in hand whatever
+        # happens, which is what makes the spend report honest.
+        response = client.messages.create(
             model=cfg.model,
-            max_tokens=MAX_TOKENS,
-            output_format=output_model,
-            output_config={"effort": effort},
+            max_tokens=max_tokens,
+            output_config={"effort": effort, "format": json_format(output_model)},
             messages=[{"role": "user", "content": prompt}],
         )
-        parsed = response.parsed_output
-        if parsed is None:
-            # A refusal or a max_tokens cutoff gets here. The call was billed.
+
+        if response.stop_reason == "max_tokens":
             raise UnusableReplyError(
-                f"{prompt_name}: no usable reply (stop_reason="
-                f"{getattr(response, 'stop_reason', 'unknown')})"
+                f"{prompt_name}: reply hit the {max_tokens}-token ceiling and was cut off"
             )
+        if response.stop_reason == "refusal":
+            raise UnusableReplyError(f"{prompt_name}: the model declined this request")
+
+        text = next((block.text for block in response.content if block.type == "text"), "")
+        parsed = output_model.model_validate_json(text)
     except Exception as exc:
         # Deliberately broad: anything at all after the request leaves money
         # spent, and an unlogged call breaks the rule that the spend report is

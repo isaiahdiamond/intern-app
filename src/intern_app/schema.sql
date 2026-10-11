@@ -136,3 +136,19 @@ CREATE TABLE IF NOT EXISTS ats_boards (
     last_pulled TEXT NOT NULL DEFAULT '',
     UNIQUE (board, slug)
 );
+
+-- What a title means once the noise is stripped. Kept beside `listings` rather
+-- than as columns on it, for the same reason `companies` is separate: the raw
+-- posting stays exactly as the source gave it, and the cleaned reading can be
+-- recomputed or corrected without touching it.
+CREATE TABLE IF NOT EXISTS listing_details (
+    listing_id  INTEGER PRIMARY KEY REFERENCES listings (id) ON DELETE CASCADE,
+    clean_title TEXT NOT NULL DEFAULT '',
+    level       TEXT NOT NULL DEFAULT '',
+    education   TEXT NOT NULL DEFAULT '',
+    term        TEXT NOT NULL DEFAULT '',
+    cleaned_at  TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS listing_details_level_idx ON listing_details (level);
+CREATE INDEX IF NOT EXISTS listing_details_education_idx ON listing_details (education);

@@ -25,11 +25,22 @@ class FakeUsage:
         self.cache_creation_input_tokens = None
 
 
-class FakeResponse:
-    """Shaped like the SDK response the real code reads."""
+class FakeBlock:
+    def __init__(self, text):
+        self.type = "text"
+        self.text = text
 
-    def __init__(self, parsed, stop_reason="end_turn"):
-        self.parsed_output = parsed
+
+class FakeResponse:
+    """Shaped like the response `messages.create` returns.
+
+    The client asks for JSON and validates it itself rather than using
+    `messages.parse`, so that a truncated or invalid reply still carries its
+    usage and is logged with the cost it actually incurred.
+    """
+
+    def __init__(self, text, stop_reason="end_turn"):
+        self.content = [FakeBlock(text)]
         self.usage = FakeUsage()
         self.stop_reason = stop_reason
         self._request_id = "req_fake123"
@@ -39,7 +50,7 @@ def install_fake(monkeypatch, result):
     """Point the client at a fake SDK. `result` is returned or raised."""
 
     class FakeMessages:
-        def parse(self, **_):
+        def create(self, **_):
             if isinstance(result, Exception):
                 raise result
             return result
@@ -66,7 +77,7 @@ def logged(conn):
 
 
 def test_a_successful_call_is_logged_with_tokens_and_cost(conn, monkeypatch):
-    install_fake(monkeypatch, FakeResponse(Roles(roles=["Data Science Intern"])))
+    install_fake(monkeypatch, FakeResponse('{"roles": ["Data Science Intern"]}'))
 
     result = call(conn)
 
@@ -94,11 +105,10 @@ def test_an_api_error_is_still_logged(conn, monkeypatch):
 
 
 def test_a_reply_that_fails_validation_is_logged_with_its_tokens(conn, monkeypatch):
-    """The regression: a pydantic failure left a billed call unlogged."""
-    try:
-        Roles(roles="not a list")
-    except ValidationError as exc:
-        install_fake(monkeypatch, exc)
+    """A billed call whose reply does not validate must still carry its cost.
+    Using the SDK's parse helper logged these at zero, because it raises before
+    handing the response back."""
+    install_fake(monkeypatch, FakeResponse('{"roles": "not a list"}'))
 
     with pytest.raises(ValidationError):
         call(conn)
@@ -107,13 +117,16 @@ def test_a_reply_that_fails_validation_is_logged_with_its_tokens(conn, monkeypat
     assert len(rows) == 1
     assert rows[0]["ok"] == 0
     assert "ValidationError" in rows[0]["error"]
+    assert rows[0]["input_tokens"] == 400
+    assert rows[0]["cost_usd"] > 0
 
 
 def test_a_refusal_or_cutoff_is_logged_and_charged(conn, monkeypatch):
-    """parsed_output is None on a refusal or max_tokens, after being billed."""
-    install_fake(monkeypatch, FakeResponse(None, stop_reason="max_tokens"))
+    """A reply cut off at the token ceiling is billed in full and its JSON is
+    unusable. This happened for real on a batch of forty titles."""
+    install_fake(monkeypatch, FakeResponse('{"roles": ["truncated', stop_reason="max_tokens"))
 
-    with pytest.raises(client.UnusableReplyError, match="max_tokens"):
+    with pytest.raises(client.UnusableReplyError, match="ceiling"):
         call(conn)
 
     rows = logged(conn)

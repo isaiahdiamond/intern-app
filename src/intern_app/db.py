@@ -309,6 +309,46 @@ def set_company_industry(conn: sqlite3.Connection, name: str, industry: str) -> 
     )
 
 
+def listings_needing_clean_title(conn: sqlite3.Connection, limit: int = 0) -> list[sqlite3.Row]:
+    """Listings whose title has not been read yet, newest first."""
+    sql = """
+        SELECT l.id, l.title
+        FROM listings l
+        LEFT JOIN listing_details d ON d.listing_id = l.id
+        WHERE d.listing_id IS NULL
+        ORDER BY l.first_seen DESC, l.id DESC
+    """
+    if limit:
+        return conn.execute(sql + " LIMIT ?", (limit,)).fetchall()
+    return conn.execute(sql).fetchall()
+
+
+def set_listing_detail(
+    conn: sqlite3.Connection,
+    *,
+    listing_id: int,
+    clean_title: str,
+    level: str,
+    education: str,
+    term: str,
+) -> None:
+    """Store how a title reads, replacing any earlier reading."""
+    conn.execute(
+        """
+        INSERT INTO listing_details
+            (listing_id, clean_title, level, education, term, cleaned_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT (listing_id) DO UPDATE SET
+            clean_title = excluded.clean_title,
+            level = excluded.level,
+            education = excluded.education,
+            term = excluded.term,
+            cleaned_at = excluded.cleaned_at
+        """,
+        (listing_id, clean_title, level, education, term, utcnow()),
+    )
+
+
 def source_counts(conn: sqlite3.Connection) -> Sequence[sqlite3.Row]:
     """Listings per source, for the CLI status view."""
     return conn.execute(

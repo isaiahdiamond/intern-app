@@ -1,0 +1,34 @@
+Job titles from job boards carry noise: the season, the year, the team, the
+office, the requisition, the degree, all run together with dashes and slashes.
+Read each one and return the parts separately.
+
+Titles:
+{titles}
+
+For each title return:
+
+- `clean_title`: the role on its own, in title case. Drop the season, the year,
+  the team or division, the office or location, the programme name, the
+  requisition number, and any degree wording. **Also drop the level word —
+  intern, internship, co-op, new grad, graduate, campus, university — because
+  `level` below carries it and the list reads inconsistently when some titles
+  keep it and others do not.** Keep what the person would actually do. "Machine Learning Scientist Intern - TikTok-Recommendation -
+  2027 Start - PhD" becomes "Machine Learning Scientist". Keep a meaningful
+  specialisation when the role would be ambiguous without it, so "Software
+  Engineer, Backend" keeps "Backend". Never return an empty string; if nothing
+  can be stripped, return the original. If stripping the level word would leave
+  nothing, keep the noun that remains: "AI Intern" becomes "AI Engineer", not
+  an empty string.
+- `level`: one of `intern`, `coop`, `new_grad`, `other`. An internship is
+  `intern`. A co-op or alternance is `coop`. A graduate, new graduate, campus,
+  university or entry-level role is `new_grad`. Anything that reads as an
+  experienced hire is `other`. Infer it from the whole title when it is not
+  stated.
+- `education`: one of `undergrad`, `masters`, `phd`, `any`. Use `phd` for PhD or
+  doctoral. Use `masters` for a master's or MS requirement. Use `undergrad` for
+  bachelor's or undergraduate. Use `any` when the title does not say — which is
+  most of them. Do not guess from the seniority of the role.
+- `term`: the season and year if the title states one, as "Summer 2027".
+  Empty string when it does not.
+
+Return one entry per title, in the same order, using the exact `id` given.

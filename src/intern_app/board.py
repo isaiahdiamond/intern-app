@@ -43,6 +43,11 @@ SELECT_LISTINGS = """
     )
     SELECT l.id, l.title, l.company, l.location, l.url, l.posted_at, l.source,
            l.full_text, l.first_seen, l.copies,
+           -- The raw title is kept untouched; this is what the board shows.
+           COALESCE(NULLIF(d.clean_title, ''), l.title) AS display_title,
+           COALESCE(d.level, '') AS level,
+           COALESCE(d.education, '') AS education,
+           COALESCE(d.term, '') AS term,
            COALESCE(NULLIF(c.industry, 'Unknown'), '') AS industry,
            COALESCE(pi.rank, :unranked) AS industry_rank,
            COALESCE(t.status, 'new') AS status,
@@ -54,6 +59,7 @@ SELECT_LISTINGS = """
     LEFT JOIN profile_industries pi
            ON pi.industry = NULLIF(c.industry, 'Unknown')
     LEFT JOIN tracker t ON t.listing_id = l.id
+    LEFT JOIN listing_details d ON d.listing_id = l.id
 """
 
 
@@ -104,7 +110,10 @@ def role_clause(roles: list[str], params: dict) -> str:
 
 
 def _new_filters(
-    industry: str, days: int, roles: list[str] | None = None
+    industry: str,
+    days: int,
+    roles: list[str] | None = None,
+    levels: list[str] | None = None,
 ) -> tuple[list[str], dict[str, object]]:
     """The WHERE clauses and parameters shared by the list and its count."""
     where = ["COALESCE(t.status, 'new') = 'new'", "l.copy_number = 1"]
@@ -120,6 +129,13 @@ def _new_filters(
         clause = role_clause(roles, params)
         if clause:
             where.append(clause)
+    if levels:
+        keys = []
+        for index, level in enumerate(levels):
+            key = f"level_{index}"
+            params[key] = level
+            keys.append(f":{key}")
+        where.append(f"COALESCE(d.level, '') IN ({', '.join(keys)})")
     return where, params
 
 
@@ -129,6 +145,7 @@ def list_new(
     industry: str = "",
     days: int = 0,
     roles: list[str] | None = None,
+    levels: list[str] | None = None,
     sort: str = DEFAULT_SORT,
     page: int = 1,
     per_page: int = DEFAULT_PER_PAGE,
@@ -142,7 +159,7 @@ def list_new(
     `days` limits to recently posted when set, which matters because a source
     will happily return a posting from last year.
     """
-    where, params = _new_filters(industry, days, roles)
+    where, params = _new_filters(industry, days, roles, levels)
     params["limit"] = max(1, per_page)
     params["offset"] = max(0, (max(1, page) - 1) * max(1, per_page))
 
@@ -161,9 +178,10 @@ def count_new(
     industry: str = "",
     days: int = 0,
     roles: list[str] | None = None,
+    levels: list[str] | None = None,
 ) -> int:
     """How many listings match, so the pager knows where it ends."""
-    where, params = _new_filters(industry, days, roles)
+    where, params = _new_filters(industry, days, roles, levels)
     sql = f"""
         {SELECT_LISTINGS}
         WHERE {" AND ".join(where)}
@@ -311,6 +329,23 @@ def status_counts(conn: sqlite3.Connection) -> dict[str, int]:
         """
     ).fetchone()[0]
     return counts
+
+
+def level_counts(conn: sqlite3.Connection) -> dict[str, int]:
+    """Unacted listings per level, for the intern / new grad filter.
+
+    An unread title counts under "", so the UI can say how many are still
+    waiting on `intern-app clean` rather than pretending they are "other".
+    """
+    sql = f"""
+        {SELECT_LISTINGS}
+        WHERE COALESCE(t.status, 'new') = 'new' AND l.copy_number = 1
+    """
+    rows = conn.execute(
+        f"SELECT level, COUNT(*) AS n FROM ({sql}) GROUP BY level",  # noqa: S608
+        {"unranked": UNRANKED},
+    ).fetchall()
+    return {row["level"]: row["n"] for row in rows}
 
 
 def known_industries(conn: sqlite3.Connection) -> list[str]:

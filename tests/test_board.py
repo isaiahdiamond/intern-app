@@ -295,3 +295,77 @@ def test_the_role_filter_counts_match_the_page(conn, listing):
 
     assert board.count_new(conn, roles=["Data Science Intern"]) == 2
     assert len(board.list_new(conn, roles=["Data Science Intern"])) == 2
+
+
+def clean(conn, listing_id, **fields):
+    db.set_listing_detail(
+        conn,
+        listing_id=listing_id,
+        clean_title=fields.get("clean_title", "Software Engineer"),
+        level=fields.get("level", "intern"),
+        education=fields.get("education", "any"),
+        term=fields.get("term", ""),
+    )
+
+
+def test_the_board_shows_the_cleaned_title_and_keeps_the_raw_one(conn, listing):
+    """Board titles carry the season, the team and the degree. The raw title is
+    never overwritten, so a bad reading can be recomputed."""
+    db.upsert_listings(
+        conn, [listing(title="Software Engineer Intern - TikTok - 2027 Start - PhD")]
+    )
+    row_id = conn.execute("SELECT id FROM listings").fetchone()["id"]
+    clean(conn, row_id, clean_title="Software Engineer", education="phd")
+
+    row = board.list_new(conn)[0]
+
+    assert row["display_title"] == "Software Engineer"
+    assert row["title"] == "Software Engineer Intern - TikTok - 2027 Start - PhD"
+    assert row["education"] == "phd"
+
+
+def test_an_unread_title_falls_back_to_the_raw_one(conn, listing):
+    """4,158 listings cannot all be read at once, so the board must work before
+    the cleaning pass has run."""
+    db.upsert_listings(conn, [listing(title="Raw Title Intern - Summer 2027")])
+
+    row = board.list_new(conn)[0]
+
+    assert row["display_title"] == "Raw Title Intern - Summer 2027"
+    assert row["level"] == ""
+
+
+def test_filtering_by_level_separates_interns_from_new_grads(conn, listing):
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/a", company="A Co", title="SWE Intern"),
+            listing("https://x.com/b", company="B Co", title="SWE New Grad"),
+            listing("https://x.com/c", company="C Co", title="Senior SWE"),
+        ],
+    )
+    ids = {r["company"]: r["id"] for r in conn.execute("SELECT id, company FROM listings")}
+    clean(conn, ids["A Co"], level="intern")
+    clean(conn, ids["B Co"], level="new_grad")
+    clean(conn, ids["C Co"], level="other")
+
+    assert len(board.list_new(conn, levels=["intern"])) == 1
+    assert len(board.list_new(conn, levels=["intern", "new_grad"])) == 2
+    assert board.count_new(conn, levels=["new_grad"]) == 1
+
+
+def test_level_counts_report_unread_titles_separately(conn, listing):
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/a", company="A Co"),
+            listing("https://x.com/b", company="B Co"),
+        ],
+    )
+    first = conn.execute("SELECT id FROM listings WHERE company = 'A Co'").fetchone()["id"]
+    clean(conn, first, level="intern")
+
+    counts = board.level_counts(conn)
+
+    assert counts["intern"] == 1
+    assert counts[""] == 1

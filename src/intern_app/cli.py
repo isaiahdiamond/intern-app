@@ -193,6 +193,46 @@ def _cmd_classify(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_clean(args: argparse.Namespace) -> int:
+    """Read every unread title into a role, a level, a degree and a term."""
+    from intern_app.llm import client, titles
+
+    if not client.have_api_key():
+        print("ANTHROPIC_API_KEY is not set. Add it to .env to clean titles.")
+        return 1
+
+    conn = db.connect()
+    try:
+        pending = db.listings_needing_clean_title(conn, limit=args.limit)
+        if not pending:
+            print("Every title has been read already.")
+            return 0
+
+        # $0.0425 per batch of 40, measured over real batches. Titles are the
+        # most expensive LLM step in the app because every listing needs one.
+        batches = -(-len(pending) // titles.BATCH_SIZE)
+        estimate = batches * 0.0425
+        print(f"{len(pending)} titles to read: {batches} calls, about ${estimate:.2f}")
+        needs_confirming = not args.yes and estimate > 0.10
+        if needs_confirming and input("Continue? [y/N] ").strip().lower() not in ("y", "yes"):
+            print("Nothing read.")
+            return 0
+
+        stored = titles.clean_titles(conn, pending)
+        print(f"read {stored} titles")
+
+        for row in conn.execute(
+            "SELECT level, COUNT(*) n FROM listing_details GROUP BY level ORDER BY n DESC"
+        ):
+            print(f"  {row['n']:>5}  {row['level']}")
+
+        spend = db.llm_spend(conn, days=1)
+        print(f"\ncost today: ${spend['cost_usd']:.4f} over {spend['calls']} calls")
+    finally:
+        conn.close()
+    return 0
+
+
 def _cmd_serve(args: argparse.Namespace) -> int:
     """Run the local web app, which is where onboarding and the dashboard live."""
     import uvicorn
@@ -231,6 +271,11 @@ def build_parser() -> argparse.ArgumentParser:
     classify_cmd = sub.add_parser("classify", help="assign an industry to each company")
     classify_cmd.add_argument("--yes", action="store_true", help="skip the cost confirmation")
     classify_cmd.set_defaults(func=_cmd_classify)
+
+    clean_cmd = sub.add_parser("clean", help="read titles into role, level, degree and term")
+    clean_cmd.add_argument("--limit", type=int, default=0, help="only read this many (0 means all)")
+    clean_cmd.add_argument("--yes", action="store_true", help="skip the cost confirmation")
+    clean_cmd.set_defaults(func=_cmd_clean)
 
     serve_cmd = sub.add_parser("serve", help="run the local web app")
     serve_cmd.add_argument("--host", default="127.0.0.1")
