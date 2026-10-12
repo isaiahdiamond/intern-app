@@ -89,6 +89,13 @@ CREATE TABLE IF NOT EXISTS profile_industries (
     rank     INTEGER NOT NULL
 );
 
+-- What the user is looking for, which is what the dashboard filters down to.
+-- One row per level wanted: someone finishing a degree often wants both an
+-- internship and a new-grad role, so this is a set rather than a single value.
+CREATE TABLE IF NOT EXISTS profile_levels (
+    level TEXT PRIMARY KEY CHECK (level IN ('intern', 'coop', 'new_grad'))
+);
+
 CREATE INDEX IF NOT EXISTS profile_industries_rank_idx ON profile_industries (rank);
 
 -- Phase 2/3. Industry is a property of the company, not the posting, so it is
@@ -170,4 +177,15 @@ CREATE TABLE IF NOT EXISTS company_icons (
     fetched_at   TEXT NOT NULL,
     ok           INTEGER NOT NULL DEFAULT 0,
     error        TEXT NOT NULL DEFAULT ''
+);
+
+-- Listings whose posting page we fetched and could not read. Kept so a run
+-- does not retry 2,000 dead pages every time, and so the reason is reportable:
+-- a 403 is the site saying no, a robots.txt block is the site saying no in
+-- advance, and "no description found" is a page that renders in the browser.
+CREATE TABLE IF NOT EXISTS page_misses (
+    listing_id INTEGER PRIMARY KEY REFERENCES listings (id) ON DELETE CASCADE,
+    host       TEXT NOT NULL DEFAULT '',
+    reason     TEXT NOT NULL DEFAULT '',
+    tried_at   TEXT NOT NULL
 );

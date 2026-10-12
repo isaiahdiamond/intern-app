@@ -104,3 +104,48 @@ def test_a_failed_save_does_not_destroy_the_previous_answers(conn):
     saved = profile.load_profile(conn)
     assert saved["roles"] == ["Software Engineer Intern", "ML Infra Intern"]
     assert saved["industries"] == ["Finance & Trading", "Software & Internet"]
+
+
+def test_a_degree_opens_everything_at_or_below_it():
+    """A master's student can take a bachelor's posting. A bachelor's student
+    cannot take a PhD one."""
+    assert profile.degrees_open_to("masters") == ["any", "undergrad", "masters"]
+    assert profile.degrees_open_to("undergrad") == ["any", "undergrad"]
+    assert profile.degrees_open_to("phd") == ["any", "undergrad", "masters", "phd"]
+
+
+def test_no_degree_set_means_no_filter_rather_than_no_results():
+    assert profile.degrees_open_to("") == []
+
+
+def test_what_the_search_is_for_is_saved_and_read_back(conn):
+    profile.save_profile(
+        conn,
+        school="Example U",
+        major="CS",
+        roles=[("Software Engineer Intern", "chip")],
+        industries=[],
+        education="masters",
+        seeking=["new_grad", "intern"],
+    )
+
+    saved = profile.load_profile(conn)
+
+    assert saved["education"] == "masters"
+    # Listed in the app's own order, not the order they were ticked in.
+    assert saved["seeking"] == ["intern", "new_grad"]
+
+
+def test_a_level_nobody_searches_for_is_dropped(conn):
+    """`other` is an experienced hire. It is a reading of a listing, never
+    something the profile asks for."""
+    profile.save_profile(
+        conn,
+        school="Example U",
+        major="CS",
+        roles=[("Software Engineer Intern", "chip")],
+        industries=[],
+        seeking=["intern", "other"],
+    )
+
+    assert profile.load_profile(conn)["seeking"] == ["intern"]

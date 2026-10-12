@@ -40,7 +40,22 @@ def connect(db_path: str | Path | None = None) -> sqlite3.Connection:
     # schema.sql sets this too, but a PRAGMA inside executescript's transaction
     # is ignored, so the ON DELETE CASCADE clauses would never fire.
     conn.execute("PRAGMA foreign_keys = ON")
+    add_missing_columns(conn)
     return conn
+
+
+# Columns added to a table that already exists in a database out in the world.
+# `CREATE TABLE IF NOT EXISTS` does nothing for a table that is already there,
+# so a new column has to be added by hand or the live database never gets it.
+ADDED_COLUMNS = (("profile", "education", "TEXT NOT NULL DEFAULT ''"),)
+
+
+def add_missing_columns(conn: sqlite3.Connection) -> None:
+    """Add any column the schema has gained since this database was created."""
+    for table, column, definition in ADDED_COLUMNS:
+        existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+        if column not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {definition}")
 
 
 # --- listings ---------------------------------------------------------------

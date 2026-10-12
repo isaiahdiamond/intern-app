@@ -202,3 +202,63 @@ def test_filters_carry_the_degree_counts(client):
     body = client.get("/api/filters").json()
 
     assert body["education_counts"] == {"": 1, "undergrad": 1}
+
+
+def test_the_profile_can_be_saved_and_drives_what_the_dashboard_shows(client):
+    """The dashboard is the profile's list. Saving a degree and a level is what
+    narrows it, so these have to be one test, not two."""
+    saved = client.post(
+        "/api/profile",
+        json={
+            "education": "undergrad",
+            "seeking": ["intern"],
+            "roles": ["Software Engineer Intern"],
+        },
+    )
+
+    assert saved.status_code == 200
+    assert saved.json()["profile"]["education"] == "undergrad"
+    assert saved.json()["profile"]["seeking"] == ["intern"]
+
+    everything = client.get("/api/listings").json()
+    matching = client.get("/api/listings", params={"match_profile": "true"}).json()
+
+    assert everything["total"] == 2
+    assert [row["company"] for row in matching["listings"]] == ["TikTok"]
+
+
+def test_a_phd_posting_is_hidden_from_an_undergraduate(client):
+    """A listing that asks for more than the user has is not one they can
+    apply to, so it is not on their board."""
+    from intern_app import db
+
+    conn = db.connect()
+    row_id = conn.execute("SELECT id FROM listings WHERE company = 'TikTok'").fetchone()["id"]
+    db.set_listing_detail(
+        conn, listing_id=row_id, clean_title="SWE", level="intern", education="phd", term=""
+    )
+    conn.close()
+
+    client.post("/api/profile", json={"education": "undergrad", "seeking": ["intern"]})
+
+    assert client.get("/api/listings", params={"match_profile": "true"}).json()["total"] == 0
+
+
+def test_a_profile_that_wants_nothing_in_particular_still_sees_everything(client):
+    """An empty answer is "no preference", not "match nothing"."""
+    client.post("/api/profile", json={"education": "", "seeking": [], "roles": []})
+
+    assert client.get("/api/listings", params={"match_profile": "true"}).json()["total"] == 2
+
+
+def test_an_unknown_degree_is_refused(client):
+    refused = client.post("/api/profile", json={"education": "doctorate-ish"})
+
+    assert refused.status_code == 400
+
+
+def test_the_form_options_are_served_for_the_dropdowns(client):
+    body = client.get("/api/options").json()
+
+    assert [item["key"] for item in body["degrees"]] == ["undergrad", "masters", "phd"]
+    assert [item["key"] for item in body["seeking"]] == ["intern", "coop", "new_grad"]

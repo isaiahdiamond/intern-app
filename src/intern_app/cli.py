@@ -215,6 +215,34 @@ def _cmd_describe(args: argparse.Namespace) -> int:
         conn.close()
 
 
+def _cmd_pages(args: argparse.Namespace) -> int:
+    """Read posting pages on hosts that publish no board API."""
+    from intern_app.sources import posting_page
+
+    conn = db.connect()
+    try:
+        pending = posting_page.listings_needing_page(conn, limit=args.limit)
+        if not pending:
+            print("Every reachable posting page has been tried.")
+            return 0
+
+        print(f"{len(pending)} posting pages to try, {posting_page.HOST_DELAY}s between hosts")
+        found = posting_page.collect_pages(conn, limit=args.limit)
+        print(
+            f"{found['tried']} tried: {found['stored']} stored, {found['empty']} with no "
+            f"description, {found['refused']} refused, {found['blocked']} blocked by "
+            f"robots.txt, {found['failed']} failed"
+        )
+        for row in conn.execute(
+            "SELECT host, reason, COUNT(*) n FROM page_misses GROUP BY host, reason"
+            " ORDER BY n DESC LIMIT 8"
+        ):
+            print(f"  {row['n']:>5}  {row['reason']:<26} {row['host']}")
+        return 0
+    finally:
+        conn.close()
+
+
 def _cmd_read(args: argparse.Namespace) -> int:
     """Read each collected posting for its level, degree, term and experience."""
     from intern_app.llm import client, postings
@@ -400,6 +428,10 @@ def build_parser() -> argparse.ArgumentParser:
     describe_cmd = sub.add_parser("describe", help="collect full postings from ATS APIs")
     describe_cmd.add_argument("--limit", type=int, default=0, help="only do this many")
     describe_cmd.set_defaults(func=_cmd_describe)
+
+    pages_cmd = sub.add_parser("pages", help="read posting pages where no board API exists")
+    pages_cmd.add_argument("--limit", type=int, default=0, help="only try this many")
+    pages_cmd.set_defaults(func=_cmd_pages)
 
     read_cmd = sub.add_parser("read", help="read collected postings for level and degree")
     read_cmd.add_argument("--limit", type=int, default=0, help="only read this many")

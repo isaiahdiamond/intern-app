@@ -32,6 +32,20 @@ def as_dicts(rows: list[sqlite3.Row]) -> list[dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
+def profile_filters(conn) -> dict[str, list[str]]:
+    """The roles, levels and degrees the stored profile narrows a list to.
+
+    Empty lists mean "do not filter on this", so a profile that has not said
+    what it wants still sees everything rather than nothing.
+    """
+    saved = profile.load_profile(conn) or {}
+    return {
+        "roles": list(saved.get("roles", [])),
+        "levels": list(saved.get("seeking", [])),
+        "educations": profile.degrees_open_to(saved.get("education", "")),
+    }
+
+
 @router.get("/listings")
 def read_listings(
     industry: str = "",
@@ -42,8 +56,15 @@ def read_listings(
     role: Annotated[list[str] | None, Query()] = None,
     level: Annotated[list[str] | None, Query()] = None,
     education: Annotated[list[str] | None, Query()] = None,
+    match_profile: bool = False,
 ) -> dict[str, Any]:
-    """One page of the dashboard: listings I have not acted on."""
+    """One page of the dashboard: listings I have not acted on.
+
+    `match_profile` narrows to what the profile says it wants — its roles, the
+    levels it is looking for, and the degree requirements it is open to. The
+    dashboard asks for that; the All listings page does not, because browsing
+    everything is the point of it.
+    """
     page = max(1, page)
     per_page = min(max(1, per_page), 200)
     roles = [name for name in (role or []) if name.strip()]
@@ -52,6 +73,11 @@ def read_listings(
 
     conn = open_db()
     try:
+        if match_profile:
+            wanted = profile_filters(conn)
+            roles = roles or wanted["roles"]
+            levels = levels or wanted["levels"]
+            educations = educations or wanted["educations"]
         total = board.count_new(
             conn,
             industry=industry,
@@ -239,3 +265,55 @@ def read_icon(company: str) -> Response:
         media_type=row["content_type"] or "image/x-icon",
         headers={"Cache-Control": "public, max-age=86400"},
     )
+
+
+class ProfileEdit(BaseModel):
+    school: str = ""
+    major: str = ""
+    education: str = ""
+    seeking: list[str] = []
+    roles: list[str] = []
+    industries: list[str] = []
+
+
+@router.post("/profile")
+def write_profile(edit: ProfileEdit) -> dict[str, Any]:
+    """Save the profile. This is what the dashboard then filters down to."""
+    conn = open_db()
+    try:
+        saved = profile.load_profile(conn) or {}
+        known = set(saved.get("roles", []))
+        try:
+            profile.save_profile(
+                conn,
+                school=edit.school or saved.get("school", ""),
+                major=edit.major or saved.get("major", ""),
+                education=edit.education,
+                seeking=edit.seeking,
+                # A role that was already on the profile keeps its origin; a new
+                # one typed here was chosen by hand, not suggested.
+                roles=[(name, "chip" if name in known else "llm_suggested") for name in edit.roles],
+                industries=edit.industries or list(saved.get("industries", [])),
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"onboarded": profile.is_onboarded(conn), "profile": profile.load_profile(conn)}
+    finally:
+        conn.close()
+
+
+@router.get("/options")
+def read_options() -> dict[str, Any]:
+    """The fixed choices the profile form offers."""
+    return {
+        "degrees": [
+            {"key": "undergrad", "label": "Bachelor's"},
+            {"key": "masters", "label": "Master's"},
+            {"key": "phd", "label": "PhD"},
+        ],
+        "seeking": [
+            {"key": "intern", "label": "Internship"},
+            {"key": "coop", "label": "Co-op"},
+            {"key": "new_grad", "label": "New grad"},
+        ],
+    }

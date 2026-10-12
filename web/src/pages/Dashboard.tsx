@@ -1,104 +1,142 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import type { Listing, Page, Tracked } from "@/lib/api"
-import { ago, get, lastDays, monthKey, saveStatus, status } from "@/lib/api"
-import Attribution from "@/components/Attribution"
-import DetailPanel from "@/components/DetailPanel"
-import { Icon } from "@/components/Icon"
-import { paths } from "@/lib/icons"
-import Layout from "@/components/Layout"
-import { CompanyCell, RoleCell } from "@/components/Row"
-import { StatusPill } from "@/components/StatusPill"
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import type { Listing, Page, Tracked } from "@/lib/api";
+import { ago, get, lastDays, monthKey, saveStatus, status } from "@/lib/api";
+import Attribution from "@/components/Attribution";
+import DetailPanel from "@/components/DetailPanel";
+import { Icon } from "@/components/Icon";
+import { paths } from "@/lib/icons";
+import Layout from "@/components/Layout";
+import { CompanyCell, RoleCell } from "@/components/Row";
+import { StatusPill } from "@/components/StatusPill";
 
-const pieKeys = ["applied", "interviewing", "offer", "rejected"]
+const pieKeys = ["applied", "interviewing", "offer", "rejected"];
 
 export default function Dashboard() {
-  const navigate = useNavigate()
-  const [rec, setRec] = useState<Listing[]>([])
-  const [recTotal, setRecTotal] = useState(0)
-  const [tracker, setTracker] = useState<Tracked[]>([])
-  const [counts, setCounts] = useState<Record<string, number>>({})
-  const [selected, setSelected] = useState<number | null>(null)
+  const navigate = useNavigate();
+  const [rec, setRec] = useState<Listing[]>([]);
+  const [recTotal, setRecTotal] = useState(0);
+  const [tracker, setTracker] = useState<Tracked[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [selected, setSelected] = useState<number | null>(null);
 
-  const [tick, setTick] = useState(0)
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     async function load() {
-      const page = await get<Page>("/api/listings?sort=rank&per_page=6")
+      const page = await get<Page>(
+        "/api/listings?match_profile=true&sort=newest&per_page=6",
+      );
       if (page) {
-        setRec(page.listings)
-        setRecTotal(page.total)
+        setRec(page.listings);
+        setRecTotal(page.total);
       }
-      const board = await get<{ listings: Tracked[]; counts: Record<string, number> }>(
-        "/api/tracker"
-      )
+      const board = await get<{
+        listings: Tracked[];
+        counts: Record<string, number>;
+      }>("/api/tracker");
       if (board) {
-        setTracker(board.listings)
-        setCounts(board.counts)
+        setTracker(board.listings);
+        setCounts(board.counts);
       }
     }
-    load()
-  }, [tick])
+    load();
+  }, [tick]);
 
-  const rows = [...rec, ...tracker]
-  const current = rows.find((row) => row.id === selected) ?? null
-  const panelOpen = current !== null
+  const rows = [...rec, ...tracker];
+  const current = rows.find((row) => row.id === selected) ?? null;
+  const panelOpen = current !== null;
 
   async function move(id: number, next: string) {
-    await saveStatus(id, next)
-    setSelected(null)
-    setTick(tick + 1)
+    await saveStatus(id, next);
+    setSelected(null);
+    setTick(tick + 1);
   }
 
   function step(by: number) {
-    const index = rows.findIndex((row) => row.id === selected)
-    const row = rows[Math.min(Math.max(index + by, 0), rows.length - 1)]
-    if (row) setSelected(row.id)
+    const index = rows.findIndex((row) => row.id === selected);
+    const row = rows[Math.min(Math.max(index + by, 0), rows.length - 1)];
+    if (row) setSelected(row.id);
   }
 
-  const sent = pieKeys.reduce((total, key) => total + (counts[key] ?? 0), 0)
-  const month = monthKey()
+  const sent = pieKeys.reduce((total, key) => total + (counts[key] ?? 0), 0);
+  const month = monthKey();
 
   function thisMonth(keys: string[]) {
-    let total = 0
+    let total = 0;
     for (const row of tracker) {
       for (const entry of row.history) {
-        if (keys.includes(entry.status) && entry.changed_at.startsWith(month)) total += 1
+        if (keys.includes(entry.status) && entry.changed_at.startsWith(month))
+          total += 1;
       }
     }
-    return total
+    return total;
   }
 
   const cards = [
-    { label: "Applications", value: sent, icon: paths.send, tint: "rgba(10,132,255,0.10)", ink: "#0066CC", delta: thisMonth(["applied"]), neutral: false },
-    { label: "Interviews", value: counts.interviewing ?? 0, icon: paths.cal, tint: "rgba(175,82,222,0.12)", ink: "#7A3DA8", delta: thisMonth(["interviewing"]), neutral: false },
-    { label: "Rejections", value: counts.rejected ?? 0, icon: paths.cross, tint: "rgba(0,0,0,0.05)", ink: "#6E6E73", delta: thisMonth(["rejected"]), neutral: true },
-    { label: "Offers", value: counts.offer ?? 0, icon: paths.offer, tint: "rgba(48,176,199,0.15)", ink: "#0B6E80", delta: thisMonth(["offer"]), neutral: false },
-  ]
+    {
+      label: "Applications",
+      value: sent,
+      icon: paths.send,
+      tint: "rgba(10,132,255,0.10)",
+      ink: "#0066CC",
+      delta: thisMonth(["applied"]),
+      neutral: false,
+    },
+    {
+      label: "Interviews",
+      value: counts.interviewing ?? 0,
+      icon: paths.cal,
+      tint: "rgba(175,82,222,0.12)",
+      ink: "#7A3DA8",
+      delta: thisMonth(["interviewing"]),
+      neutral: false,
+    },
+    {
+      label: "Rejections",
+      value: counts.rejected ?? 0,
+      icon: paths.cross,
+      tint: "rgba(0,0,0,0.05)",
+      ink: "#6E6E73",
+      delta: thisMonth(["rejected"]),
+      neutral: true,
+    },
+    {
+      label: "Offers",
+      value: counts.offer ?? 0,
+      icon: paths.offer,
+      tint: "rgba(48,176,199,0.15)",
+      ink: "#0B6E80",
+      delta: thisMonth(["offer"]),
+      neutral: false,
+    },
+  ];
 
-  const days = lastDays(28)
+  const days = lastDays(28);
   for (const row of tracker) {
     for (const entry of row.history) {
-      if (entry.status !== "applied") continue
-      const day = days.find((item) => item.key === entry.changed_at.slice(0, 10))
-      if (day) day.count += 1
+      if (entry.status !== "applied") continue;
+      const day = days.find(
+        (item) => item.key === entry.changed_at.slice(0, 10),
+      );
+      if (day) day.count += 1;
     }
   }
-  const peak = Math.max(2, ...days.map((day) => day.count))
+  const peak = Math.max(2, ...days.map((day) => day.count));
 
-  let sweep = 0
+  let sweep = 0;
   const stops = pieKeys.map((key) => {
-    const from = sweep
-    sweep += ((counts[key] ?? 0) / (sent || 1)) * 360
-    return `${status(key).dot} ${from}deg ${sweep}deg`
-  })
+    const from = sweep;
+    sweep += ((counts[key] ?? 0) / (sent || 1)) * 360;
+    return `${status(key).dot} ${from}deg ${sweep}deg`;
+  });
 
   const recCols = panelOpen
     ? "minmax(0,1fr) minmax(0,1.3fr) minmax(0,0.9fr) 52px"
-    : "minmax(140px,1fr) minmax(0,1.8fr) minmax(0,1fr) 60px"
+    : "minmax(140px,1fr) minmax(0,1.8fr) minmax(0,1fr) 60px";
   const appCols = panelOpen
     ? "minmax(0,1fr) minmax(0,1.4fr) 56px 108px"
-    : "minmax(140px,1fr) minmax(0,2.2fr) 72px 108px"
+    : "minmax(140px,1fr) minmax(0,2.2fr) 72px 108px";
 
   return (
     <Layout
@@ -136,7 +174,11 @@ export default function Dashboard() {
                     card.neutral || card.delta === 0
                       ? "rgba(0,0,0,0.045)"
                       : "rgba(52,199,89,0.12)",
-                  color: card.neutral ? "#6E6E73" : card.delta > 0 ? "#1E7A34" : "#86868B",
+                  color: card.neutral
+                    ? "#6E6E73"
+                    : card.delta > 0
+                      ? "#1E7A34"
+                      : "#86868B",
                 }}
               >
                 {card.delta > 0 ? "↑ " : ""}
@@ -180,8 +222,12 @@ export default function Dashboard() {
                   <div
                     className="w-full max-w-4 rounded-t-[5px] rounded-b-[2px]"
                     style={{
-                      height: day.count ? Math.round((day.count / peak) * 118) : 3,
-                      background: day.count ? "rgba(10,132,255,0.55)" : "#EDEDF0",
+                      height: day.count
+                        ? Math.round((day.count / peak) * 118)
+                        : 3,
+                      background: day.count
+                        ? "rgba(10,132,255,0.55)"
+                        : "#EDEDF0",
                     }}
                   />
                 </div>
@@ -197,7 +243,10 @@ export default function Dashboard() {
                   {index === 27
                     ? "Today"
                     : index % 7 === 0
-                      ? day.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                      ? day.date.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })
                       : ""}
                 </div>
               ))}
@@ -214,7 +263,11 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center justify-center gap-x-[26px] gap-y-[22px] px-6 pt-2 pb-6">
             <div
               className="relative size-[156px] shrink-0 rounded-full"
-              style={{ background: sent ? `conic-gradient(${stops.join(",")})` : "#EDEDF0" }}
+              style={{
+                background: sent
+                  ? `conic-gradient(${stops.join(",")})`
+                  : "#EDEDF0",
+              }}
             >
               <div className="absolute inset-5 flex flex-col items-center justify-center gap-[3px] rounded-full bg-surface shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
                 <span className="font-display text-[30px] leading-none font-semibold tracking-[-0.035em]">
@@ -264,8 +317,19 @@ export default function Dashboard() {
               className="ml-auto flex h-7 items-center gap-1 rounded-control px-2.5 text-[12.5px] font-medium text-accent-text hover:bg-accent/[0.08]"
             >
               View all
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.7}>
-                <path d="M4.5 2.5L8 6l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.7}
+              >
+                <path
+                  d="M4.5 2.5L8 6l-3.5 3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </div>
@@ -286,7 +350,10 @@ export default function Dashboard() {
               style={{
                 gridTemplateColumns: recCols,
                 borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
-                background: selected === listing.id ? "rgba(10,132,255,0.07)" : "transparent",
+                background:
+                  selected === listing.id
+                    ? "rgba(10,132,255,0.07)"
+                    : "transparent",
               }}
             >
               <span className="absolute top-1/2 left-[15px] -mt-[3px] size-1.5 rounded-full bg-accent" />
@@ -316,8 +383,19 @@ export default function Dashboard() {
               className="ml-auto flex h-7 items-center gap-1 rounded-control px-2.5 text-[12.5px] font-medium text-accent-text hover:bg-accent/[0.08]"
             >
               View all
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.7}>
-                <path d="M4.5 2.5L8 6l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 12 12"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.7}
+              >
+                <path
+                  d="M4.5 2.5L8 6l-3.5 3.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
             </button>
           </div>
@@ -350,14 +428,20 @@ export default function Dashboard() {
                 className="relative grid h-[62px] items-center gap-4 px-5 transition-colors duration-100 hover:bg-[#FAFAFC]"
                 style={{
                   gridTemplateColumns: appCols,
-                  borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
-                  background: selected === listing.id ? "rgba(10,132,255,0.07)" : "transparent",
+                  borderTop:
+                    index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
+                  background:
+                    selected === listing.id
+                      ? "rgba(10,132,255,0.07)"
+                      : "transparent",
                 }}
               >
                 <CompanyCell listing={listing} size={34} />
                 <RoleCell listing={listing} bold={false} />
                 <span className="font-mono text-[11.5px] whitespace-nowrap text-text-3">
-                  {listing.status_changed_at ? ago(listing.status_changed_at) : "—"}
+                  {listing.status_changed_at
+                    ? ago(listing.status_changed_at)
+                    : "—"}
                 </span>
                 <div className="flex justify-end">
                   <StatusPill value={listing.status} wide />
@@ -370,5 +454,5 @@ export default function Dashboard() {
 
       <Attribution listings={rows} />
     </Layout>
-  )
+  );
 }

@@ -50,6 +50,8 @@ export type Profile = {
   profile: {
     school: string;
     major: string;
+    education: string;
+    seeking: string[];
     roles: string[];
     industries: string[];
     created_at: string;
