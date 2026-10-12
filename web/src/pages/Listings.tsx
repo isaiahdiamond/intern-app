@@ -1,50 +1,58 @@
-import { useEffect, useState } from "react"
-import type { Filters, Listing, Page } from "@/lib/api"
-import { ago, get, saveStatus, status } from "@/lib/api"
-import Attribution from "@/components/Attribution"
-import DetailPanel from "@/components/DetailPanel"
-import { External, Magnifier } from "@/components/Icon"
-import FilterMenu from "@/components/FilterMenu"
-import type { Option } from "@/components/FilterMenu"
-import Layout from "@/components/Layout"
-import { ColumnHead, CompanyCell, RoleCell } from "@/components/Row"
-import { StatusMenu } from "@/components/StatusPill"
+import { useEffect, useState } from "react";
+import type { Filters, Listing, Page } from "@/lib/api";
+import { ago, get, saveStatus, status } from "@/lib/api";
+import Attribution from "@/components/Attribution";
+import DetailPanel from "@/components/DetailPanel";
+import { External, Magnifier } from "@/components/Icon";
+import FilterMenu from "@/components/FilterMenu";
+import type { Option } from "@/components/FilterMenu";
+import Layout from "@/components/Layout";
+import { ColumnHead, CompanyCell, RoleCell } from "@/components/Row";
+import { StatusMenu } from "@/components/StatusPill";
 
-const perPage = 50
+const perPage = 50;
 
 const levelLabels: Record<string, string> = {
   intern: "Intern",
   coop: "Co-op",
   new_grad: "New grad",
   other: "Other",
-}
+};
+
+const educationLabels: Record<string, string> = {
+  phd: "PhD",
+  masters: "Master's",
+  undergrad: "Bachelor's",
+  any: "No degree stated",
+};
 
 export default function Listings() {
-  const [filters, setFilters] = useState<Filters | null>(null)
-  const [typed, setTyped] = useState("")
-  const [query, setQuery] = useState("")
-  const [industry, setIndustry] = useState("")
-  const [roles, setRoles] = useState<string[]>([])
-  const [levels, setLevels] = useState<string[]>([])
-  const [sort, setSort] = useState("newest")
-  const [rows, setRows] = useState<Listing[]>([])
-  const [total, setTotal] = useState(0)
-  const [more, setMore] = useState(false)
-  const [page, setPage] = useState(1)
-  const [menu, setMenu] = useState<string | null>(null)
-  const [selected, setSelected] = useState<number | null>(null)
+  const [filters, setFilters] = useState<Filters | null>(null);
+  const [typed, setTyped] = useState("");
+  const [query, setQuery] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [roles, setRoles] = useState<string[]>([]);
+  const [levels, setLevels] = useState<string[]>([]);
+  const [educations, setEducations] = useState<string[]>([]);
+  const [sort, setSort] = useState("newest");
+  const [rows, setRows] = useState<Listing[]>([]);
+  const [total, setTotal] = useState(0);
+  const [more, setMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [menu, setMenu] = useState<string | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
 
   useEffect(() => {
     async function load() {
-      setFilters(await get<Filters>("/api/filters"))
+      setFilters(await get<Filters>("/api/filters"));
     }
-    load()
-  }, [])
+    load();
+  }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => setQuery(typed.trim()), 250)
-    return () => clearTimeout(timer)
-  }, [typed])
+    const timer = setTimeout(() => setQuery(typed.trim()), 250);
+    return () => clearTimeout(timer);
+  }, [typed]);
 
   function url(wanted: number) {
     if (query) {
@@ -53,70 +61,73 @@ export default function Listings() {
         industry,
         page: String(wanted),
         per_page: String(perPage),
-      })
-      return `/api/search?${params}`
+      });
+      return `/api/search?${params}`;
     }
     const params = new URLSearchParams({
       industry,
       sort,
       page: String(wanted),
       per_page: String(perPage),
-    })
-    for (const role of roles) params.append("role", role)
-    for (const level of levels) params.append("level", level)
-    return `/api/listings?${params}`
+    });
+    for (const role of roles) params.append("role", role);
+    for (const level of levels) params.append("level", level);
+    for (const education of educations) params.append("education", education);
+    return `/api/listings?${params}`;
   }
 
   useEffect(() => {
     async function load() {
-      const result = await get<Page>(url(1))
-      setPage(1)
-      setRows(result ? result.listings : [])
-      setTotal(result ? result.total : 0)
-      setMore(result ? result.has_more : false)
+      const result = await get<Page>(url(1));
+      setPage(1);
+      setRows(result ? result.listings : []);
+      setTotal(result ? result.total : 0);
+      setMore(result ? result.has_more : false);
     }
-    load()
+    load();
     // `url` is rebuilt every render, so depending on it would reload forever.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, industry, roles, levels, sort])
+  }, [query, industry, roles, levels, educations, sort]);
 
   async function loadMore() {
-    const result = await get<Page>(url(page + 1))
-    if (!result) return
-    setPage(page + 1)
-    setRows([...rows, ...result.listings])
-    setMore(result.has_more)
+    const result = await get<Page>(url(page + 1));
+    if (!result) return;
+    setPage(page + 1);
+    setRows([...rows, ...result.listings]);
+    setMore(result.has_more);
   }
 
   async function move(id: number, next: string) {
-    const saved = await saveStatus(id, next)
-    setMenu(null)
-    if (!saved) return
-    setRows(rows.map((row) => (row.id === id ? { ...row, status: next } : row)))
+    const saved = await saveStatus(id, next);
+    setMenu(null);
+    if (!saved) return;
+    setRows(
+      rows.map((row) => (row.id === id ? { ...row, status: next } : row)),
+    );
   }
 
   function step(by: number) {
-    const index = rows.findIndex((row) => row.id === selected)
-    const row = rows[Math.min(Math.max(index + by, 0), rows.length - 1)]
-    if (row) setSelected(row.id)
+    const index = rows.findIndex((row) => row.id === selected);
+    const row = rows[Math.min(Math.max(index + by, 0), rows.length - 1)];
+    if (row) setSelected(row.id);
   }
 
-  const current = rows.find((row) => row.id === selected) ?? null
-  const panelOpen = current !== null
-  const searching = query !== ""
+  const current = rows.find((row) => row.id === selected) ?? null;
+  const panelOpen = current !== null;
+  const searching = query !== "";
 
   const industryOptions: Option[] = (filters?.industries ?? []).map((name) => ({
     key: name,
     label: name,
     count: filters?.industry_counts[name] ?? null,
     on: industry === name,
-  }))
+  }));
   const roleOptions: Option[] = (filters?.roles ?? []).map((name) => ({
     key: name,
     label: name,
     count: null,
     on: roles.includes(name),
-  }))
+  }));
   const levelOptions: Option[] = Object.keys(filters?.level_counts ?? {})
     .filter((key) => key !== "")
     .map((key) => ({
@@ -124,18 +135,32 @@ export default function Listings() {
       label: levelLabels[key] ?? key,
       count: filters?.level_counts[key] ?? null,
       on: levels.includes(key),
-    }))
+    }));
+  const educationOptions: Option[] = Object.keys(
+    filters?.education_counts ?? {},
+  )
+    .filter((key) => key !== "")
+    .map((key) => ({
+      key,
+      label: educationLabels[key] ?? key,
+      count: filters?.education_counts[key] ?? null,
+      on: educations.includes(key),
+    }));
   const sortOptions: Option[] = (filters?.sorts ?? []).map((key) => ({
     key,
     label: key,
     count: null,
     on: sort === key,
-  }))
+  }));
 
-  const dirty = industry !== "" || roles.length > 0 || levels.length > 0
+  const dirty =
+    industry !== "" ||
+    roles.length > 0 ||
+    levels.length > 0 ||
+    educations.length > 0;
   const columns = panelOpen
     ? "minmax(0,1fr) minmax(0,1.4fr) 56px 110px"
-    : "minmax(140px,1fr) minmax(0,2.2fr) 72px 110px"
+    : "minmax(140px,1fr) minmax(0,2.2fr) 72px 110px";
 
   return (
     <Layout
@@ -153,7 +178,10 @@ export default function Listings() {
         ) : null
       }
     >
-      <div onClick={() => setMenu(null)} className="rounded-panel border border-line bg-surface">
+      <div
+        onClick={() => setMenu(null)}
+        className="rounded-panel border border-line bg-surface"
+      >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5 border-b border-line-soft px-3.5 py-3">
           <div className="flex max-w-full min-w-0 shrink-0 flex-wrap items-center gap-2">
             <FilterMenu
@@ -167,14 +195,24 @@ export default function Listings() {
             />
             <FilterMenu
               label="Role"
-              value={roles.length === 1 ? roles[0] : roles.length ? `${roles.length} selected` : ""}
+              value={
+                roles.length === 1
+                  ? roles[0]
+                  : roles.length
+                    ? `${roles.length} selected`
+                    : ""
+              }
               open={menu === "role"}
               active={roles.length > 0}
               muted={searching}
               options={roleOptions}
               onToggle={() => setMenu(menu === "role" ? null : "role")}
               onPick={(key) =>
-                setRoles(roles.includes(key) ? roles.filter((name) => name !== key) : [...roles, key])
+                setRoles(
+                  roles.includes(key)
+                    ? roles.filter((name) => name !== key)
+                    : [...roles, key],
+                )
               }
             />
             <FilterMenu
@@ -193,7 +231,33 @@ export default function Listings() {
               onToggle={() => setMenu(menu === "level" ? null : "level")}
               onPick={(key) =>
                 setLevels(
-                  levels.includes(key) ? levels.filter((name) => name !== key) : [...levels, key]
+                  levels.includes(key)
+                    ? levels.filter((name) => name !== key)
+                    : [...levels, key],
+                )
+              }
+            />
+            <FilterMenu
+              label="Degree"
+              value={
+                educations.length === 1
+                  ? (educationLabels[educations[0]] ?? educations[0])
+                  : educations.length
+                    ? `${educations.length} selected`
+                    : ""
+              }
+              open={menu === "education"}
+              active={educations.length > 0}
+              muted={searching}
+              options={educationOptions}
+              onToggle={() =>
+                setMenu(menu === "education" ? null : "education")
+              }
+              onPick={(key) =>
+                setEducations(
+                  educations.includes(key)
+                    ? educations.filter((name) => name !== key)
+                    : [...educations, key],
                 )
               }
             />
@@ -206,16 +270,17 @@ export default function Listings() {
               options={sortOptions}
               onToggle={() => setMenu(menu === "sort" ? null : "sort")}
               onPick={(key) => {
-                setSort(key)
-                setMenu(null)
+                setSort(key);
+                setMenu(null);
               }}
             />
             {dirty ? (
               <span
                 onClick={() => {
-                  setIndustry("")
-                  setRoles([])
-                  setLevels([])
+                  setIndustry("");
+                  setRoles([]);
+                  setLevels([]);
+                  setEducations([]);
                 }}
                 className="cursor-pointer px-1 text-[12.5px] whitespace-nowrap text-accent-text hover:underline"
               >
@@ -238,11 +303,14 @@ export default function Listings() {
           </div>
         </div>
 
-        <ColumnHead columns={columns} labels={["Company", "Role", "Posted", "Track"]} />
+        <ColumnHead
+          columns={columns}
+          labels={["Company", "Role", "Posted", "Track"]}
+        />
 
         {rows.map((listing, index) => {
-          const tracked = listing.status !== "new"
-          const tone = status(listing.status)
+          const tracked = listing.status !== "new";
+          const tone = status(listing.status);
           return (
             <div
               key={listing.id}
@@ -251,7 +319,10 @@ export default function Listings() {
               style={{
                 gridTemplateColumns: columns,
                 borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
-                background: selected === listing.id ? "rgba(10,132,255,0.07)" : "transparent",
+                background:
+                  selected === listing.id
+                    ? "rgba(10,132,255,0.07)"
+                    : "transparent",
               }}
             >
               {tracked ? null : (
@@ -265,18 +336,35 @@ export default function Listings() {
               <div className="flex items-center justify-end gap-1.5">
                 <div
                   onClick={(event) => {
-                    event.stopPropagation()
-                    if (tracked) setMenu(menu === `row${listing.id}` ? null : `row${listing.id}`)
-                    else move(listing.id, "saved")
+                    event.stopPropagation();
+                    if (tracked)
+                      setMenu(
+                        menu === `row${listing.id}` ? null : `row${listing.id}`,
+                      );
+                    else move(listing.id, "saved");
                   }}
-                  title={tracked ? `In tracker · ${tone.label}` : "Add to tracker"}
+                  title={
+                    tracked ? `In tracker · ${tone.label}` : "Add to tracker"
+                  }
                   className="flex size-7 items-center justify-center rounded-[7px] text-accent-text transition-colors duration-150 hover:brightness-95"
-                  style={{ background: tracked ? tone.bg : "rgba(10,132,255,0.10)" }}
+                  style={{
+                    background: tracked ? tone.bg : "rgba(10,132,255,0.10)",
+                  }}
                 >
                   {tracked ? (
-                    <span className="size-[9px] rounded-full" style={{ background: tone.dot }} />
+                    <span
+                      className="size-[9px] rounded-full"
+                      style={{ background: tone.dot }}
+                    />
                   ) : (
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.7}>
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.7}
+                    >
                       <path d="M6 2v8M2 6h8" strokeLinecap="round" />
                     </svg>
                   )}
@@ -301,7 +389,7 @@ export default function Listings() {
                 />
               ) : null}
             </div>
-          )
+          );
         })}
 
         {rows.length === 0 ? (
@@ -325,5 +413,5 @@ export default function Listings() {
 
       <Attribution listings={rows} />
     </Layout>
-  )
+  );
 }

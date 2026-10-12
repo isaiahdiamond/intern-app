@@ -41,22 +41,32 @@ def read_listings(
     per_page: int = board.DEFAULT_PER_PAGE,
     role: Annotated[list[str] | None, Query()] = None,
     level: Annotated[list[str] | None, Query()] = None,
+    education: Annotated[list[str] | None, Query()] = None,
 ) -> dict[str, Any]:
     """One page of the dashboard: listings I have not acted on."""
     page = max(1, page)
     per_page = min(max(1, per_page), 200)
     roles = [name for name in (role or []) if name.strip()]
     levels = [name for name in (level or []) if name.strip()]
+    educations = [name for name in (education or []) if name.strip()]
 
     conn = open_db()
     try:
-        total = board.count_new(conn, industry=industry, days=days, roles=roles, levels=levels)
+        total = board.count_new(
+            conn,
+            industry=industry,
+            days=days,
+            roles=roles,
+            levels=levels,
+            educations=educations,
+        )
         rows = board.list_new(
             conn,
             industry=industry,
             days=days,
             roles=roles,
             levels=levels,
+            educations=educations,
             sort=sort,
             page=page,
             per_page=per_page,
@@ -153,6 +163,7 @@ def read_filters() -> dict[str, Any]:
             "industry_counts": board.new_counts_by_industry(conn),
             "status_counts": board.status_counts(conn),
             "level_counts": board.level_counts(conn),
+            "education_counts": board.education_counts(conn),
             "roles": profile.load_role_names(conn),
             "sorts": list(board.SORT_ORDERS),
             "statuses": list(board.ACTIVE),

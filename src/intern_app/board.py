@@ -120,6 +120,7 @@ def _new_filters(
     days: int,
     roles: list[str] | None = None,
     levels: list[str] | None = None,
+    educations: list[str] | None = None,
 ) -> tuple[list[str], dict[str, object]]:
     """The WHERE clauses and parameters shared by the list and its count."""
     where = ["COALESCE(t.status, 'new') = 'new'", "l.copy_number = 1"]
@@ -142,6 +143,13 @@ def _new_filters(
             params[key] = level
             keys.append(f":{key}")
         where.append(f"COALESCE(d.level, '') IN ({', '.join(keys)})")
+    if educations:
+        keys = []
+        for index, education in enumerate(educations):
+            key = f"education_{index}"
+            params[key] = education
+            keys.append(f":{key}")
+        where.append(f"COALESCE(d.education, '') IN ({', '.join(keys)})")
     return where, params
 
 
@@ -152,6 +160,7 @@ def list_new(
     days: int = 0,
     roles: list[str] | None = None,
     levels: list[str] | None = None,
+    educations: list[str] | None = None,
     sort: str = DEFAULT_SORT,
     page: int = 1,
     per_page: int = DEFAULT_PER_PAGE,
@@ -165,7 +174,7 @@ def list_new(
     `days` limits to recently posted when set, which matters because a source
     will happily return a posting from last year.
     """
-    where, params = _new_filters(industry, days, roles, levels)
+    where, params = _new_filters(industry, days, roles, levels, educations)
     params["limit"] = max(1, per_page)
     params["offset"] = max(0, (max(1, page) - 1) * max(1, per_page))
 
@@ -185,9 +194,10 @@ def count_new(
     days: int = 0,
     roles: list[str] | None = None,
     levels: list[str] | None = None,
+    educations: list[str] | None = None,
 ) -> int:
     """How many listings match, so the pager knows where it ends."""
-    where, params = _new_filters(industry, days, roles, levels)
+    where, params = _new_filters(industry, days, roles, levels, educations)
     sql = f"""
         {SELECT_LISTINGS}
         WHERE {" AND ".join(where)}
@@ -353,6 +363,25 @@ def level_counts(conn: sqlite3.Connection) -> dict[str, int]:
         {"unranked": UNRANKED},
     ).fetchall()
     return {row["level"]: row["n"] for row in rows}
+
+
+def education_counts(conn: sqlite3.Connection) -> dict[str, int]:
+    """Unacted listings per degree, for the education filter.
+
+    Same shape as `level_counts`, including the "" bucket for a title that has
+    not been read yet. `any` is not a degree requirement — it is what most
+    postings say, which is nothing — so the filter shows it as its own choice
+    rather than folding it into the others.
+    """
+    sql = f"""
+        {SELECT_LISTINGS}
+        WHERE COALESCE(t.status, 'new') = 'new' AND l.copy_number = 1
+    """
+    rows = conn.execute(
+        f"SELECT education, COUNT(*) AS n FROM ({sql}) GROUP BY education",  # noqa: S608
+        {"unranked": UNRANKED},
+    ).fetchall()
+    return {row["education"]: row["n"] for row in rows}
 
 
 def known_industries(conn: sqlite3.Connection) -> list[str]:

@@ -420,3 +420,57 @@ def test_a_manual_job_needs_a_title_and_a_company(conn):
         board.add_manual_listing(conn, title="", company="Acme")
     with pytest.raises(ValueError, match="title and a company"):
         board.add_manual_listing(conn, title="SWE Intern", company="  ")
+
+
+def test_filtering_by_degree_narrows_to_matching_listings(conn, listing):
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/a", company="A Co", title="SWE Intern"),
+            listing("https://x.com/b", company="B Co", title="ML Intern"),
+            listing("https://x.com/c", company="C Co", title="Data Intern"),
+        ],
+    )
+    ids = {r["company"]: r["id"] for r in conn.execute("SELECT id, company FROM listings")}
+    clean(conn, ids["A Co"], education="phd")
+    clean(conn, ids["B Co"], education="masters")
+    clean(conn, ids["C Co"], education="any")
+
+    assert len(board.list_new(conn, educations=["phd"])) == 1
+    assert len(board.list_new(conn, educations=["phd", "masters"])) == 2
+    assert board.count_new(conn, educations=["any"]) == 1
+
+
+def test_degree_and_level_filters_narrow_together(conn, listing):
+    """Both chips are on the same bar, so they have to compose rather than one
+    replacing the other."""
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/a", company="A Co"),
+            listing("https://x.com/b", company="B Co"),
+        ],
+    )
+    ids = {r["company"]: r["id"] for r in conn.execute("SELECT id, company FROM listings")}
+    clean(conn, ids["A Co"], level="intern", education="phd")
+    clean(conn, ids["B Co"], level="new_grad", education="phd")
+
+    assert len(board.list_new(conn, levels=["intern"], educations=["phd"])) == 1
+    assert len(board.list_new(conn, levels=["intern"], educations=["masters"])) == 0
+
+
+def test_degree_counts_report_unread_titles_separately(conn, listing):
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/a", company="A Co"),
+            listing("https://x.com/b", company="B Co"),
+        ],
+    )
+    first = conn.execute("SELECT id FROM listings WHERE company = 'A Co'").fetchone()["id"]
+    clean(conn, first, education="phd")
+
+    counts = board.education_counts(conn)
+
+    assert counts["phd"] == 1
+    assert counts[""] == 1

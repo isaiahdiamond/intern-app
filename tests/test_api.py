@@ -188,3 +188,17 @@ def test_an_icon_is_served_from_our_own_origin(client):
 
 def test_a_company_with_no_icon_404s_so_the_row_draws_its_tile(client):
     assert client.get("/api/icon/Nobody%20Inc").status_code == 404
+
+
+def test_the_degree_filter_narrows_the_page_and_its_total(client):
+    body = client.get("/api/listings", params={"education": "undergrad"}).json()
+
+    assert body["total"] == 1
+    assert body["listings"][0]["company"] == "TikTok"
+    assert client.get("/api/listings", params={"education": "phd"}).json()["total"] == 0
+
+
+def test_filters_carry_the_degree_counts(client):
+    body = client.get("/api/filters").json()
+
+    assert body["education_counts"] == {"": 1, "undergrad": 1}
