@@ -1,50 +1,61 @@
-import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import type { Tracked } from "@/lib/api"
-import { ago, get, saveStatus, status, tracked as trackedStatuses } from "@/lib/api"
-import Attribution from "@/components/Attribution"
-import DetailPanel from "@/components/DetailPanel"
-import { Chevron, Magnifier } from "@/components/Icon"
-import Layout from "@/components/Layout"
-import { ColumnHead, CompanyCell, RoleCell } from "@/components/Row"
-import { StatusMenu, StatusPill } from "@/components/StatusPill"
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import type { Tracked } from "@/lib/api";
+import {
+  ago,
+  get,
+  saveStatus,
+  status,
+  tracked as trackedStatuses,
+} from "@/lib/api";
+import AddJob from "@/components/AddJob";
+import Attribution from "@/components/Attribution";
+import DetailPanel from "@/components/DetailPanel";
+import { Chevron, Magnifier } from "@/components/Icon";
+import Layout from "@/components/Layout";
+import { ColumnHead, CompanyCell, RoleCell } from "@/components/Row";
+import { StatusMenu, StatusPill } from "@/components/StatusPill";
 
 export default function Tracker() {
-  const navigate = useNavigate()
-  const [rows, setRows] = useState<Tracked[]>([])
-  const [counts, setCounts] = useState<Record<string, number>>({})
-  const [filter, setFilter] = useState("all")
-  const [query, setQuery] = useState("")
-  const [collapsed, setCollapsed] = useState<string[]>([])
-  const [menu, setMenu] = useState<string | null>(null)
-  const [selected, setSelected] = useState<number | null>(null)
+  const navigate = useNavigate();
+  const [rows, setRows] = useState<Tracked[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [filter, setFilter] = useState("all");
+  const [query, setQuery] = useState("");
+  const [collapsed, setCollapsed] = useState<string[]>([]);
+  const [menu, setMenu] = useState<string | null>(null);
+  const [selected, setSelected] = useState<number | null>(null);
 
-  const [tick, setTick] = useState(0)
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     async function load() {
-      const board = await get<{ listings: Tracked[]; counts: Record<string, number> }>(
-        "/api/tracker"
-      )
-      if (!board) return
-      setRows(board.listings)
-      setCounts(board.counts)
+      const board = await get<{
+        listings: Tracked[];
+        counts: Record<string, number>;
+      }>("/api/tracker");
+      if (!board) return;
+      setRows(board.listings);
+      setCounts(board.counts);
     }
-    load()
-  }, [tick])
+    load();
+  }, [tick]);
 
   async function move(id: number, next: string) {
-    setMenu(null)
-    await saveStatus(id, next)
-    setTick(tick + 1)
+    setMenu(null);
+    await saveStatus(id, next);
+    setTick(tick + 1);
   }
 
-  const text = query.trim().toLowerCase()
+  const text = query.trim().toLowerCase();
   const matching = rows.filter(
     (row) =>
       !text ||
-      [row.display_title, row.title, row.company, row.location].join(" ").toLowerCase().includes(text)
-  )
+      [row.display_title, row.title, row.company, row.location]
+        .join(" ")
+        .toLowerCase()
+        .includes(text),
+  );
 
   const groups = trackedStatuses
     .filter((item) => filter === "all" || item.key === filter)
@@ -52,23 +63,23 @@ export default function Tracker() {
       ...item,
       rows: matching.filter((row) => row.status === item.key),
     }))
-    .filter((group) => group.rows.length > 0 || filter === group.key)
+    .filter((group) => group.rows.length > 0 || filter === group.key);
 
   const visible = groups
     .filter((group) => !collapsed.includes(group.key))
-    .flatMap((group) => group.rows)
-  const current = visible.find((row) => row.id === selected) ?? null
-  const panelOpen = current !== null
+    .flatMap((group) => group.rows);
+  const current = visible.find((row) => row.id === selected) ?? null;
+  const panelOpen = current !== null;
 
   function step(by: number) {
-    const index = visible.findIndex((row) => row.id === selected)
-    const row = visible[Math.min(Math.max(index + by, 0), visible.length - 1)]
-    if (row) setSelected(row.id)
+    const index = visible.findIndex((row) => row.id === selected);
+    const row = visible[Math.min(Math.max(index + by, 0), visible.length - 1)];
+    if (row) setSelected(row.id);
   }
 
   const columns = panelOpen
     ? "minmax(0,1fr) minmax(0,1.4fr) 56px 108px"
-    : "minmax(140px,1fr) minmax(0,2.2fr) 72px 108px"
+    : "minmax(140px,1fr) minmax(0,2.2fr) 72px 108px";
 
   const segments = [
     { key: "all", label: "All", count: rows.length },
@@ -77,7 +88,7 @@ export default function Tracker() {
       label: item.label,
       count: counts[item.key] ?? 0,
     })),
-  ]
+  ];
 
   return (
     <Layout
@@ -87,7 +98,7 @@ export default function Tracker() {
         <div className="relative flex flex-wrap items-center gap-x-3 gap-y-2.5 px-8 pt-[22px] pb-3.5">
           <div className="flex min-w-0 gap-0.5 overflow-hidden rounded-[9px] bg-track p-0.5">
             {segments.map((segment) => {
-              const on = filter === segment.key
+              const on = filter === segment.key;
               return (
                 <button
                   type="button"
@@ -101,9 +112,11 @@ export default function Tracker() {
                   }}
                 >
                   <span>{segment.label}</span>
-                  <span className="font-mono text-[11px] text-text-4">{segment.count}</span>
+                  <span className="font-mono text-[11px] text-text-4">
+                    {segment.count}
+                  </span>
                 </button>
-              )
+              );
             })}
           </div>
           <div className="ml-auto box-border flex h-[30px] max-w-[280px] min-w-[180px] flex-[1_1_180px] items-center gap-[7px] rounded-control border border-line bg-surface px-2.5">
@@ -115,6 +128,7 @@ export default function Tracker() {
               className="min-w-0 flex-1 border-0 bg-transparent text-[12.5px] outline-none"
             />
           </div>
+          <AddJob onAdded={() => setTick(tick + 1)} />
         </div>
       }
       panel={
@@ -132,10 +146,13 @@ export default function Tracker() {
     >
       {rows.length === 0 ? (
         <div className="rounded-panel border border-line bg-surface px-8 py-16 text-center">
-          <div className="text-[17px] font-semibold tracking-[-0.012em]">Nothing tracked yet</div>
+          <div className="text-[17px] font-semibold tracking-[-0.012em]">
+            Nothing tracked yet
+          </div>
           <p className="mx-auto mt-2.5 max-w-[420px] text-[13px] leading-[1.5] text-text-3 text-pretty">
-            The tracker holds the listings you are doing something about. Save one from the board and
-            it appears here, with its status history.
+            The tracker holds the listings you are doing something about. Save
+            one from the board and it appears here, with its status history — or
+            add a job you found somewhere else.
           </p>
           <button
             type="button"
@@ -146,8 +163,14 @@ export default function Tracker() {
           </button>
         </div>
       ) : (
-        <div onClick={() => setMenu(null)} className="rounded-panel border border-line bg-surface">
-          <ColumnHead columns={columns} labels={["Company", "Role", "Posted", "Status"]} />
+        <div
+          onClick={() => setMenu(null)}
+          className="rounded-panel border border-line bg-surface"
+        >
+          <ColumnHead
+            columns={columns}
+            labels={["Company", "Role", "Posted", "Status"]}
+          />
           {groups.map((group, groupIndex) => (
             <div key={group.key}>
               <div
@@ -155,16 +178,26 @@ export default function Tracker() {
                   setCollapsed(
                     collapsed.includes(group.key)
                       ? collapsed.filter((key) => key !== group.key)
-                      : [...collapsed, group.key]
+                      : [...collapsed, group.key],
                   )
                 }
                 className="flex h-[34px] items-center gap-2 border-b border-line-soft bg-head-2 pr-4 pl-3 text-text-4"
-                style={{ borderTop: groupIndex === 0 ? "none" : "1px solid rgba(0,0,0,0.06)" }}
+                style={{
+                  borderTop:
+                    groupIndex === 0 ? "none" : "1px solid rgba(0,0,0,0.06)",
+                }}
               >
                 <Chevron size={12} flip={!collapsed.includes(group.key)} />
-                <span className="size-2 rounded-full" style={{ background: group.dot }} />
-                <span className="text-[12.5px] font-semibold text-text">{group.label}</span>
-                <span className="font-mono text-[11.5px]">{group.rows.length}</span>
+                <span
+                  className="size-2 rounded-full"
+                  style={{ background: group.dot }}
+                />
+                <span className="text-[12.5px] font-semibold text-text">
+                  {group.label}
+                </span>
+                <span className="font-mono text-[11.5px]">
+                  {group.rows.length}
+                </span>
               </div>
               {collapsed.includes(group.key)
                 ? null
@@ -175,9 +208,12 @@ export default function Tracker() {
                       className="relative grid h-12 items-center gap-4 pr-4 pl-[30px] transition-colors duration-100 hover:bg-row-hover"
                       style={{
                         gridTemplateColumns: columns,
-                        borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
+                        borderTop:
+                          index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
                         background:
-                          selected === listing.id ? "rgba(10,132,255,0.07)" : "transparent",
+                          selected === listing.id
+                            ? "rgba(10,132,255,0.07)"
+                            : "transparent",
                       }}
                     >
                       <CompanyCell listing={listing} />
@@ -191,8 +227,12 @@ export default function Tracker() {
                           wide
                           chevron
                           onClick={(event) => {
-                            event.stopPropagation()
-                            setMenu(menu === `row${listing.id}` ? null : `row${listing.id}`)
+                            event.stopPropagation();
+                            setMenu(
+                              menu === `row${listing.id}`
+                                ? null
+                                : `row${listing.id}`,
+                            );
                           }}
                         />
                       </div>
@@ -216,5 +256,5 @@ export default function Tracker() {
       )}
       <Attribution listings={rows} />
     </Layout>
-  )
+  );
 }

@@ -12,9 +12,10 @@ import sqlite3
 from typing import Annotated, Any
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import Response
 from pydantic import BaseModel
 
-from intern_app import board, profile
+from intern_app import board, icons, profile
 
 router = APIRouter(prefix="/api")
 
@@ -76,6 +77,7 @@ def read_search(
     q: str = "",
     industry: str = "",
     status: str = "",
+    sort: str = board.DEFAULT_SORT,
     page: int = 1,
     per_page: int = board.DEFAULT_PER_PAGE,
 ) -> dict[str, Any]:
@@ -87,7 +89,13 @@ def read_search(
     try:
         total = board.count_search(conn, text=q, industry=industry, status=status)
         rows = board.search_listings(
-            conn, text=q, industry=industry, status=status, page=page, per_page=per_page
+            conn,
+            text=q,
+            industry=industry,
+            status=status,
+            sort=sort,
+            page=page,
+            per_page=per_page,
         )
         return {
             "listings": as_dicts(rows),
@@ -164,3 +172,59 @@ def read_profile() -> dict[str, Any]:
         }
     finally:
         conn.close()
+
+
+class ManualListing(BaseModel):
+    title: str
+    company: str
+    location: str = ""
+    url: str = ""
+    posted_at: str = ""
+    status: str = "applied"
+    notes: str = ""
+
+
+@router.post("/manual")
+def write_manual_listing(entry: ManualListing) -> dict[str, Any]:
+    """Add a job I found outside the app, straight into the tracker."""
+    conn = open_db()
+    try:
+        try:
+            listing_id = board.add_manual_listing(
+                conn,
+                title=entry.title,
+                company=entry.company,
+                location=entry.location,
+                url=entry.url,
+                posted_at=entry.posted_at,
+                status=entry.status,
+                notes=entry.notes,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return {"listing_id": listing_id, "counts": board.status_counts(conn)}
+    finally:
+        conn.close()
+
+
+@router.get("/icon/{company}")
+def read_icon(company: str) -> Response:
+    """A company's cached favicon, or 404 so the row draws its fallback tile.
+
+    The bytes were fetched once by `intern-app icons` and stored locally, so
+    rendering the board makes no third-party request and tells nobody which
+    companies are on it.
+    """
+    conn = open_db()
+    try:
+        row = icons.read_icon(conn, company)
+    finally:
+        conn.close()
+
+    if row is None or row["image"] is None:
+        raise HTTPException(status_code=404, detail="no icon for that company")
+    return Response(
+        content=row["image"],
+        media_type=row["content_type"] or "image/x-icon",
+        headers={"Cache-Control": "public, max-age=86400"},
+    )

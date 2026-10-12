@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import sqlite3
 
+from intern_app import db
 from intern_app.db import utcnow
 
 STATUSES = ("new", "saved", "applied", "interviewing", "rejected", "offer", "hidden")
@@ -49,6 +50,9 @@ SELECT_LISTINGS = """
            COALESCE(d.education, '') AS education,
            COALESCE(d.term, '') AS term,
            COALESCE(NULLIF(c.industry, 'Unknown'), '') AS industry,
+           -- So a row only asks for a logo we actually hold, rather than
+           -- firing a request per company and letting most of them 404.
+           COALESCE(i.ok, 0) AS has_icon,
            COALESCE(pi.rank, :unranked) AS industry_rank,
            COALESCE(t.status, 'new') AS status,
            COALESCE(t.notes, '') AS notes,
@@ -60,20 +64,22 @@ SELECT_LISTINGS = """
            ON pi.industry = NULLIF(c.industry, 'Unknown')
     LEFT JOIN tracker t ON t.listing_id = l.id
     LEFT JOIN listing_details d ON d.listing_id = l.id
+    LEFT JOIN company_icons i ON i.company = l.company
 """
 
 
 DEFAULT_PER_PAGE = 50
 
-# Sort orders the list can be read in. `rank` leads with the most preferred
-# industry, which buries everything else for 23 pages; `newest` is what a daily
-# pass wants. A listing with no date sorts last under `newest` rather than first.
+# Sort orders the list can be read in. `newest` is the default and is what a
+# daily pass wants. `rank` leads with the most preferred industry, which is a
+# useful second read but buries everything else for 23 pages. A listing with no
+# date sorts last under `newest` rather than first.
 SORT_ORDERS = {
     "rank": "industry_rank, l.posted_at DESC, l.id DESC",
     "newest": "(l.posted_at = '') , l.posted_at DESC, l.id DESC",
     "company": "l.company COLLATE NOCASE, l.title COLLATE NOCASE",
 }
-DEFAULT_SORT = "rank"
+DEFAULT_SORT = "newest"
 
 
 def order_by(sort: str) -> str:
@@ -230,6 +236,7 @@ def search_listings(
     text: str = "",
     industry: str = "",
     status: str = "",
+    sort: str = DEFAULT_SORT,
     page: int = 1,
     per_page: int = DEFAULT_PER_PAGE,
 ) -> list[sqlite3.Row]:
@@ -245,7 +252,7 @@ def search_listings(
     sql = f"""
         {SELECT_LISTINGS}
         WHERE {" AND ".join(where)}
-        ORDER BY industry_rank, l.posted_at DESC, l.id DESC
+        ORDER BY {order_by(sort)}
         LIMIT :limit OFFSET :offset
     """
     return conn.execute(sql, params).fetchall()
@@ -359,3 +366,63 @@ def known_industries(conn: sqlite3.Connection) -> list[str]:
         """
     ).fetchall()
     return [row["industry"] for row in rows]
+
+
+def add_manual_listing(
+    conn: sqlite3.Connection,
+    *,
+    title: str,
+    company: str,
+    location: str = "",
+    url: str = "",
+    posted_at: str = "",
+    status: str = "applied",
+    notes: str = "",
+) -> int:
+    """Store a job I found outside the app and put it straight in the tracker.
+
+    Most of what I apply to arrives through a source, but not all of it — a
+    referral, a careers page I was sent, a recruiter email. Those have to live
+    in the tracker too or the tracker is not the whole picture.
+
+    `url` is what listings dedupe on and it is optional here, so a listing with
+    no link gets a stable local one rather than colliding with every other
+    blank. The listing is stored with `source = 'manual'` so it is always clear
+    which rows I typed myself.
+    """
+    from intern_app.sources.base import normalize
+
+    title = title.strip()
+    company = company.strip()
+    if not title or not company:
+        raise ValueError("a manual listing needs both a title and a company")
+    if status not in STATUSES:
+        raise ValueError(f"status must be one of {STATUSES}, got {status!r}")
+
+    link = url.strip()
+    if not link:
+        slug = f"{company} {title}".lower().replace(" ", "-")
+        link = f"manual:{slug}"
+
+    db.upsert_listings(
+        conn,
+        [
+            normalize(
+                title=title,
+                company=company,
+                location=location.strip(),
+                url=link,
+                description="",
+                posted_at=posted_at.strip(),
+                source="manual",
+                full_text=False,
+            )
+        ],
+    )
+    listing_id = conn.execute("SELECT id FROM listings WHERE url = ?", (link,)).fetchone()["id"]
+    set_status(conn, listing_id, status)
+    if notes.strip():
+        conn.execute(
+            "UPDATE tracker SET notes = ? WHERE listing_id = ?", (notes.strip(), listing_id)
+        )
+    return int(listing_id)

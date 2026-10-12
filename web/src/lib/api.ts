@@ -14,6 +14,7 @@ export type Listing = {
   education: string
   term: string
   industry: string
+  has_icon: number
   industry_rank: number
   status: string
   notes: string

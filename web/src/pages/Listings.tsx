@@ -26,7 +26,7 @@ export default function Listings() {
   const [industry, setIndustry] = useState("")
   const [roles, setRoles] = useState<string[]>([])
   const [levels, setLevels] = useState<string[]>([])
-  const [sort, setSort] = useState("rank")
+  const [sort, setSort] = useState("newest")
   const [rows, setRows] = useState<Listing[]>([])
   const [total, setTotal] = useState(0)
   const [more, setMore] = useState(false)
@@ -201,7 +201,7 @@ export default function Listings() {
               label="Sort"
               value={sort}
               open={menu === "sort"}
-              active={sort !== "rank"}
+              active={sort !== "newest"}
               muted={searching}
               options={sortOptions}
               onToggle={() => setMenu(menu === "sort" ? null : "sort")}

@@ -30,7 +30,7 @@ def board_data(conn, listing):
 
 
 def test_listings_sort_by_industry_preference(board_data):
-    rows = board.list_new(board_data)
+    rows = board.list_new(board_data, sort="rank")
 
     assert [row["company"] for row in rows] == ["TD Bank", "TikTok", "Acme Co"]
     assert [row["industry_rank"] for row in rows] == [1, 2, board.UNRANKED]
@@ -38,7 +38,7 @@ def test_listings_sort_by_industry_preference(board_data):
 
 def test_an_unranked_industry_sorts_last_but_is_not_hidden(board_data):
     """A good role in a fifth-choice industry is still worth seeing."""
-    companies = [row["company"] for row in board.list_new(board_data)]
+    companies = [row["company"] for row in board.list_new(board_data, sort="rank")]
 
     assert "Acme Co" in companies
     assert companies[-1] == "Acme Co"
@@ -239,7 +239,7 @@ def test_an_unknown_sort_falls_back_rather_than_failing(conn, listing):
     table and never interpolated."""
     db.upsert_listings(conn, [listing()])
 
-    assert board.order_by("'; DROP TABLE listings; --") == board.SORT_ORDERS["rank"]
+    assert board.order_by("'; DROP TABLE listings; --") == board.SORT_ORDERS[board.DEFAULT_SORT]
     assert board.list_new(conn, sort="nonsense")
 
 
@@ -369,3 +369,54 @@ def test_level_counts_report_unread_titles_separately(conn, listing):
 
     assert counts["intern"] == 1
     assert counts[""] == 1
+
+
+def test_the_board_leads_with_the_newest_listing(conn, listing):
+    """Ordering by industry rank buried everything else for 23 pages, so the
+    default a daily pass gets is newest first."""
+    db.upsert_listings(
+        conn,
+        [
+            listing("https://x.com/old", company="Old Co", posted_at="2025-01-01"),
+            listing("https://x.com/new", company="New Co", posted_at="2026-10-09"),
+        ],
+    )
+
+    assert [row["company"] for row in board.list_new(conn)] == ["New Co", "Old Co"]
+
+
+def test_a_manual_job_lands_in_the_tracker_not_the_board(conn):
+    """Most of what I apply to comes through a source. A referral does not, and
+    the tracker is not the whole picture unless it holds those too."""
+    listing_id = board.add_manual_listing(
+        conn,
+        title="Software Engineer Intern",
+        company="Acme",
+        location="Boston, MA",
+        status="applied",
+        notes="Referred by a friend",
+    )
+
+    tracked = board.list_tracked(conn)
+
+    assert [row["id"] for row in tracked] == [listing_id]
+    assert tracked[0]["company"] == "Acme"
+    assert tracked[0]["source"] == "manual"
+    assert tracked[0]["notes"] == "Referred by a friend"
+    assert listing_id not in [row["id"] for row in board.list_new(conn)]
+
+
+def test_two_manual_jobs_with_no_link_do_not_collide(conn):
+    """Listings dedupe on url, and a manual entry need not have one."""
+    first = board.add_manual_listing(conn, title="SWE Intern", company="Acme")
+    second = board.add_manual_listing(conn, title="Data Intern", company="Globex")
+
+    assert first != second
+    assert len(board.list_tracked(conn)) == 2
+
+
+def test_a_manual_job_needs_a_title_and_a_company(conn):
+    with pytest.raises(ValueError, match="title and a company"):
+        board.add_manual_listing(conn, title="", company="Acme")
+    with pytest.raises(ValueError, match="title and a company"):
+        board.add_manual_listing(conn, title="SWE Intern", company="  ")

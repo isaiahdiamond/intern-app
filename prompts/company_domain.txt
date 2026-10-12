@@ -1,0 +1,34 @@
+Each line below is the name of a company that is hiring, as a job board wrote
+it. Give the company's own primary website domain, so its favicon can be shown
+beside its listings.
+
+Companies:
+{companies}
+
+For each company return:
+
+- `domain`: the bare domain of its main website, lowercase, no scheme and no
+  `www.` — "nvidia.com", "jpmorganchase.com", "bbc.co.uk". Use the company's
+  real site, not a job board, not an applicant tracking system, not a LinkedIn
+  or Crunchbase page.
+- `confident`: `true` only when you actually know this company and its site.
+  `false` when you are inferring the domain from the name, when the name is too
+  generic to identify, when several real companies share it, or when you have
+  not heard of it.
+
+Rules that matter more than coverage here:
+
+- A wrong logo is worse than no logo. "Multiply Labs" is `multiplylabs.com`,
+  not `multiply.com`. If the obvious guess belongs to a different company, say
+  `confident: false`.
+- Keep the name's own words. "The Hartford" is `thehartford.com`. Do not strip
+  "The", "Labs", "Group" or "Technologies" when they are part of the real
+  domain.
+- Expand an abbreviation to the site the company actually uses. "Southern
+  California Edison (SCE)" is `sce.com`.
+- A university, a government agency, a hospital or a national lab is a company
+  here too: use its real domain.
+- When you genuinely cannot place the company, return an empty `domain` and
+  `confident: false`. That is a useful answer, not a failure.
+
+Return one entry per company, in the same order, using the exact name given.

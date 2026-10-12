@@ -193,6 +193,58 @@ def _cmd_classify(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_icons(args: argparse.Namespace) -> int:
+    """Find each company's website and cache its favicon.
+
+    Two passes. The apply url answers for the companies that post on their own
+    site; the rest need Claude, because a company name is not a domain and the
+    obvious guess is often a different company's site.
+    """
+    from intern_app import icons
+    from intern_app.llm import client, domains
+
+    conn = db.connect()
+    try:
+        pending = icons.companies_needing_icon(conn, limit=args.limit)
+        if not pending:
+            print("Every company has been looked up already.")
+            return 0
+
+        unresolved = [
+            row["company"]
+            for row in pending
+            if not icons.domain_from_urls((row["urls"] or "").split("\n"))
+        ]
+        resolved: dict[str, str] = {}
+
+        if unresolved and not args.no_llm:
+            if not client.have_api_key():
+                print("ANTHROPIC_API_KEY is not set, so only apply-url domains can be used.")
+            else:
+                calls = -(-len(unresolved) // domains.BATCH_SIZE)
+                estimate = calls * 0.02
+                print(
+                    f"{len(pending)} companies, {len(unresolved)} needing Claude: "
+                    f"{calls} calls, about ${estimate:.2f}"
+                )
+                needs_confirming = not args.yes and estimate > 0.10
+                answer = input("Continue? [y/N] ").strip().lower() if needs_confirming else "y"
+                if answer not in ("y", "yes"):
+                    print("Nothing fetched.")
+                    return 0
+                resolved = domains.resolve_domains(conn, unresolved)
+                print(f"Claude placed {len(resolved)} of {len(unresolved)} companies")
+
+        found = icons.collect_icons(conn, limit=args.limit, domains=resolved)
+        print(
+            f"{found['companies']} companies: {found['icons']} icons, "
+            f"{found['no_icon']} with no icon, {found['no_domain']} with no domain"
+        )
+        return 0
+    finally:
+        conn.close()
+
+
 def _cmd_clean(args: argparse.Namespace) -> int:
     """Read every unread title into a role, a level, a degree and a term."""
     from intern_app.llm import client, titles
@@ -276,6 +328,14 @@ def build_parser() -> argparse.ArgumentParser:
     clean_cmd.add_argument("--limit", type=int, default=0, help="only read this many (0 means all)")
     clean_cmd.add_argument("--yes", action="store_true", help="skip the cost confirmation")
     clean_cmd.set_defaults(func=_cmd_clean)
+
+    icons_cmd = sub.add_parser("icons", help="cache a favicon for each company")
+    icons_cmd.add_argument("--limit", type=int, default=0, help="only do this many (0 means all)")
+    icons_cmd.add_argument("--yes", action="store_true", help="skip the cost confirmation")
+    icons_cmd.add_argument(
+        "--no-llm", action="store_true", help="only use domains found in apply urls"
+    )
+    icons_cmd.set_defaults(func=_cmd_icons)
 
     serve_cmd = sub.add_parser("serve", help="run the local web app")
     serve_cmd.add_argument("--host", default="127.0.0.1")

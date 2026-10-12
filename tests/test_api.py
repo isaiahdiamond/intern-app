@@ -83,6 +83,7 @@ def test_listings_come_back_with_the_fields_the_board_renders(client):
     assert row["level"] == "intern"
     assert row["education"] == "undergrad"
     assert row["industry"] == "Software & Internet"
+    assert row["has_icon"] == 0
     assert row["status"] == "new"
 
 
@@ -142,3 +143,48 @@ def test_the_profile_endpoint_says_onboarding_is_done(client):
 
     assert body["onboarded"] is True
     assert body["profile"]["school"] == "Example U"
+
+
+def test_a_manual_job_posts_straight_into_the_tracker(client):
+    added = client.post(
+        "/api/manual",
+        json={"title": "Research Intern", "company": "Acme", "status": "applied"},
+    )
+
+    assert added.status_code == 200
+    tracked = client.get("/api/tracker").json()["listings"]
+    assert [row["company"] for row in tracked] == ["Acme"]
+    assert tracked[0]["source"] == "manual"
+
+
+def test_a_manual_job_without_a_company_is_refused(client):
+    refused = client.post("/api/manual", json={"title": "Research Intern", "company": ""})
+
+    assert refused.status_code == 400
+    assert client.get("/api/tracker").json()["listings"] == []
+
+
+def test_an_icon_is_served_from_our_own_origin(client):
+    from intern_app import db, icons
+
+    conn = db.connect()
+    icons.save_icon(
+        conn,
+        company="TikTok",
+        domain="lifeattiktok.com",
+        domain_from="url",
+        image=b"\x89PNG\r\n",
+        content_type="image/png",
+        ok=True,
+    )
+    conn.close()
+
+    served = client.get("/api/icon/TikTok")
+
+    assert served.status_code == 200
+    assert served.content == b"\x89PNG\r\n"
+    assert served.headers["content-type"] == "image/png"
+
+
+def test_a_company_with_no_icon_404s_so_the_row_draws_its_tile(client):
+    assert client.get("/api/icon/Nobody%20Inc").status_code == 404

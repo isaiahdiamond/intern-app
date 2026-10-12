@@ -152,3 +152,22 @@ CREATE TABLE IF NOT EXISTS listing_details (
 
 CREATE INDEX IF NOT EXISTS listing_details_level_idx ON listing_details (level);
 CREATE INDEX IF NOT EXISTS listing_details_education_idx ON listing_details (education);
+
+-- A company's website and its favicon, so the board can show a logo.
+-- The listing's apply url is usually an ATS (greenhouse, workday, ashby) and
+-- not the company at all, so the domain is worked out separately and cached
+-- here. The image bytes live in the row because they are a couple of kilobytes
+-- each and this keeps the whole cache inside the one database file.
+--
+-- A row with ok = 0 is a company we looked for and did not find. It is kept so
+-- the lookup is not retried on every page load.
+CREATE TABLE IF NOT EXISTS company_icons (
+    company      TEXT PRIMARY KEY,
+    domain       TEXT NOT NULL DEFAULT '',
+    domain_from  TEXT NOT NULL DEFAULT '',
+    image        BLOB,
+    content_type TEXT NOT NULL DEFAULT '',
+    fetched_at   TEXT NOT NULL,
+    ok           INTEGER NOT NULL DEFAULT 0,
+    error        TEXT NOT NULL DEFAULT ''
+);
