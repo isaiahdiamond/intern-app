@@ -1,0 +1,46 @@
+Below is the full text of one job posting, and the title the board gave it.
+Read the posting and answer from what it actually says.
+
+Title: {title}
+
+Posting:
+{description}
+
+Return:
+
+- `clean_title`: the role on its own, in title case. Drop the season, the year,
+  the team or division, the office or location, the programme name, the
+  requisition number, the level word (intern, internship, co-op, new grad,
+  graduate, campus, university) and any degree wording. Keep a meaningful
+  specialisation, so "Software Engineer, Backend" keeps "Backend". Prefer the
+  title's own words; only rename it if the posting makes clear the title is
+  wrong. Never return an empty string.
+  Keep the role noun. "Machine Learning Internship - Manipulation" is "Machine
+  Learning Engineer, Manipulation", not "Manipulation": a specialisation on
+  its own does not say what the job is.
+- `level`: one of `intern`, `coop`, `new_grad`, `other`. An internship is
+  `intern`. A co-op or alternance is `coop`. A graduate, new graduate, campus,
+  university or entry-level role aimed at people finishing a degree is
+  `new_grad`. A role that asks for years of professional experience is `other`.
+  The posting body is the authority here, not the title: a title with no level
+  word often turns out to be a campus role in the body, and a title that says
+  "Engineer 1" often turns out to require five years.
+- `education`: one of `undergrad`, `masters`, `phd`, `any`.
+  - `phd` only when a doctorate is required or the role is restricted to PhD
+    students.
+  - `masters` only when a master's is the stated minimum.
+  - `undergrad` when a bachelor's is the stated minimum, or when the posting is
+    open to undergraduates.
+  - `any` when the posting states no degree requirement, or accepts any of
+    several levels. "Currently enrolled in a degree program" with no level named
+    is `any`.
+  Do not infer a degree from how senior the role sounds. Say what the posting
+  says.
+- `term`: the season and year the role runs, as "Summer 2027", if the posting
+  states one. Empty string otherwise.
+- `years_experience`: the minimum years of professional experience the posting
+  asks for, as a whole number. 0 when it asks for none or does not say.
+- `citizenship`: `us_citizen` when the posting requires US citizenship,
+  `clearance` when it requires or will sponsor a security clearance,
+  `no_sponsorship` when it says it will not sponsor a visa, and `` (empty) when
+  none of these are stated. Pick the most restrictive that applies.

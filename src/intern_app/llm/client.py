@@ -102,18 +102,25 @@ def call_structured(
     listing_id: int | None = None,
     effort: str = "low",
     max_tokens: int = MAX_TOKENS,
+    model: str = "",
 ) -> BaseModel:
     """Send one prompt, validate the reply against `output_model`, log the call.
 
     `effort` defaults to low because the calls in this app are short extraction
     and suggestion tasks rather than hard reasoning. Raise it per call site if a
     task needs more thought.
+
+    `model` overrides the configured one for a single call. Reading a job
+    description is a long-input, short-output job where the volume of text
+    rather than the difficulty is what costs, so that step asks for a smaller
+    model. The logged cost is computed from whichever model actually ran.
     """
     if not have_api_key():
         # Nothing was spent, so there is nothing to log.
         raise NoApiKeyError("ANTHROPIC_API_KEY is not set. Add it to .env to use the LLM steps.")
 
     cfg = settings()
+    chosen = model or cfg.model
     client = anthropic.Anthropic(api_key=cfg.require("ANTHROPIC_API_KEY"))
     response = None
 
@@ -124,7 +131,7 @@ def call_structured(
         # the JSON and validating it here keeps the usage in hand whatever
         # happens, which is what makes the spend report honest.
         response = client.messages.create(
-            model=cfg.model,
+            model=chosen,
             max_tokens=max_tokens,
             output_config={"effort": effort, "format": json_format(output_model)},
             messages=[{"role": "user", "content": prompt}],
@@ -146,7 +153,7 @@ def call_structured(
         db.record_llm_call(
             conn,
             prompt_name=prompt_name,
-            model=cfg.model,
+            model=chosen,
             listing_id=listing_id,
             request_id=getattr(response, "_request_id", "") or "",
             input_text=prompt,
@@ -159,7 +166,7 @@ def call_structured(
     db.record_llm_call(
         conn,
         prompt_name=prompt_name,
-        model=cfg.model,
+        model=chosen,
         listing_id=listing_id,
         request_id=response._request_id or "",
         input_text=prompt,

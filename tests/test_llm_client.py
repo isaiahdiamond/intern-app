@@ -157,3 +157,22 @@ def test_load_prompt_fills_placeholders():
 def test_a_missing_prompt_file_fails_loudly():
     with pytest.raises(FileNotFoundError, match="no_such_prompt"):
         client.load_prompt("no_such_prompt")
+
+
+def test_a_per_call_model_is_what_gets_logged(conn, monkeypatch):
+    """Reading a posting runs on a smaller model than the rest of the app. The
+    success log kept reading the configured model instead of the one that ran,
+    so a Haiku call was logged, and priced, as Opus — forty times over."""
+    install_fake(monkeypatch, FakeResponse('{"roles": ["Data Science Intern"]}'))
+
+    client.call_structured(
+        conn,
+        prompt_name="suggest_roles",
+        prompt="hello",
+        output_model=Roles,
+        model="claude-haiku-5-5",
+    )
+
+    row = logged(conn)[0]
+    assert row["model"] == "claude-haiku-5-5"
+    assert row["cost_usd"] < 0.001

@@ -193,6 +193,66 @@ def _cmd_classify(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_describe(args: argparse.Namespace) -> int:
+    """Collect the full text of every listing on a board that publishes one."""
+    from intern_app.sources import ats_detail
+
+    conn = db.connect()
+    try:
+        pending = ats_detail.listings_needing_description(conn, limit=args.limit)
+        if not pending:
+            print("Every reachable posting already has its full text.")
+            return 0
+
+        print(f"{len(pending)} postings to fetch from greenhouse, lever and ashby")
+        found = ats_detail.collect_descriptions(conn, limit=args.limit)
+        print(
+            f"{found['tried']} tried: {found['stored']} stored, "
+            f"{found['empty']} empty, {found['failed']} failed"
+        )
+        return 0
+    finally:
+        conn.close()
+
+
+def _cmd_read(args: argparse.Namespace) -> int:
+    """Read each collected posting for its level, degree, term and experience."""
+    from intern_app.llm import client, postings
+
+    if not client.have_api_key():
+        print("ANTHROPIC_API_KEY is not set. Add it to .env to read postings.")
+        return 1
+
+    conn = db.connect()
+    try:
+        pending = postings.listings_with_unread_descriptions(conn, limit=args.limit)
+        if not pending:
+            print("Every collected posting has been read already.")
+            return 0
+
+        # About $0.0015 each on Haiku, measured over real postings.
+        estimate = len(pending) * 0.0015
+        print(f"{len(pending)} postings to read on {postings.MODEL}, about ${estimate:.2f}")
+        needs_confirming = not args.yes and estimate > 0.10
+        if needs_confirming and input("Continue? [y/N] ").strip().lower() not in ("y", "yes"):
+            print("Nothing read.")
+            return 0
+
+        read = failed = 0
+        for row in pending:
+            try:
+                postings.read_posting(conn, row)
+                read += 1
+            # One bad posting must not end a run of nine hundred.
+            except Exception as exc:
+                failed += 1
+                print(f"  listing {row['id']}: {type(exc).__name__}")
+        print(f"read {read} postings, {failed} failed")
+        return 0
+    finally:
+        conn.close()
+
+
 def _cmd_icons(args: argparse.Namespace) -> int:
     """Find each company's website and cache its favicon.
 
@@ -336,6 +396,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--no-llm", action="store_true", help="only use domains found in apply urls"
     )
     icons_cmd.set_defaults(func=_cmd_icons)
+
+    describe_cmd = sub.add_parser("describe", help="collect full postings from ATS APIs")
+    describe_cmd.add_argument("--limit", type=int, default=0, help="only do this many")
+    describe_cmd.set_defaults(func=_cmd_describe)
+
+    read_cmd = sub.add_parser("read", help="read collected postings for level and degree")
+    read_cmd.add_argument("--limit", type=int, default=0, help="only read this many")
+    read_cmd.add_argument("--yes", action="store_true", help="skip the cost confirmation")
+    read_cmd.set_defaults(func=_cmd_read)
 
     serve_cmd = sub.add_parser("serve", help="run the local web app")
     serve_cmd.add_argument("--host", default="127.0.0.1")
