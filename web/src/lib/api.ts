@@ -13,6 +13,8 @@ export type Listing = {
   level: string;
   education: string;
   term: string;
+  citizenship: string;
+  years_experience: number;
   industry: string;
   has_icon: number;
   industry_rank: number;
@@ -207,8 +209,9 @@ export function today() {
   return `${day} · ${date}`;
 }
 
-// `level`, `education` and `term` hold what the title cleaner stripped out of the
-// raw title. Most rows are not cleaned yet, so this is often empty.
+// What a listing says about itself beyond its title. Citizenship and years of
+// experience come only from the posting body, so they show on the listings whose
+// full text we hold and are absent on the rest.
 export function titleTags(listing: Listing) {
   const labels: Record<string, string> = {
     intern: "Intern",
@@ -219,12 +222,19 @@ export function titleTags(listing: Listing) {
     masters: "Masters",
     phd: "PhD",
     any: "Any degree",
+    us_citizen: "US citizens",
+    clearance: "Clearance",
+    no_sponsorship: "No sponsorship",
   };
   const tags = [];
   if (listing.level) tags.push(labels[listing.level] ?? listing.level);
   if (listing.education)
     tags.push(labels[listing.education] ?? listing.education);
   if (listing.term) tags.push(listing.term);
+  if (listing.citizenship)
+    tags.push(labels[listing.citizenship] ?? listing.citizenship);
+  if (listing.years_experience > 0)
+    tags.push(`${listing.years_experience}+ yrs`);
   return tags;
 }
 

@@ -49,6 +49,8 @@ SELECT_LISTINGS = """
            COALESCE(d.level, '') AS level,
            COALESCE(d.education, '') AS education,
            COALESCE(d.term, '') AS term,
+           COALESCE(d.citizenship, '') AS citizenship,
+           COALESCE(d.years_experience, 0) AS years_experience,
            COALESCE(NULLIF(c.industry, 'Unknown'), '') AS industry,
            -- So a row only asks for a logo we actually hold, rather than
            -- firing a request per company and letting most of them 404.

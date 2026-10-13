@@ -154,6 +154,10 @@ CREATE TABLE IF NOT EXISTS listing_details (
     level       TEXT NOT NULL DEFAULT '',
     education   TEXT NOT NULL DEFAULT '',
     term        TEXT NOT NULL DEFAULT '',
+    -- Only a posting's own text says these two, so they stay 0 and '' for a
+    -- listing read from its title alone.
+    years_experience INTEGER NOT NULL DEFAULT 0,
+    citizenship TEXT NOT NULL DEFAULT '',
     cleaned_at  TEXT NOT NULL
 );
 

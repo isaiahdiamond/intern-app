@@ -47,7 +47,11 @@ def connect(db_path: str | Path | None = None) -> sqlite3.Connection:
 # Columns added to a table that already exists in a database out in the world.
 # `CREATE TABLE IF NOT EXISTS` does nothing for a table that is already there,
 # so a new column has to be added by hand or the live database never gets it.
-ADDED_COLUMNS = (("profile", "education", "TEXT NOT NULL DEFAULT ''"),)
+ADDED_COLUMNS = (
+    ("profile", "education", "TEXT NOT NULL DEFAULT ''"),
+    ("listing_details", "years_experience", "INTEGER NOT NULL DEFAULT 0"),
+    ("listing_details", "citizenship", "TEXT NOT NULL DEFAULT ''"),
+)
 
 
 def add_missing_columns(conn: sqlite3.Connection) -> None:
@@ -346,21 +350,39 @@ def set_listing_detail(
     level: str,
     education: str,
     term: str,
+    years_experience: int = 0,
+    citizenship: str = "",
 ) -> None:
-    """Store how a title reads, replacing any earlier reading."""
+    """Store how a title reads, replacing any earlier reading.
+
+    The last two default to empty because a title cannot say them. Only the
+    pass that reads the posting body fills them in.
+    """
     conn.execute(
         """
         INSERT INTO listing_details
-            (listing_id, clean_title, level, education, term, cleaned_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+            (listing_id, clean_title, level, education, term,
+             years_experience, citizenship, cleaned_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT (listing_id) DO UPDATE SET
             clean_title = excluded.clean_title,
             level = excluded.level,
             education = excluded.education,
             term = excluded.term,
+            years_experience = excluded.years_experience,
+            citizenship = excluded.citizenship,
             cleaned_at = excluded.cleaned_at
         """,
-        (listing_id, clean_title, level, education, term, utcnow()),
+        (
+            listing_id,
+            clean_title,
+            level,
+            education,
+            term,
+            years_experience,
+            citizenship,
+            utcnow(),
+        ),
     )
 
 

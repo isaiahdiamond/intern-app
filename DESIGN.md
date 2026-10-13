@@ -153,13 +153,23 @@ Table row — the core of the app. A CSS grid, never a flex row, so columns line
 
 Company icon tile
 - 28px / radius 7px in lists, 34px / radius 9px on the dashboard, 40px / radius 10px in the panel
-- `--color-tile` background with a centred 🏢
-- The API has no company domain, only a job-board apply URL, so there is no real favicon to load.
-  Never fetch an icon from a third party and never render a broken image.
+- `--color-tile` background with a centred 🏢, which shows through whenever there is no icon
+- The apply URL is a job board, not the company, so the domain is resolved separately and the icon
+  is cached server-side. The page loads it from our own origin at `/api/icon/{company}`: the
+  browser must never request an icon from a third party, because that would tell a logo service
+  which companies are on the board
+- `has_icon` on the row says whether one exists. Only request an icon when it does, and never
+  render a broken image.
 
 Title tags
-- The row shows `level`, `education` and `term` as separate tags, in that order, and nothing when
-  they are empty — most listings are not cleaned yet and must still look right
+- The row shows `level`, `education`, `term`, `citizenship` and years of experience as separate
+  tags, in that order, and nothing when they are empty
+- The first three come from the title, the last two only from the posting body, so a listing whose
+  full text we never collected shows three tags at most and must still look right
+- `citizenship` reads "US citizens", "Clearance" or "No sponsorship"; years reads "2+ yrs". These
+  are knockout facts, which is why they sit on the row and not only in the panel
+- Keep every label inside 15 characters. The tags share a `minmax(0,2.2fr)` column with a
+  truncating `display_title`, and a long one eats the title instead of wrapping
 - 18px tall, radius 5px, `rgba(0,0,0,0.035)` on a `--color-line-soft` border, 10.5px mono
 
 Status pill

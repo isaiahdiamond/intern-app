@@ -79,6 +79,8 @@ def read_posting(conn: sqlite3.Connection, row: sqlite3.Row) -> bool:
         level=one_of(result.level, LEVELS, "other"),
         education=one_of(result.education, EDUCATION, "any"),
         term=result.term.strip(),
+        years_experience=max(0, result.years_experience),
+        citizenship=one_of(result.citizenship, CITIZENSHIP, ""),
     )
     return True
 
