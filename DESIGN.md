@@ -46,7 +46,7 @@ Lines (all hairline, 1px)
 - `--color-line-strong` `rgba(0,0,0,0.1)` menus, secondary buttons
 
 Fills
-- `--color-hover` `rgba(0,0,0,0.04)` sidebar hover
+- `--color-hover` `rgba(0,0,0,0.04)` sidebar and secondary-control hover
 - `--color-row-hover` `rgba(0,0,0,0.025)` list and tracker row hover
   (dashboard rows hover to `#FAFAFC`)
 - `--color-selected` `rgba(10,132,255,0.07)` the selected row
@@ -125,7 +125,10 @@ Never above 600. Uppercase only on dashboard column headers.
   18px onboarding chips
 - `--shadow-card` `0 1px 2px rgba(0,0,0,0.04), 0 8px 24px -12px rgba(0,0,0,0.08)` — dashboard cards
 - `--shadow-menu` `0 10px 30px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)` — every popover
-- `--shadow-seg` `0 1px 2px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.06)` — selected segment
+- `--shadow-seg` `0 1px 2px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.06)` — selected segment.
+  Every segment carries a 1px border so selecting one shifts nothing; it is transparent except on
+  the selected segment, which takes `rgba(0,0,0,0.06)`. Forced-colors mode drops every
+  `box-shadow`, and that border is what still tells the segments apart there
 - The list and tracker cards have a border and no shadow
 
 ## Layout
@@ -228,7 +231,7 @@ Buttons
 
 Onboarding role chips
 - 36px tall, radius 18px, 14px / 500, white on `--color-line-strong`; selected is
-  `#0A84FF` fill with white text; `scale(0.97)` while pressed
+  `#0A84FF` fill with white text; `scale(0.96)` while pressed (see Motion)
 - "Other" is a dashed-border chip that becomes an inline input with an "Add" button
 
 Empty states
@@ -237,9 +240,42 @@ Empty states
 
 ## Motion
 
-- 120–180ms on hovers and fills; 300ms `cubic-bezier(0.32,0.72,0,1)` on the panel width
-- `pop 140ms ease-out` on menus, `in 160ms ease-out` on inline inputs
-- No bouncing, no loops, respect `prefers-reduced-motion`
+The archetype is Corporate: clean, predictable, functional. This is a board someone scans every
+day, so motion confirms what just happened and never competes with reading. No bouncing, no
+overshoot, no loops, no ambient or decorative motion anywhere.
+
+Three constants, all `@theme` tokens in `index.css`. Use the tokens, never a raw curve or a
+millisecond literal in a component.
+
+Signature easing — `--ease-brand` `cubic-bezier(0.2,0,0,1)`, the default everywhere
+- It is also wired to `--default-transition-timing-function`, so a bare `transition-*` class
+  already uses it and needs no `ease-` utility
+- Two exceptions, both deliberate: `--ease-panel` `cubic-bezier(0.32,0.72,0,1)` for the detail
+  panel's width, and `ease-out` on a press, which better-ui fixes as an exact value
+
+Duration palette — three tiers plus one for hover
+- `--duration-hover` `100ms` row hover, and anything else that fires while scanning
+- `--duration-quick` `150ms` the default; presses, fills, chevrons, segment and filter state
+- `--duration-standard` `300ms` the detail panel's width
+- `--default-transition-duration` is `--duration-quick`, so a bare `transition-*` is 150ms and
+  only the two off-default tiers name a duration
+
+Entrance pattern — one recipe, 150ms, opacity with `translateY(4px)` and `scale(0.98)`
+- `--animate-pop` enters downward from its trigger: menus and popovers
+- `--animate-in` enters upward: inline inputs, empty states, a save confirmation, an error message
+- Nothing else animates in. Rows never stagger or fade; a table of 4,000 rows that animates on
+  every load or filter change is noise, not polish
+
+Other rules
+- Press is `scale(0.96)` over `--duration-quick`, gated behind `motion-safe:`, and only on the
+  onboarding role chips. A disabled control never scales
+- Exits are instant. Menus, the panel and empty states unmount without motion, which carries no
+  information here
+- Route changes are instant. No page transition
+- Icon stroke is `1.5` beside regular text and `2` beside semibold, which is why the active
+  sidebar nav item's icon is heavier than the rest
+- Respect `prefers-reduced-motion`; the global rule in `index.css` covers every transition and
+  animation, and the one scale is additionally `motion-safe:`
 
 ## Screens
 

@@ -1,9 +1,9 @@
-import { useState } from "react"
-import type { Listing } from "@/lib/api"
-import { ago, fullDate, status } from "@/lib/api"
-import { paths } from "@/lib/icons"
-import { External, Icon } from "./Icon"
-import { StatusMenu, StatusPill } from "./StatusPill"
+import { useState } from "react";
+import type { Listing } from "@/lib/api";
+import { ago, fullDate, status } from "@/lib/api";
+import { paths } from "@/lib/icons";
+import { External, Icon } from "./Icon";
+import { StatusMenu, StatusPill } from "./StatusPill";
 
 const labels: Record<string, string> = {
   undergrad: "Undergraduate",
@@ -14,14 +14,14 @@ const labels: Record<string, string> = {
   coop: "Co-op",
   new_grad: "New grad",
   other: "Other",
-}
+};
 
 const nextStatus: Record<string, string> = {
   new: "saved",
   saved: "applied",
   applied: "interviewing",
   interviewing: "offer",
-}
+};
 
 export default function DetailPanel({
   listing,
@@ -31,17 +31,23 @@ export default function DetailPanel({
   onClose,
   onStatus,
 }: {
-  listing: Listing
-  position: string
-  onPrev: () => void
-  onNext: () => void
-  onClose: () => void
-  onStatus: (next: string) => void
+  listing: Listing;
+  position: string;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+  onStatus: (next: string) => void;
 }) {
-  const [menu, setMenu] = useState(false)
-  const next = nextStatus[listing.status]
+  const [menu, setMenu] = useState(false);
+  const next = nextStatus[listing.status];
 
-  const props: { label: string; icon: string; value: string; mono?: boolean; meta?: string }[] = [
+  const props: {
+    label: string;
+    icon: string;
+    value: string;
+    mono?: boolean;
+    meta?: string;
+  }[] = [
     { label: "Location", icon: paths.pin, value: listing.location },
     {
       label: "Posted",
@@ -56,11 +62,18 @@ export default function DetailPanel({
       value: listing.source,
       meta: listing.source === "adzuna" ? "Jobs by Adzuna" : "",
     },
-    { label: "Industry", icon: paths.dash, value: listing.industry || "unclassified" },
+    {
+      label: "Industry",
+      icon: paths.dash,
+      value: listing.industry || "unclassified",
+    },
     {
       label: "Preference",
       icon: paths.target,
-      value: listing.industry_rank === 999 ? "unranked" : `#${listing.industry_rank} industry`,
+      value:
+        listing.industry_rank === 999
+          ? "unranked"
+          : `#${listing.industry_rank} industry`,
       mono: true,
     },
     {
@@ -68,7 +81,7 @@ export default function DetailPanel({
       icon: paths.profile,
       value: listing.full_text ? "full description stored" : "link only",
     },
-  ]
+  ];
   if (listing.level || listing.education) {
     props.push({
       label: "Level",
@@ -77,16 +90,17 @@ export default function DetailPanel({
         .filter(Boolean)
         .map((key) => labels[key] ?? key)
         .join(" · "),
-    })
+    });
   }
-  if (listing.term) props.push({ label: "Term", icon: paths.cal, value: listing.term })
+  if (listing.term)
+    props.push({ label: "Term", icon: paths.cal, value: listing.term });
   if (listing.copies > 1) {
     props.push({
       label: "Duplicates",
       icon: paths.copies,
       value: `${listing.copies} postings collapsed`,
       mono: true,
-    })
+    });
   }
 
   return (
@@ -100,8 +114,19 @@ export default function DetailPanel({
             aria-label="Previous listing"
             className="flex size-7 items-center justify-center rounded-[7px] hover:bg-black/5"
           >
-            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path d="M3 7.5l3-3 3 3" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                d="M3 7.5l3-3 3 3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
           <button
@@ -110,8 +135,19 @@ export default function DetailPanel({
             aria-label="Next listing"
             className="flex size-7 items-center justify-center rounded-[7px] hover:bg-black/5"
           >
-            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.5}>
-              <path d="M3 4.5l3 3 3-3" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
+              <path
+                d="M3 4.5l3 3 3-3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
           <button
@@ -120,14 +156,21 @@ export default function DetailPanel({
             aria-label="Close panel"
             className="flex size-7 items-center justify-center rounded-[7px] hover:bg-black/5"
           >
-            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={1.5}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 12 12"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+            >
               <path d="M3 3l6 6M9 3l-6 6" strokeLinecap="round" />
             </svg>
           </button>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto px-6 pt-6 pb-8">
+      <div className="min-h-0 flex-1 overflow-auto overscroll-contain px-6 pt-6 pb-8">
         <div className="flex size-10 items-center justify-center rounded-menu bg-tile text-[20px]">
           🏢
         </div>
@@ -155,17 +198,23 @@ export default function DetailPanel({
           </button>
         </div>
 
-        <div className="mt-[26px] text-[11.5px] font-semibold text-text-4">Properties</div>
+        <div className="mt-[26px] text-[11.5px] font-semibold text-text-4">
+          Properties
+        </div>
         <div className="mt-2 flex flex-col">
           {props.map((prop) => (
             <div key={prop.label} className="flex min-h-8 items-center py-1">
-              <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">{prop.label}</span>
+              <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">
+                {prop.label}
+              </span>
               <span className="mr-2 shrink-0 text-text-4">
                 <Icon path={prop.icon} size={14} />
               </span>
               <span
                 className="min-w-0 text-[13px] break-words"
-                style={{ fontFamily: prop.mono ? "var(--font-mono)" : undefined }}
+                style={{
+                  fontFamily: prop.mono ? "var(--font-mono)" : undefined,
+                }}
               >
                 {prop.value}
               </span>
@@ -178,21 +227,23 @@ export default function DetailPanel({
           ))}
 
           <div className="relative flex h-8 items-center">
-            <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">Status</span>
+            <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">
+              Status
+            </span>
             <StatusPill
               value={listing.status}
               chevron
               onClick={(event) => {
-                event.stopPropagation()
-                setMenu(!menu)
+                event.stopPropagation();
+                setMenu(!menu);
               }}
             />
             {menu ? (
               <StatusMenu
                 value={listing.status}
                 onPick={(key) => {
-                  setMenu(false)
-                  onStatus(key)
+                  setMenu(false);
+                  onStatus(key);
                 }}
                 style={{ left: 104, top: 30 }}
               />
@@ -200,7 +251,9 @@ export default function DetailPanel({
           </div>
 
           <div className="flex h-8 items-center">
-            <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">Link</span>
+            <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">
+              Link
+            </span>
             <span className="mr-2 shrink-0 text-text-4">
               <Icon path={paths.link} size={14} />
             </span>
@@ -217,13 +270,16 @@ export default function DetailPanel({
         </div>
 
         <div className="my-5 mb-[18px] h-px bg-line-soft" />
-        <div className="text-[11.5px] font-semibold text-text-4">Raw posting title</div>
+        <div className="text-[11.5px] font-semibold text-text-4">
+          Raw posting title
+        </div>
         <div className="mt-2 text-[13px] text-pretty">{listing.title}</div>
 
         <div className="mt-[18px] flex items-center gap-2.5 rounded-menu bg-bg px-3.5 py-3 text-[12.5px] text-text-2">
-          Skill extraction has not run on this listing, so there are no parsed requirements yet.
+          Skill extraction has not run on this listing, so there are no parsed
+          requirements yet.
         </div>
       </div>
     </div>
-  )
+  );
 }

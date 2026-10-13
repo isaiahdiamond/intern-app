@@ -1,5 +1,5 @@
-import { status, statuses, tracked } from "@/lib/api"
-import { Check, Chevron } from "./Icon"
+import { status, statuses, tracked } from "@/lib/api";
+import { Check, Chevron } from "./Icon";
 
 export function StatusPill({
   value,
@@ -7,12 +7,12 @@ export function StatusPill({
   chevron,
   onClick,
 }: {
-  value: string
-  wide?: boolean
-  chevron?: boolean
-  onClick?: (event: React.MouseEvent) => void
+  value: string;
+  wide?: boolean;
+  chevron?: boolean;
+  onClick?: (event: React.MouseEvent) => void;
 }) {
-  const current = status(value)
+  const current = status(value);
   return (
     <div
       onClick={onClick}
@@ -24,7 +24,10 @@ export function StatusPill({
         cursor: onClick ? "pointer" : "default",
       }}
     >
-      <span className="size-1.5 shrink-0 rounded-full" style={{ background: current.dot }} />
+      <span
+        className="size-1.5 shrink-0 rounded-full"
+        style={{ background: current.dot }}
+      />
       <span className="truncate">{current.label}</span>
       {chevron ? (
         <span className="ml-auto opacity-60">
@@ -32,7 +35,7 @@ export function StatusPill({
         </span>
       ) : null}
     </div>
-  )
+  );
 }
 
 export function StatusMenu({
@@ -41,12 +44,12 @@ export function StatusMenu({
   onPick,
   style,
 }: {
-  value: string
-  includeNew?: boolean
-  onPick: (next: string) => void
-  style?: React.CSSProperties
+  value: string;
+  includeNew?: boolean;
+  onPick: (next: string) => void;
+  style?: React.CSSProperties;
 }) {
-  const options = includeNew ? statuses : tracked
+  const options = includeNew ? statuses : tracked;
   return (
     <div
       onClick={(event) => event.stopPropagation()}
@@ -57,16 +60,19 @@ export function StatusMenu({
         <div
           key={option.key}
           onClick={(event) => {
-            event.stopPropagation()
-            onPick(option.key)
+            event.stopPropagation();
+            onPick(option.key);
           }}
           className="flex h-7 items-center gap-2.5 rounded-sm px-2.5 text-[12.5px] hover:bg-accent/10"
         >
-          <span className="size-[7px] rounded-full" style={{ background: option.dot }} />
+          <span
+            className="size-[7px] rounded-full"
+            style={{ background: option.dot }}
+          />
           <span>{option.label}</span>
           <Check on={option.key === value} />
         </div>
       ))}
     </div>
-  )
+  );
 }

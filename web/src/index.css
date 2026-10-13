@@ -32,9 +32,10 @@
   --color-offline: #ff3b30;
 
   --font-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue",
-    system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", system-ui, sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   --radius-sm: 6px;
@@ -43,18 +44,26 @@
   --radius-panel: 12px;
   --radius-card: 16px;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.08);
+  --shadow-card:
+    0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.08);
   --shadow-menu: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-seg: 0 1px 2px rgba(0, 0, 0, 0.1), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
-  --shadow-tile: 0 0 0 1px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.05);
 
+  --duration-hover: 100ms;
+  --duration-quick: 150ms;
+  --duration-standard: 300ms;
+
+  --ease-brand: cubic-bezier(0.2, 0, 0, 1);
   --ease-panel: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --default-transition-duration: var(--duration-quick);
+  --default-transition-timing-function: var(--ease-brand);
 
   --spacing-sidebar: 232px;
   --spacing-panel: 420px;
 
-  --animate-pop: pop 140ms ease-out;
-  --animate-in: in 160ms ease-out;
+  --animate-pop: pop 150ms var(--ease-brand);
+  --animate-in: in 150ms var(--ease-brand);
 }
 
 @keyframes pop {
@@ -67,7 +76,7 @@
 @keyframes in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(4px) scale(0.98);
   }
 }
 
@@ -93,8 +102,10 @@
     text-decoration: none;
   }
 
-  a:hover {
-    text-decoration: underline;
+  @media (hover: hover) {
+    a:hover {
+      text-decoration: underline;
+    }
   }
 
   input::placeholder,
@@ -132,6 +143,8 @@
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

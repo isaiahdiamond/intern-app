@@ -1,10 +1,10 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom"
-import Chat from "@/pages/Chat"
-import Dashboard from "@/pages/Dashboard"
-import Listings from "@/pages/Listings"
-import Onboarding from "@/pages/Onboarding"
-import Profile from "@/pages/Profile"
-import Tracker from "@/pages/Tracker"
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Chat from "@/pages/Chat";
+import Dashboard from "@/pages/Dashboard";
+import Listings from "@/pages/Listings";
+import Onboarding from "@/pages/Onboarding";
+import Profile from "@/pages/Profile";
+import Tracker from "@/pages/Tracker";
 
 export default function App() {
   return (
@@ -18,5 +18,5 @@ export default function App() {
         <Route path="/onboarding" element={<Onboarding />} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }

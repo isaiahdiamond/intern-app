@@ -152,7 +152,9 @@ export default function AddJob({ onAdded }: { onAdded: () => void }) {
       </div>
 
       {error ? (
-        <div className="mt-3 text-[12.5px] text-[#B3261E]">{error}</div>
+        <div className="animate-in mt-3 text-[12.5px] text-[#B3261E]">
+          {error}
+        </div>
       ) : null}
 
       <div className="mt-5 flex items-center gap-2">

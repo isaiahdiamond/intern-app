@@ -25,6 +25,7 @@ export default function Tracker() {
   const [collapsed, setCollapsed] = useState<string[]>([]);
   const [menu, setMenu] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   const [tick, setTick] = useState(0);
 
@@ -34,6 +35,7 @@ export default function Tracker() {
         listings: Tracked[];
         counts: Record<string, number>;
       }>("/api/tracker");
+      setLoaded(true);
       if (!board) return;
       setRows(board.listings);
       setCounts(board.counts);
@@ -104,9 +106,10 @@ export default function Tracker() {
                   type="button"
                   key={segment.key}
                   onClick={() => setFilter(segment.key)}
-                  className="flex h-[26px] items-center gap-1.5 rounded-[7px] px-2.5 text-[12.5px] font-medium whitespace-nowrap transition-all duration-150"
+                  className="flex h-[26px] items-center gap-1.5 rounded-[7px] border border-transparent px-2.5 text-[12.5px] font-medium whitespace-nowrap transition-[background-color,box-shadow,color]"
                   style={{
                     background: on ? "#fff" : "transparent",
+                    borderColor: on ? "rgba(0,0,0,0.06)" : "transparent",
                     boxShadow: on ? "var(--shadow-seg)" : "none",
                     color: on ? "#1D1D1F" : "#3A3A3C",
                   }}
@@ -144,8 +147,8 @@ export default function Tracker() {
         ) : null
       }
     >
-      {rows.length === 0 ? (
-        <div className="rounded-panel border border-line bg-surface px-8 py-16 text-center">
+      {!loaded ? null : rows.length === 0 ? (
+        <div className="animate-in rounded-panel border border-line bg-surface px-8 py-16 text-center">
           <div className="text-[17px] font-semibold tracking-[-0.012em]">
             Nothing tracked yet
           </div>
@@ -205,15 +208,17 @@ export default function Tracker() {
                     <div
                       key={listing.id}
                       onClick={() => setSelected(listing.id)}
-                      className="relative grid h-12 items-center gap-4 pr-4 pl-[30px] transition-colors duration-100 hover:bg-row-hover"
+                      className="relative grid h-12 items-center gap-4 pr-4 pl-[30px] transition-colors duration-[var(--duration-hover)] hover:bg-row-hover"
                       style={{
                         gridTemplateColumns: columns,
                         borderTop:
-                          index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
+                          index === 0
+                            ? "none"
+                            : "1px solid var(--color-line-row)",
                         background:
                           selected === listing.id
-                            ? "rgba(10,132,255,0.07)"
-                            : "transparent",
+                            ? "var(--color-selected)"
+                            : undefined,
                       }}
                     >
                       <CompanyCell listing={listing} />
@@ -248,7 +253,7 @@ export default function Tracker() {
             </div>
           ))}
           {matching.length === 0 ? (
-            <div className="px-4 py-10 text-center text-text-3">
+            <div className="animate-in px-4 py-10 text-center text-text-3">
               No tracked listings match “{query}”.
             </div>
           ) : null}

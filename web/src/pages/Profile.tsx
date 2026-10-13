@@ -137,7 +137,7 @@ export default function Profile() {
                   onClick={() =>
                     setRoles(roles.filter((item) => item !== name))
                   }
-                  className="flex size-[16px] items-center justify-center rounded-full text-[13px] leading-none text-text-4 hover:bg-black/[0.06]"
+                  className="flex size-[16px] items-center justify-center rounded-full text-[13px] leading-none text-text-4 hover:bg-hover"
                 >
                   ×
                 </button>
@@ -207,10 +207,14 @@ export default function Profile() {
             Save
           </button>
           {saved ? (
-            <span className="text-[12.5px] text-[#1E7A34]">Saved</span>
+            <span className="animate-in text-[12.5px] text-[#1E7A34]">
+              Saved
+            </span>
           ) : null}
           {error ? (
-            <span className="text-[12.5px] text-[#B3261E]">{error}</span>
+            <span className="animate-in text-[12.5px] text-[#B3261E]">
+              {error}
+            </span>
           ) : null}
         </div>
       </div>

@@ -41,6 +41,7 @@ export default function Listings() {
   const [page, setPage] = useState(1);
   const [menu, setMenu] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -83,6 +84,7 @@ export default function Listings() {
       setRows(result ? result.listings : []);
       setTotal(result ? result.total : 0);
       setMore(result ? result.has_more : false);
+      setLoaded(true);
     }
     load();
     // `url` is rebuilt every render, so depending on it would reload forever.
@@ -315,14 +317,13 @@ export default function Listings() {
             <div
               key={listing.id}
               onClick={() => setSelected(listing.id)}
-              className="relative grid h-12 items-center gap-4 pr-3.5 pl-[30px] transition-colors duration-100 hover:bg-row-hover"
+              className="relative grid h-12 items-center gap-4 pr-3.5 pl-[30px] transition-colors duration-[var(--duration-hover)] hover:bg-row-hover"
               style={{
                 gridTemplateColumns: columns,
-                borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
+                borderTop:
+                  index === 0 ? "none" : "1px solid var(--color-line-row)",
                 background:
-                  selected === listing.id
-                    ? "rgba(10,132,255,0.07)"
-                    : "transparent",
+                  selected === listing.id ? "var(--color-selected)" : undefined,
               }}
             >
               {tracked ? null : (
@@ -346,7 +347,7 @@ export default function Listings() {
                   title={
                     tracked ? `In tracker · ${tone.label}` : "Add to tracker"
                   }
-                  className="flex size-7 items-center justify-center rounded-[7px] text-accent-text transition-colors duration-150 hover:brightness-95"
+                  className="flex size-7 items-center justify-center rounded-[7px] text-accent-text transition-[background-color,filter] hover:brightness-95"
                   style={{
                     background: tracked ? tone.bg : "rgba(10,132,255,0.10)",
                   }}
@@ -363,7 +364,7 @@ export default function Listings() {
                       viewBox="0 0 12 12"
                       fill="none"
                       stroke="currentColor"
-                      strokeWidth={1.7}
+                      strokeWidth={1.5}
                     >
                       <path d="M6 2v8M2 6h8" strokeLinecap="round" />
                     </svg>
@@ -392,8 +393,8 @@ export default function Listings() {
           );
         })}
 
-        {rows.length === 0 ? (
-          <div className="px-4 py-10 text-center text-text-3">
+        {loaded && rows.length === 0 ? (
+          <div className="animate-in px-4 py-10 text-center text-text-3">
             No listings match these filters.
           </div>
         ) : null}

@@ -19,6 +19,7 @@ export default function Dashboard() {
   const [tracker, setTracker] = useState<Tracked[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [selected, setSelected] = useState<number | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   const [tick, setTick] = useState(0);
 
@@ -39,6 +40,7 @@ export default function Dashboard() {
         setTracker(board.listings);
         setCounts(board.counts);
       }
+      setLoaded(true);
     }
     load();
   }, [tick]);
@@ -323,7 +325,7 @@ export default function Dashboard() {
                 viewBox="0 0 12 12"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={1.7}
+                strokeWidth={1.5}
               >
                 <path
                   d="M4.5 2.5L8 6l-3.5 3.5"
@@ -346,14 +348,13 @@ export default function Dashboard() {
             <div
               key={listing.id}
               onClick={() => setSelected(listing.id)}
-              className="relative grid h-[62px] items-center gap-4 pr-5 pl-[34px] transition-colors duration-100 hover:bg-[#FAFAFC]"
+              className="relative grid h-[62px] items-center gap-4 pr-5 pl-[34px] transition-colors duration-[var(--duration-hover)] hover:bg-[#FAFAFC]"
               style={{
                 gridTemplateColumns: recCols,
-                borderTop: index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
+                borderTop:
+                  index === 0 ? "none" : "1px solid var(--color-line-row)",
                 background:
-                  selected === listing.id
-                    ? "rgba(10,132,255,0.07)"
-                    : "transparent",
+                  selected === listing.id ? "var(--color-selected)" : undefined,
               }}
             >
               <span className="absolute top-1/2 left-[15px] -mt-[3px] size-1.5 rounded-full bg-accent" />
@@ -389,7 +390,7 @@ export default function Dashboard() {
                 viewBox="0 0 12 12"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={1.7}
+                strokeWidth={1.5}
               >
                 <path
                   d="M4.5 2.5L8 6l-3.5 3.5"
@@ -408,8 +409,8 @@ export default function Dashboard() {
             <span>Changed</span>
             <span className="text-right">Status</span>
           </div>
-          {tracker.length === 0 ? (
-            <div className="px-4 py-10 text-center text-text-3">
+          {!loaded ? null : tracker.length === 0 ? (
+            <div className="animate-in px-4 py-10 text-center text-text-3">
               Nothing tracked yet. Add a listing from{" "}
               <button
                 type="button"
@@ -425,15 +426,15 @@ export default function Dashboard() {
               <div
                 key={listing.id}
                 onClick={() => setSelected(listing.id)}
-                className="relative grid h-[62px] items-center gap-4 px-5 transition-colors duration-100 hover:bg-[#FAFAFC]"
+                className="relative grid h-[62px] items-center gap-4 px-5 transition-colors duration-[var(--duration-hover)] hover:bg-[#FAFAFC]"
                 style={{
                   gridTemplateColumns: appCols,
                   borderTop:
-                    index === 0 ? "none" : "1px solid rgba(0,0,0,0.05)",
+                    index === 0 ? "none" : "1px solid var(--color-line-row)",
                   background:
                     selected === listing.id
-                      ? "rgba(10,132,255,0.07)"
-                      : "transparent",
+                      ? "var(--color-selected)"
+                      : undefined,
                 }}
               >
                 <CompanyCell listing={listing} size={34} />

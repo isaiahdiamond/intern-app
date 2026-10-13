@@ -1,11 +1,11 @@
 export function Icon({
   path,
   size = 16,
-  stroke = 1.4,
+  stroke = 1.5,
 }: {
-  path: string
-  size?: number
-  stroke?: number
+  path: string;
+  size?: number;
+  stroke?: number;
 }) {
   return (
     <svg
@@ -19,10 +19,16 @@ export function Icon({
     >
       <path d={path} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  )
+  );
 }
 
-export function Chevron({ size = 10, flip = false }: { size?: number; flip?: boolean }) {
+export function Chevron({
+  size = 10,
+  flip = false,
+}: {
+  size?: number;
+  flip?: boolean;
+}) {
   return (
     <svg
       width={size}
@@ -31,12 +37,12 @@ export function Chevron({ size = 10, flip = false }: { size?: number; flip?: boo
       fill="none"
       stroke="currentColor"
       strokeWidth={1.5}
-      className="shrink-0 transition-transform duration-150"
+      className="shrink-0 transition-transform"
       style={{ transform: flip ? "rotate(180deg)" : "none" }}
     >
       <path d="M3 4.5l3 3 3-3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
-  )
+  );
 }
 
 export function Check({ on }: { on: boolean }) {
@@ -46,14 +52,18 @@ export function Check({ on }: { on: boolean }) {
       height={12}
       viewBox="0 0 12 12"
       fill="none"
-      stroke="#0A84FF"
-      strokeWidth={1.7}
-      className="ml-auto"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      className="ml-auto text-accent"
       style={{ opacity: on ? 1 : 0 }}
     >
-      <path d="M2.5 6.2l2.4 2.3 4.6-5" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M2.5 6.2l2.4 2.3 4.6-5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
-  )
+  );
 }
 
 export function External({ size = 10 }: { size?: number }) {
@@ -64,19 +74,31 @@ export function External({ size = 10 }: { size?: number }) {
       viewBox="0 0 12 12"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.6}
+      strokeWidth={1.5}
       className="shrink-0 opacity-70"
     >
-      <path d="M4 2.5h5.5V8M9.5 2.5L3 9" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M4 2.5h5.5V8M9.5 2.5L3 9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
-  )
+  );
 }
 
 export function Magnifier() {
   return (
-    <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="#86868B" strokeWidth={1.5}>
+    <svg
+      width={14}
+      height={14}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      className="shrink-0 text-text-4"
+    >
       <circle cx="7" cy="7" r="4.5" />
       <path d="M10.5 10.5L14 14" strokeLinecap="round" />
     </svg>
-  )
+  );
 }
