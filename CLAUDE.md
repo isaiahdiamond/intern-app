@@ -7,8 +7,24 @@ Python 3.12. Package lives in `src/intern_app/`.
 
 ## Hard rules
 
-1. **No scraping.** Only documented APIs and public board endpoints. No LinkedIn
-   scraping ever — LinkedIn data arrives only via job-alert emails from my Gmail.
+1. **Documented APIs first; a posting's own page only under these terms.** Reach
+   for a published API whenever one exists — Greenhouse, Lever, Ashby, Adzuna,
+   Muse, USAJobs. Where none does, a listing's own page may be fetched for its
+   description, and only for that, subject to all of:
+   - **robots.txt decides.** Check it per host before the first request and
+     honour it. No robots.txt means allowed.
+   - **One request per host every 1.5 seconds**, no concurrency within a host.
+   - **A User-Agent that says who this is** and that it is one person's job
+     search.
+   - **A refusal is final.** 401, 403 or 429 is the site saying no: record the
+     miss and never retry that listing.
+   - **No headless browser.** If the description needs JavaScript to appear, the
+     listing is out of reach and stays out of reach.
+
+   **No LinkedIn, ever.** Not the API, not a page, not through a redirector.
+   LinkedIn data arrives only via job-alert emails from my Yahoo account. This
+   clause survives any future rewrite of this rule.
+
 2. **No secrets in the repo.** Keys come from `.env` (gitignored) through
    `config.py`. Never hardcode a key, never commit `.env`, never print a key or a
    token in a log line, error message, or test fixture. `.env.example` holds names
