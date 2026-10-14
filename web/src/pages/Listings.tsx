@@ -7,7 +7,12 @@ import { External, Magnifier } from "@/components/Icon";
 import FilterMenu from "@/components/FilterMenu";
 import type { Option } from "@/components/FilterMenu";
 import Layout from "@/components/Layout";
-import { ColumnHead, CompanyCell, RoleCell } from "@/components/Row";
+import {
+  ColumnHead,
+  CompanyCell,
+  RoleCell,
+  SkeletonRows,
+} from "@/components/Row";
 import { StatusMenu, StatusPill } from "@/components/StatusPill";
 
 const perPage = 50;
@@ -186,7 +191,6 @@ export default function Listings() {
     <Layout
       title="All listings"
       subtitle="Everything the sources have collected, newest first."
-      slot="listings"
       panel={
         current ? (
           <DetailPanel
@@ -350,6 +354,10 @@ export default function Listings() {
           columns={columns}
           labels={["Company", "Role", "Posted", "Status", ""]}
         />
+
+        {loaded ? null : (
+          <SkeletonRows columns={columns} cells={5} count={12} />
+        )}
 
         {rows.map((listing) => {
           const isTracked = listing.status !== "new";

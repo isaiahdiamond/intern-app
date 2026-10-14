@@ -1,36 +1,25 @@
 import { useState } from "react";
-import { slots } from "@/lib/slots";
-import type { Slot } from "@/lib/slots";
+import type { Background } from "@/lib/backgrounds";
 
-export default function Backdrop({
-  slot,
-  full,
-}: {
-  slot: Slot;
-  full?: boolean;
-}) {
+export default function Backdrop({ image }: { image: Background }) {
   const [loaded, setLoaded] = useState(false);
-  const image = slots[slot];
+
   return (
-    <div
-      className={full ? "backdrop backdrop-full" : "backdrop"}
-      aria-hidden="true"
-    >
+    <div className="backdrop" aria-hidden="true">
       <div
         className="backdrop-fallback"
         style={{ background: image.fallback }}
       />
-      {image.src ? (
-        <img
-          className="backdrop-img"
-          data-loaded={loaded}
-          src={image.src}
-          alt=""
-          loading="eager"
-          decoding="async"
-          onLoad={() => setLoaded(true)}
-        />
-      ) : null}
+      <img
+        className="backdrop-img"
+        data-loaded={loaded}
+        src={image.src}
+        alt=""
+        loading="eager"
+        decoding="async"
+        fetchPriority="high"
+        onLoad={() => setLoaded(true)}
+      />
       <div className="backdrop-scrim" />
     </div>
   );

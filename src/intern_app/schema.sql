@@ -69,6 +69,7 @@ CREATE INDEX IF NOT EXISTS llm_calls_listing_idx ON llm_calls (listing_id);
 -- most one row and `id` is pinned to 1 by a CHECK.
 CREATE TABLE IF NOT EXISTS profile (
     id         INTEGER PRIMARY KEY CHECK (id = 1),
+    name       TEXT NOT NULL DEFAULT '',
     school     TEXT NOT NULL DEFAULT '',
     major      TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL,

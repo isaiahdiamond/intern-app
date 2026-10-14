@@ -51,6 +51,7 @@ export type Filters = {
 export type Profile = {
   onboarded: boolean;
   profile: {
+    name: string;
     school: string;
     major: string;
     education: string;
@@ -246,12 +247,17 @@ export function monthKey() {
   return new Date().toISOString().slice(0, 7);
 }
 
-export function lastDays(count: number) {
-  const days = [];
-  for (let back = count - 1; back >= 0; back -= 1) {
-    const date = new Date();
-    date.setDate(date.getDate() - back);
-    days.push({ key: date.toISOString().slice(0, 10), date, count: 0 });
-  }
-  return days;
+// Boundaries are in DESIGN.md §7.16; the clock is the browser's, because the
+// greeting is about where the user is sitting, not where the API runs.
+export function greeting(name: string) {
+  const hour = new Date().getHours();
+  const part =
+    hour < 5
+      ? "Good evening"
+      : hour < 12
+        ? "Good morning"
+        : hour < 18
+          ? "Good afternoon"
+          : "Good evening";
+  return name ? `${part}, ${name}` : part;
 }

@@ -7,8 +7,9 @@
   --color-surface-sunk: #f4f4f4;
   --color-tile: #efefef;
   --color-rail: #171717;
-  --color-rail-hover: rgba(255, 255, 255, 0.08);
-  --color-rail-active: rgba(255, 255, 255, 0.14);
+  --color-rail-hover: rgba(255, 255, 255, 0.06);
+  --color-rail-active: rgba(255, 255, 255, 0.1);
+  --color-rail-edge: rgba(255, 255, 255, 0.14);
 
   --color-ink: #171717;
   --color-ink-2: #323232;
@@ -30,6 +31,7 @@
   --color-ring: rgba(23, 23, 23, 0.28);
   --color-online: #1e7a34;
   --color-offline: #b3261e;
+  --color-chart-dot: rgba(23, 23, 23, 0.16);
 
   --font-sans:
     -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
@@ -119,6 +121,8 @@
   --shadow-seg:
     0 1px 2px rgba(23, 23, 23, 0.1), 0 0 0 0.5px rgba(23, 23, 23, 0.06);
   --shadow-panel: -16px 0 48px -24px rgba(23, 23, 23, 0.18);
+  --shadow-rail:
+    0 18px 44px -12px rgba(0, 0, 0, 0.42), 0 2px 8px rgba(0, 0, 0, 0.16);
 
   --duration-hover: 100ms;
   --duration-quick: 150ms;
@@ -130,27 +134,38 @@
   --default-transition-duration: var(--duration-quick);
   --default-transition-timing-function: var(--ease-brand);
 
+  --gutter: 16px;
+
   --rail-w: 72px;
+  --rail-inset: 14px;
+  --rail-radius: 30px;
   --panel-w: 460px;
   --page-max: 1440px;
+  --measure: 760px;
   --row-h: 64px;
   --row-h-sm: 56px;
   --toolbar-h: 64px;
 
-  --scrim-page: linear-gradient(
-    180deg,
-    rgba(250, 250, 250, 0.12) 0%,
-    rgba(250, 250, 250, 0.15) 55%,
-    rgba(250, 250, 250, 0.2) 100%
-  );
+  --kpi-h: 132px;
+  --plot-h: 214px;
+  --bar-share: 36%;
+  --dot-day: 10px;
+  --dot-day-wide: 6px;
+  --avatar-lap: -8px;
+  --donut: 112px;
+  --donut-ring: 15px;
+  --legend-h: 36px;
+
+  --scrim-page: transparent;
+  --scrim-page-dark: rgba(0, 0, 0, 0.18);
   --scrim-image-card: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0) 0%,
     rgba(0, 0, 0, 0.25) 45%,
     rgba(0, 0, 0, 0.62) 100%
   );
-  --backdrop-filter: saturate(0.8) blur(10px);
-  --backdrop-scale: 1.04;
+  --backdrop-filter: saturate(0.92) blur(3px);
+  --backdrop-scale: 1.03;
 
   --animate-pop: pop 150ms var(--ease-brand);
   --animate-in: in 150ms var(--ease-brand);
@@ -167,6 +182,12 @@
   from {
     opacity: 0;
     transform: translateY(4px) scale(0.98);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.6;
   }
 }
 
@@ -211,16 +232,23 @@
 }
 
 @layer components {
+  .shell {
+    --title-ink: var(--color-ink);
+    --title-ink-2: var(--color-ink-2);
+  }
+
+  .shell[data-tone="dark"] {
+    --title-ink: var(--color-ink-inverse);
+    --title-ink-2: rgba(255, 255, 255, 0.86);
+    --scrim-page: var(--scrim-page-dark);
+  }
+
   .backdrop {
     position: fixed;
-    inset: 0 0 0 var(--rail-w);
+    inset: 0;
     z-index: 0;
     overflow: hidden;
     pointer-events: none;
-  }
-
-  .backdrop-full {
-    left: 0;
   }
 
   .backdrop-fallback {
@@ -252,10 +280,57 @@
 
   .rail {
     position: fixed;
-    inset: 0 auto 0 0;
+    top: var(--rail-inset);
+    bottom: var(--rail-inset);
+    left: var(--rail-inset);
     z-index: 30;
     width: var(--rail-w);
     background: var(--color-rail);
+    border: 1px solid var(--color-rail-edge);
+    border-radius: var(--rail-radius);
+    box-shadow: var(--shadow-rail);
+  }
+
+  .rail-item {
+    position: relative;
+  }
+
+  .rail-tip {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 20px);
+    z-index: 40;
+    display: flex;
+    height: 32px;
+    align-items: center;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: var(--color-ink);
+    color: var(--color-ink-inverse);
+    box-shadow: var(--shadow-float);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(-4px, -50%);
+    pointer-events: none;
+    transition:
+      opacity var(--duration-quick) var(--ease-brand),
+      transform var(--duration-quick) var(--ease-brand);
+  }
+
+  .rail-item:focus-visible .rail-tip {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+
+  @media (hover: hover) {
+    .rail-item:hover .rail-tip {
+      opacity: 1;
+      transform: translate(0, -50%);
+    }
   }
 
   .rail :focus-visible {
@@ -266,7 +341,7 @@
   .page {
     position: relative;
     z-index: 1;
-    margin-left: var(--rail-w);
+    margin-left: calc(var(--rail-inset) + var(--rail-w));
     height: 100vh;
     display: flex;
   }
@@ -281,7 +356,13 @@
   .page-inner {
     max-width: var(--page-max);
     margin: 0 auto;
-    padding: var(--spacing-10) var(--spacing-10) var(--spacing-12);
+    padding: var(--gutter) var(--gutter) var(--spacing-8);
+  }
+
+  /* Form-style pages read as a column, so the whole page — header included —
+     is one measure centred in the content area. */
+  .page-narrow {
+    max-width: calc(var(--measure) + var(--gutter) * 2);
   }
 
   .page-panel {
@@ -293,17 +374,9 @@
   }
 
   .card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-line);
+    background: var(--color-surface-veil);
+    border: 1px solid var(--color-line-strong);
     box-shadow: var(--shadow-card);
-  }
-
-  @supports (backdrop-filter: blur(20px)) {
-    .card {
-      background: var(--color-surface-veil);
-      backdrop-filter: blur(20px) saturate(1.05);
-      -webkit-backdrop-filter: blur(20px) saturate(1.05);
-    }
   }
 
   .hero-card::after {
@@ -312,6 +385,11 @@
     inset: 0;
     background: var(--scrim-image-card);
     pointer-events: none;
+  }
+
+  .skeleton {
+    background: var(--color-tile);
+    animation: pulse 1200ms ease-in-out infinite;
   }
 
   .image-outline {
@@ -327,8 +405,6 @@
 
   .card {
     background: var(--color-surface);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 }
 
@@ -344,5 +420,13 @@
 
   .backdrop-img {
     opacity: 1;
+  }
+
+  .skeleton {
+    animation: none;
+  }
+
+  .rail-tip {
+    transform: translate(0, -50%);
   }
 }

@@ -71,7 +71,7 @@ export default function AddJob({
   }
 
   return (
-    <div className="card mb-6 animate-in rounded-2xl p-6">
+    <div className="card mb-[var(--gutter)] animate-in rounded-2xl p-6">
       <div className="text-section text-ink">Add a job from outside</div>
       <p className="mt-2 mb-0 text-body text-ink-3">
         A referral, a careers page, a recruiter email — anything that did not

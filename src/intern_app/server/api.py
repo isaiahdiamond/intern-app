@@ -164,6 +164,21 @@ def read_tracker() -> dict[str, Any]:
         conn.close()
 
 
+@router.get("/activity")
+def read_activity(days: int = board.DEFAULT_RANGE) -> dict[str, Any]:
+    """Applications sent per day, with the companies behind each day's bar."""
+    window = days if days in board.RANGES else board.DEFAULT_RANGE
+    conn = open_db()
+    try:
+        return {
+            "days": window,
+            "ranges": list(board.RANGES),
+            "entries": board.load_activity(conn, window),
+        }
+    finally:
+        conn.close()
+
+
 @router.get("/settings")
 def read_settings() -> dict[str, str]:
     """Every app preference, with defaults for anything never set."""
@@ -309,6 +324,7 @@ def read_icon(company: str) -> Response:
 
 
 class ProfileEdit(BaseModel):
+    name: str = ""
     school: str = ""
     major: str = ""
     education: str = ""
@@ -327,6 +343,7 @@ def write_profile(edit: ProfileEdit) -> dict[str, Any]:
         try:
             profile.save_profile(
                 conn,
+                name=edit.name,
                 school=edit.school or saved.get("school", ""),
                 major=edit.major or saved.get("major", ""),
                 education=edit.education,

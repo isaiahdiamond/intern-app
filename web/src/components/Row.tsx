@@ -103,3 +103,45 @@ export function ColumnHead({
     </div>
   );
 }
+
+// Rows of the exact final height, so the table card is already the right size
+// when the data lands and nothing below it moves. `cells` is how many columns
+// the table has, so the placeholder lines up with the header above it.
+export function SkeletonRows({
+  columns,
+  cells,
+  count,
+}: {
+  columns: string;
+  cells: number;
+  count: number;
+}) {
+  const rows = [];
+  for (let index = 0; index < count; index += 1) rows.push(index);
+  return (
+    <>
+      {rows.map((index) => (
+        <div
+          key={index}
+          aria-hidden="true"
+          className="grid items-center gap-4 border-t border-line-soft pr-4 pl-6"
+          style={{ gridTemplateColumns: columns, height: "var(--row-h)" }}
+        >
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="skeleton size-9 shrink-0 rounded-sm" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <div className="skeleton h-3.5 w-28 rounded-xs" />
+              <div className="skeleton h-3 w-20 rounded-xs" />
+            </div>
+          </div>
+          <div className="skeleton h-3.5 w-full max-w-[280px] rounded-xs" />
+          <div className="skeleton h-3 w-14 rounded-xs" />
+          {cells >= 4 ? (
+            <div className="skeleton h-7 w-[108px] rounded-full" />
+          ) : null}
+          {cells >= 5 ? <span /> : null}
+        </div>
+      ))}
+    </>
+  );
+}

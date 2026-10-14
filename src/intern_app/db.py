@@ -49,6 +49,7 @@ def connect(db_path: str | Path | None = None) -> sqlite3.Connection:
 # so a new column has to be added by hand or the live database never gets it.
 ADDED_COLUMNS = (
     ("profile", "education", "TEXT NOT NULL DEFAULT ''"),
+    ("profile", "name", "TEXT NOT NULL DEFAULT ''"),
     ("listing_details", "years_experience", "INTEGER NOT NULL DEFAULT 0"),
     ("listing_details", "citizenship", "TEXT NOT NULL DEFAULT ''"),
 )

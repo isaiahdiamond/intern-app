@@ -346,8 +346,19 @@ async def save_onboarding(request: Request):
 
     conn = open_db()
     try:
+        # Onboarding asks about roles, not about the person, so whatever the
+        # profile already knows about them has to survive the rewrite.
+        # `save_profile` is a full replace: a field left out here is not left
+        # alone, it is erased. Dropping `education` and `seeking` silently
+        # turned off the degree and level filters, so the board started
+        # counting PhD-only and experienced-hire postings as matches with
+        # nothing on screen saying why.
+        saved = profile.load_profile(conn) or {}
         profile.save_profile(
             conn,
+            name=saved.get("name", ""),
+            education=saved.get("education", ""),
+            seeking=list(saved.get("seeking", [])),
             school=school,
             major=major,
             # A role not in this major's chip list came from the LLM.

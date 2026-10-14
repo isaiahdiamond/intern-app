@@ -14,7 +14,12 @@ import DetailPanel from "@/components/DetailPanel";
 import { Chevron, Icon, Magnifier } from "@/components/Icon";
 import { paths } from "@/lib/icons";
 import Layout from "@/components/Layout";
-import { ColumnHead, CompanyCell, RoleCell } from "@/components/Row";
+import {
+  ColumnHead,
+  CompanyCell,
+  RoleCell,
+  SkeletonRows,
+} from "@/components/Row";
 import { StatusMenu, StatusPill } from "@/components/StatusPill";
 
 export default function Tracker() {
@@ -101,7 +106,6 @@ export default function Tracker() {
     <Layout
       title="Tracker"
       subtitle="The listings you are doing something about."
-      slot="tracker"
       actions={
         <button
           type="button"
@@ -135,7 +139,7 @@ export default function Tracker() {
         />
       ) : null}
 
-      <div className="mb-6 flex flex-wrap items-center gap-3">
+      <div className="mb-[var(--gutter)] flex flex-wrap items-center gap-3">
         <div className="flex min-w-0 gap-1 overflow-hidden rounded-full bg-track p-1">
           {segments.map((segment) => {
             const on = filter === segment.key;
@@ -172,7 +176,15 @@ export default function Tracker() {
         </div>
       </div>
 
-      {!loaded ? null : rows.length === 0 ? (
+      {!loaded ? (
+        <div className="card rounded-2xl p-3">
+          <ColumnHead
+            columns={columns}
+            labels={["Company", "Role", "Posted", "Status"]}
+          />
+          <SkeletonRows columns={columns} cells={4} count={8} />
+        </div>
+      ) : rows.length === 0 ? (
         <div className="card animate-in rounded-2xl px-8 py-12 text-center">
           <div className="text-section text-ink">Nothing tracked yet</div>
           <p className="mx-auto mt-3 max-w-[460px] text-lead text-ink-2 text-pretty">

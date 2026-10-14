@@ -333,3 +333,39 @@ def test_a_background_with_no_image_behind_it_is_refused(client):
 
     assert reply.status_code == 400
     assert "unknown background" in reply.json()["detail"]
+
+
+def test_activity_puts_an_application_on_the_day_it_was_sent(client):
+    """The chart is only worth drawing if a bar lands on the right day.
+
+    Asserting the shape alone passed while the grouping, the company list and
+    the UTC-to-local day conversion could all have been broken, because the
+    fixture sends no applications and every count is zero.
+    """
+    listing_id = client.get("/api/listings").json()["listings"][0]["id"]
+    client.post("/api/status", json={"listing_id": listing_id, "status": "applied"})
+
+    body = client.get("/api/activity?days=7").json()
+
+    assert body["days"] == 7
+    assert len(body["entries"]) == 7
+    today = body["entries"][-1]
+    assert today["count"] == 1
+    assert today["companies"][0]["company"] in {"TikTok", "TD Bank"}
+    assert sum(entry["count"] for entry in body["entries"][:-1]) == 0
+
+
+def test_moving_an_application_on_does_not_move_its_bar(client):
+    """A listing counts on the day it was sent, not the day it last changed."""
+    listing_id = client.get("/api/listings").json()["listings"][0]["id"]
+    client.post("/api/status", json={"listing_id": listing_id, "status": "applied"})
+    client.post("/api/status", json={"listing_id": listing_id, "status": "interviewing"})
+
+    entries = client.get("/api/activity?days=7").json()["entries"]
+
+    assert sum(entry["count"] for entry in entries) == 1
+
+
+def test_an_unsupported_range_falls_back_to_the_default(client):
+    """A junk range must not return an empty chart with no explanation."""
+    assert client.get("/api/activity?days=999").json()["days"] == 7

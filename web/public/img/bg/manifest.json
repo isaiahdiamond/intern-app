@@ -1,14 +1,77 @@
 {
-  "note": "Backgrounds offered in Settings. `tone` says which ink a page title takes over this image: light means the image is bright and the title is --color-ink, dark means the title is --color-ink-inverse. `ratio` is the measured worst-case contrast for that choice in the title zone, and nothing below 4.5 ships.",
+  "note": "Themes offered in Settings. Each is a pair: `bg/<key>.jpg` behind the page and `hero/<key>.jpg` in the dashboard's hero card. `tone` says which ink a page title takes over the backdrop. `ratio` and `subtitleRatio` are the worst pixel under the title's and the subtitle's own bounding box, measured on the rendered page with the backdrop's real filter, cover-fit and scrim applied \u2014 not on the raw file, which reads differently. `heroRatio` is the worst case for white text across the hero image's bottom 45% with --scrim-image-card applied. Floors: 4.5 for text on the backdrop, 7 for the hero. These must match the table in DESIGN.md section 3.2; if they ever disagree, one of them is invented and both need re-measuring.",
   "backgrounds": [
-    { "key": "meadow", "label": "Meadow",   "tone": "light", "ratio": 13.6 },
-    { "key": "coast",  "label": "Coast",    "tone": "light", "ratio": 9.0 },
-    { "key": "dunes",  "label": "Dunes",    "tone": "light", "ratio": 8.9 },
-    { "key": "alpine", "label": "Alpine",   "tone": "light", "ratio": 6.9 },
-    { "key": "forest", "label": "Forest",   "tone": "light", "ratio": 10.6 },
-    { "key": "clouds", "label": "Clouds",   "tone": "light", "ratio": 7.0 },
-    { "key": "snow",   "label": "Snow",     "tone": "light", "ratio": 15.2 },
-    { "key": "dusk",   "label": "Dusk",     "tone": "dark",  "ratio": 7.9 },
-    { "key": "silk",   "label": "Silk",     "tone": "dark",  "ratio": 10.8 }
+    {
+      "key": "meadow",
+      "label": "Meadow",
+      "tone": "light",
+      "ratio": 14.6,
+      "heroRatio": 18.6,
+      "subtitleRatio": 10.8
+    },
+    {
+      "key": "coast",
+      "label": "Coast",
+      "tone": "light",
+      "ratio": 10.8,
+      "heroRatio": 10.9,
+      "subtitleRatio": 7.7
+    },
+    {
+      "key": "dunes",
+      "label": "Dunes",
+      "tone": "light",
+      "ratio": 9.4,
+      "heroRatio": 19.7,
+      "subtitleRatio": 7.1
+    },
+    {
+      "key": "alpine",
+      "label": "Alpine",
+      "tone": "light",
+      "ratio": 7.7,
+      "heroRatio": 16.9,
+      "subtitleRatio": 5.7
+    },
+    {
+      "key": "forest",
+      "label": "Forest",
+      "tone": "light",
+      "ratio": 12.3,
+      "heroRatio": 11.1,
+      "subtitleRatio": 7.7
+    },
+    {
+      "key": "clouds",
+      "label": "Clouds",
+      "tone": "light",
+      "ratio": 8.2,
+      "heroRatio": 12.0,
+      "subtitleRatio": 6.3
+    },
+    {
+      "key": "snow",
+      "label": "Snow",
+      "tone": "light",
+      "ratio": 15.3,
+      "heroRatio": 16.2,
+      "subtitleRatio": 11.1
+    },
+    {
+      "key": "dusk",
+      "label": "Dusk",
+      "tone": "dark",
+      "ratio": 13.4,
+      "heroRatio": 18.9,
+      "subtitleRatio": 13.1
+    },
+    {
+      "key": "silk",
+      "label": "Silk",
+      "tone": "dark",
+      "ratio": 16.0,
+      "heroRatio": 20.1,
+      "subtitleRatio": 16.6
+    }
   ]
 }

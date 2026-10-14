@@ -78,6 +78,7 @@ def save_profile(
     industries: list[str],
     education: str = "",
     seeking: list[str] | None = None,
+    name: str = "",
 ) -> None:
     """Write the profile, its roles, its ranked industries and what it wants.
 
@@ -108,15 +109,23 @@ def save_profile(
         created_at = existing["created_at"] if existing else now
         conn.execute(
             """
-            INSERT INTO profile (id, school, major, education, created_at, updated_at)
-            VALUES (1, ?, ?, ?, ?, ?)
+            INSERT INTO profile (id, name, school, major, education, created_at, updated_at)
+            VALUES (1, ?, ?, ?, ?, ?, ?)
             ON CONFLICT (id) DO UPDATE SET
+                name = excluded.name,
                 school = excluded.school,
                 major = excluded.major,
                 education = excluded.education,
                 updated_at = excluded.updated_at
             """,
-            (school.strip(), major.strip(), education.strip().lower(), created_at, now),
+            (
+                name.strip(),
+                school.strip(),
+                major.strip(),
+                education.strip().lower(),
+                created_at,
+                now,
+            ),
         )
 
         conn.execute("DELETE FROM profile_roles")
@@ -147,6 +156,7 @@ def load_profile(conn: sqlite3.Connection) -> dict[str, Any] | None:
     if row is None:
         return None
     return {
+        "name": row["name"],
         "school": row["school"],
         "major": row["major"],
         "education": row["education"],

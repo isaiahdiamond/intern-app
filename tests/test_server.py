@@ -257,3 +257,46 @@ def test_roles_and_industries_post_from_one_form(client):
     assert page.count('<form method="post"') == 1
     assert 'name="roles"' in page
     assert 'name="industries"' in page
+
+
+def test_rerunning_onboarding_keeps_what_it_never_asked_about(client):
+    """Onboarding asks about roles. It must not quietly answer other questions.
+
+    `save_profile` is a full replace, so a field the onboarding form omits is
+    erased rather than left alone. Losing `education` and `seeking` turns off
+    the degree and level filters, and the board silently starts counting
+    PhD-only and experienced-hire postings as matches.
+    """
+    from intern_app import db, profile
+
+    conn = db.connect()
+    profile.save_profile(
+        conn,
+        name="Jack",
+        school="University of Florida",
+        major="Applied Mathematics",
+        education="masters",
+        seeking=["intern", "coop"],
+        roles=[("Software Engineer Intern", "chip")],
+        industries=["Software & Internet"],
+    )
+
+    reply = client.post(
+        "/onboarding/save",
+        data={
+            "school": "University of Florida",
+            "major": "Applied Mathematics",
+            "roles": ["Software Engineer Intern"],
+            "industries": ["Software & Internet"],
+        },
+        follow_redirects=False,
+    )
+
+    # Without this the form is refused with a 400, save_profile never runs, and
+    # the assertions below pass against a profile nothing ever touched.
+    assert reply.status_code == 303
+
+    after = profile.load_profile(conn)
+    assert after["name"] == "Jack"
+    assert after["education"] == "masters"
+    assert after["seeking"] == ["intern", "coop"]

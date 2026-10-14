@@ -377,6 +377,62 @@ def status_counts(conn: sqlite3.Connection) -> dict[str, int]:
     return counts
 
 
+RANGES = (3, 7, 14, 30, 90)
+DEFAULT_RANGE = 7
+
+
+def load_activity(conn: sqlite3.Connection, days: int = DEFAULT_RANGE) -> list[dict]:
+    """One entry per day: how many applications went out, and to whom.
+
+    Every day in the window is returned, including the empty ones, because a
+    gap in a job search is information and a chart that silently drops it
+    reads as a run of steady effort.
+
+    A listing counts on the first day it reached `applied`, so moving it on to
+    interviewing later does not move or duplicate the application.
+
+    Days are local days, not UTC ones. History is stored in UTC, and applying
+    at nine in the evening is already tomorrow in UTC, so comparing raw dates
+    puts the application on a bar the user never lived through.
+    """
+    window = max(1, days)
+    rows = conn.execute(
+        """
+        WITH first_applied AS (
+            SELECT listing_id, MIN(changed_at) AS sent_at
+            FROM tracker_history
+            WHERE status = 'applied'
+            GROUP BY listing_id
+        )
+        SELECT date(f.sent_at, 'localtime') AS day, l.company, COALESCE(i.ok, 0) AS has_icon
+        FROM first_applied f
+        JOIN listings l ON l.id = f.listing_id
+        LEFT JOIN company_icons i ON i.company = l.company
+        WHERE date(f.sent_at, 'localtime') >= date('now', 'localtime', :cutoff)
+        ORDER BY f.sent_at
+        """,
+        {"cutoff": f"-{window - 1} days"},
+    ).fetchall()
+
+    by_day: dict[str, list[dict]] = {}
+    for row in rows:
+        by_day.setdefault(row["day"], []).append(
+            {"company": row["company"], "has_icon": bool(row["has_icon"])}
+        )
+
+    today = conn.execute("SELECT date('now', 'localtime') AS d").fetchone()["d"]
+    days_back = conn.execute(
+        "SELECT date(:today, :offset) AS d", {"today": today, "offset": f"-{window - 1} days"}
+    ).fetchone()["d"]
+    out = []
+    cursor = days_back
+    while cursor <= today:
+        companies = by_day.get(cursor, [])
+        out.append({"day": cursor, "count": len(companies), "companies": companies})
+        cursor = conn.execute("SELECT date(:d, '+1 day') AS n", {"d": cursor}).fetchone()["n"]
+    return out
+
+
 def board_status_counts(conn: sqlite3.Connection) -> dict[str, int]:
     """How many board rows sit at each status, for the filter chips.
 

@@ -2,7 +2,7 @@ import Layout from "@/components/Layout";
 
 export default function Chat() {
   return (
-    <Layout title="Coach" subtitle="A later phase." slot="coach">
+    <Layout title="Coach" subtitle="A later phase.">
       <div className="card mx-auto flex max-w-[720px] flex-col items-center gap-6 rounded-2xl px-8 py-12 text-center">
         <div
           className="image-outline h-60 w-80 rounded-md"
