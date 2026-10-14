@@ -42,6 +42,8 @@ artifacts = ["src/intern_app/server/templates/*.html", "src/intern_app/schema.sq
 line-length = 100
 target-version = "py312"
 src = ["src", "tests"]
+# Vendored third-party skills, installed by `npx skills add`. Not ours to lint.
+extend-exclude = [".agents"]
 
 [tool.ruff.lint]
 select = [

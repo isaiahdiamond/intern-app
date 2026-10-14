@@ -1,3 +1,8 @@
+# `.agents/skills/` holds third-party skills installed by `npx skills add`.
+# They are vendored code: our style rules do not apply to them, and reformatting
+# them would silently fork them from upstream on the next update.
+exclude: '^\.agents/skills/'
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.0

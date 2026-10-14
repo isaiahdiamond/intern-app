@@ -1,0 +1,7 @@
+# One fingerprint per allowed finding. Each line is a specific, reviewed
+# false positive — never a path or a rule turned off wholesale.
+
+# Vendored third-party skill. The "secret" is the literal string
+# `sk-proj-abc123...` in a block labelled BAD, inside a section titled
+# "No Hardcoded Secrets". It is the counter-example, not a key.
+.agents/skills/higgsfield-websites/references/security.md:generic-api-key:354
