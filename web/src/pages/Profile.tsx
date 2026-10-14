@@ -63,13 +63,56 @@ export default function Profile() {
   }
 
   const profile = data?.profile;
+  const degree = (options?.degrees ?? []).find(
+    (item) => item.key === profile?.education,
+  );
+  const degreeLabel = degree ? degree.label : (profile?.education ?? "—");
   const suggestions = allRoles.filter((name) => !roles.includes(name));
 
   return (
-    <Layout title="Profile">
-      <div className="flex max-w-[680px] flex-col gap-4">
+    <Layout
+      title="Profile"
+      subtitle="What the board is ranked against."
+      slot="profile"
+    >
+      <div className="flex max-w-[760px] flex-col gap-6">
+        <div className="card overflow-hidden rounded-2xl">
+          <div
+            className="h-28 w-full"
+            style={{
+              background:
+                "linear-gradient(90deg, #F0EDE9 0%, #F6F6F6 50%, #EFF1F3 100%)",
+              boxShadow: "inset 0 -1px 0 var(--color-line)",
+            }}
+          />
+          <div className="p-6">
+            <div className="text-section text-ink">
+              {profile?.school || "No school saved"}
+            </div>
+            <div className="mt-1 text-body text-ink-3">
+              {profile?.major || "No major saved"}
+            </div>
+            <div className="mt-5 flex flex-col">
+              <Row label="Degree">{degreeLabel}</Row>
+              <Row label="Industries">
+                {profile?.industries.length
+                  ? profile.industries.join(" · ")
+                  : "—"}
+              </Row>
+              <Row label="Updated">
+                {profile ? fullDate(profile.updated_at) : "—"}
+              </Row>
+              <Row label="API host">
+                <span className="font-mono text-meta text-ink-3">
+                  {window.location.host}
+                </span>
+              </Row>
+            </div>
+          </div>
+        </div>
+
         <Panel title="What you are looking for">
-          <p className="px-4 pt-3.5 text-[12.5px] leading-[1.5] text-text-3">
+          <p className="mt-2 mb-5 text-body text-ink-3">
             The Dashboard shows the newest listings that match this. Everything
             stays on All listings either way.
           </p>
@@ -78,7 +121,7 @@ export default function Profile() {
             <select
               value={education}
               onChange={(event) => setEducation(event.target.value)}
-              className="h-[30px] min-w-[200px] rounded-control border border-line bg-surface px-2 text-[13px] outline-none"
+              className="h-10 min-w-[220px] rounded-md border border-line-strong bg-surface px-3 text-control text-ink outline-none"
             >
               <option value="">No preference</option>
               {(options?.degrees ?? []).map((item) => (
@@ -87,7 +130,7 @@ export default function Profile() {
                 </option>
               ))}
             </select>
-            <span className="ml-2.5 text-[12px] text-text-4">
+            <span className="ml-3 text-meta text-ink-3">
               {education
                 ? "Postings asking for more than this are hidden"
                 : "Nothing is hidden"}
@@ -95,7 +138,7 @@ export default function Profile() {
           </Row>
 
           <Row label="Looking for">
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {(options?.seeking ?? []).map((item) => {
                 const on = seeking.includes(item.key);
                 return (
@@ -109,12 +152,12 @@ export default function Profile() {
                           : [...seeking, item.key],
                       )
                     }
-                    className="flex h-[26px] items-center rounded-control px-2.5 text-[12.5px] font-medium"
-                    style={{
-                      background: on ? "rgba(10,132,255,0.13)" : "transparent",
-                      color: on ? "#0066CC" : "#3A3A3C",
-                      border: on ? "none" : "1px solid var(--color-line)",
-                    }}
+                    className={[
+                      "flex h-10 items-center rounded-full border px-4 text-control transition-colors",
+                      on
+                        ? "border-transparent bg-ink text-ink-inverse"
+                        : "border-line-strong bg-surface text-ink hover:bg-hover",
+                    ].join(" ")}
                   >
                     {item.label}
                   </button>
@@ -125,11 +168,11 @@ export default function Profile() {
         </Panel>
 
         <Panel title="Target roles" count={roles.length}>
-          <div className="flex flex-wrap gap-1.5 px-4 py-3.5">
+          <div className="mt-4 flex flex-wrap gap-2">
             {roles.map((name) => (
               <span
                 key={name}
-                className="flex h-[26px] items-center gap-1.5 rounded-control border border-line bg-black/[0.02] pr-1.5 pl-2.5 text-[12.5px]"
+                className="flex h-10 items-center gap-2 rounded-full border border-line-strong bg-surface pr-2 pl-4 text-control text-ink"
               >
                 {name}
                 <button
@@ -137,40 +180,42 @@ export default function Profile() {
                   onClick={() =>
                     setRoles(roles.filter((item) => item !== name))
                   }
-                  className="flex size-[16px] items-center justify-center rounded-full text-[13px] leading-none text-text-4 hover:bg-hover"
+                  aria-label={`Remove ${name}`}
+                  className="flex size-6 items-center justify-center rounded-full text-[15px] leading-none text-ink-3 hover:bg-hover"
                 >
                   ×
                 </button>
               </span>
             ))}
             {roles.length === 0 ? (
-              <span className="text-[12.5px] text-text-4">
+              <span className="text-body text-ink-3">
                 No roles yet, so nothing is narrowed by role.
               </span>
             ) : null}
           </div>
 
-          <div className="flex items-center gap-2 border-t border-line-soft px-4 py-3">
+          <div className="mt-5 flex items-center gap-2">
             <input
               value={typed}
               onChange={(event) => setTyped(event.target.value)}
               onKeyDown={(event) => event.key === "Enter" && addRole()}
               placeholder="Add a role, e.g. Quantitative Intern"
-              className="h-[30px] flex-1 rounded-control border border-line bg-surface px-2.5 text-[13px] outline-none"
+              aria-label="Add a role"
+              className="h-10 flex-1 rounded-md border border-line bg-surface-sunk px-4 text-control text-ink outline-none"
             />
             <button
               type="button"
               onClick={addRole}
               disabled={!typed.trim()}
-              className="h-[30px] rounded-control border border-line px-3 text-[13px] font-medium text-text-2 hover:bg-hover disabled:opacity-40"
+              className="h-10 rounded-full border border-line-strong bg-surface px-4 text-control text-ink hover:bg-hover disabled:cursor-not-allowed disabled:opacity-45"
             >
               Add
             </button>
           </div>
 
           {suggestions.length ? (
-            <div className="flex flex-wrap items-center gap-1.5 border-t border-line-soft px-4 py-3">
-              <span className="mr-1 text-[11px] font-medium tracking-[0.04em] text-text-5 uppercase">
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-label text-ink-3 uppercase">
                 Removed
               </span>
               {suggestions.map((name) => (
@@ -178,7 +223,7 @@ export default function Profile() {
                   key={name}
                   type="button"
                   onClick={() => setRoles([...roles, name])}
-                  className="flex h-[24px] items-center rounded-control border border-dashed border-line px-2.5 text-[12.5px] text-text-3 hover:bg-hover"
+                  className="flex h-10 items-center rounded-full border border-dashed border-line-strong px-4 text-control text-ink-3 hover:bg-hover"
                 >
                   + {name}
                 </button>
@@ -187,34 +232,19 @@ export default function Profile() {
           ) : null}
         </Panel>
 
-        <Panel title="You">
-          <Row label="School">{profile?.school || "—"}</Row>
-          <Row label="Major">{profile?.major || "—"}</Row>
-          <Row label="Industries">
-            {profile?.industries.length ? profile.industries.join(" · ") : "—"}
-          </Row>
-          <Row label="Updated">
-            {profile ? fullDate(profile.updated_at) : "—"}
-          </Row>
-        </Panel>
-
         <div className="flex items-center gap-3 pb-6">
           <button
             type="button"
             onClick={save}
-            className="h-[30px] rounded-control bg-accent px-3.5 text-[13px] font-medium text-white hover:bg-accent-hover"
+            className="h-10 rounded-full bg-ink px-4 text-control text-ink-inverse transition-colors hover:bg-black motion-safe:active:scale-[0.96]"
           >
             Save
           </button>
           {saved ? (
-            <span className="animate-in text-[12.5px] text-[#1E7A34]">
-              Saved
-            </span>
+            <span className="animate-in text-body text-[#1E7A34]">Saved</span>
           ) : null}
           {error ? (
-            <span className="animate-in text-[12.5px] text-[#B3261E]">
-              {error}
-            </span>
+            <span className="animate-in text-body text-[#B3261E]">{error}</span>
           ) : null}
         </div>
       </div>
@@ -232,11 +262,13 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-panel border border-line bg-surface">
-      <div className="flex h-[46px] items-center gap-2 border-b border-line-soft px-4">
-        <span className="text-[13px] font-semibold">{title}</span>
+    <div className="card rounded-2xl p-6">
+      <div className="flex items-center gap-2">
+        <span className="text-section text-ink">{title}</span>
         {count === undefined ? null : (
-          <span className="font-mono text-[11.5px] text-text-4">{count}</span>
+          <span className="font-mono text-meta text-ink-3 tabular-nums">
+            {count}
+          </span>
         )}
       </div>
       {children}
@@ -252,8 +284,8 @@ function Row({
   children: React.ReactNode;
 }) {
   return (
-    <div className="grid min-h-[46px] items-center gap-4 border-t border-line-soft px-4 py-2.5 text-[13px] [grid-template-columns:140px_minmax(0,1fr)] first:border-t-0">
-      <span className="text-[12.5px] text-text-3">{label}</span>
+    <div className="grid min-h-14 items-center gap-4 border-t border-line-soft py-3 text-body text-ink-2 [grid-template-columns:120px_minmax(0,1fr)] first:border-t-0">
+      <span className="text-label text-ink-3 uppercase">{label}</span>
       <div className="flex min-w-0 flex-wrap items-center">{children}</div>
     </div>
   );

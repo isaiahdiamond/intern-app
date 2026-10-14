@@ -50,13 +50,40 @@ def test_the_industry_filter_narrows_the_list(board_data):
     assert [row["company"] for row in rows] == ["TD Bank"]
 
 
-def test_acting_on_a_listing_takes_it_off_the_new_list(board_data):
+def test_a_tracked_listing_stays_on_the_board_carrying_its_status(board_data):
+    """Scrolling past a role you already applied to has to tell you so.
+
+    The board used to drop anything tracked, so the one thing you most need
+    while scanning — that you have been here before — was the one thing it
+    could not show you.
+    """
     listing_id = board.list_new(board_data)[0]["id"]
 
     board.set_status(board_data, listing_id, "applied")
 
-    assert listing_id not in [row["id"] for row in board.list_new(board_data)]
+    shown = {row["id"]: row["status"] for row in board.list_new(board_data)}
+    assert shown[listing_id] == "applied"
     assert [row["status"] for row in board.list_tracked(board_data)] == ["applied"]
+
+
+def test_ignoring_a_listing_takes_it_off_the_board(board_data):
+    """Ignore is the one status that hides a row, which is its whole purpose."""
+    listing_id = board.list_new(board_data)[0]["id"]
+
+    board.ignore_listing(board_data, listing_id)
+
+    assert listing_id not in [row["id"] for row in board.list_new(board_data)]
+    assert [row["id"] for row in board.list_new(board_data, statuses=["hidden"])] == [listing_id]
+
+
+def test_an_ignored_listing_can_come_back(board_data):
+    """Ignoring is a shelf and not a delete, so it has to be reversible."""
+    listing_id = board.list_new(board_data)[0]["id"]
+
+    board.ignore_listing(board_data, listing_id)
+    board.restore_listing(board_data, listing_id)
+
+    assert listing_id in [row["id"] for row in board.list_new(board_data)]
 
 
 def test_every_status_change_is_kept_as_history(board_data):

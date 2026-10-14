@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from intern_app import board, icons, profile
+from intern_app import board, icons, profile, settings_store
 
 router = APIRouter(prefix="/api")
 
@@ -56,6 +56,7 @@ def read_listings(
     role: Annotated[list[str] | None, Query()] = None,
     level: Annotated[list[str] | None, Query()] = None,
     education: Annotated[list[str] | None, Query()] = None,
+    status: Annotated[list[str] | None, Query()] = None,
     match_profile: bool = False,
 ) -> dict[str, Any]:
     """One page of the dashboard: listings I have not acted on.
@@ -70,6 +71,7 @@ def read_listings(
     roles = [name for name in (role or []) if name.strip()]
     levels = [name for name in (level or []) if name.strip()]
     educations = [name for name in (education or []) if name.strip()]
+    statuses = [name for name in (status or []) if name.strip() in board.STATUSES]
 
     conn = open_db()
     try:
@@ -85,6 +87,7 @@ def read_listings(
             roles=roles,
             levels=levels,
             educations=educations,
+            statuses=statuses,
         )
         rows = board.list_new(
             conn,
@@ -93,6 +96,7 @@ def read_listings(
             roles=roles,
             levels=levels,
             educations=educations,
+            statuses=statuses,
             sort=sort,
             page=page,
             per_page=per_page,
@@ -160,6 +164,35 @@ def read_tracker() -> dict[str, Any]:
         conn.close()
 
 
+@router.get("/settings")
+def read_settings() -> dict[str, str]:
+    """Every app preference, with defaults for anything never set."""
+    conn = open_db()
+    try:
+        return settings_store.read_settings(conn)
+    finally:
+        conn.close()
+
+
+class SettingChange(BaseModel):
+    key: str
+    value: str
+
+
+@router.post("/settings")
+def write_setting(change: SettingChange) -> dict[str, str]:
+    """Store one preference and return the full set back."""
+    conn = open_db()
+    try:
+        try:
+            settings_store.save_setting(conn, change.key, change.value)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        return settings_store.read_settings(conn)
+    finally:
+        conn.close()
+
+
 class StatusChange(BaseModel):
     listing_id: int
     status: str
@@ -167,14 +200,21 @@ class StatusChange(BaseModel):
 
 @router.post("/status")
 def write_status(change: StatusChange) -> dict[str, Any]:
-    """Move a listing to a new status and return the fresh badge counts."""
+    """Move a listing to a new status and return the fresh badge counts.
+
+    Both sets of counts come back, because one action moves both: ignoring a
+    listing from the board changes a filter chip and a tracker tab at once.
+    """
     conn = open_db()
     try:
         try:
             board.set_status(conn, change.listing_id, change.status)
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
-        return {"counts": board.status_counts(conn)}
+        return {
+            "counts": board.status_counts(conn),
+            "board_counts": board.board_status_counts(conn),
+        }
     finally:
         conn.close()
 
@@ -193,6 +233,7 @@ def read_filters() -> dict[str, Any]:
             "roles": profile.load_role_names(conn),
             "sorts": list(board.SORT_ORDERS),
             "statuses": list(board.ACTIVE),
+            "board_status_counts": board.board_status_counts(conn),
         }
     finally:
         conn.close()

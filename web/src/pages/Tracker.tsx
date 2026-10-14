@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { Tracked } from "@/lib/api";
 import {
   ago,
@@ -11,13 +11,15 @@ import {
 import AddJob from "@/components/AddJob";
 import Attribution from "@/components/Attribution";
 import DetailPanel from "@/components/DetailPanel";
-import { Chevron, Magnifier } from "@/components/Icon";
+import { Chevron, Icon, Magnifier } from "@/components/Icon";
+import { paths } from "@/lib/icons";
 import Layout from "@/components/Layout";
 import { ColumnHead, CompanyCell, RoleCell } from "@/components/Row";
 import { StatusMenu, StatusPill } from "@/components/StatusPill";
 
 export default function Tracker() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [rows, setRows] = useState<Tracked[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [filter, setFilter] = useState("all");
@@ -26,6 +28,9 @@ export default function Tracker() {
   const [menu, setMenu] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [adding, setAdding] = useState(
+    Boolean((location.state as { add?: boolean } | null)?.add),
+  );
 
   const [tick, setTick] = useState(0);
 
@@ -80,8 +85,8 @@ export default function Tracker() {
   }
 
   const columns = panelOpen
-    ? "minmax(0,1fr) minmax(0,1.4fr) 56px 108px"
-    : "minmax(140px,1fr) minmax(0,2.2fr) 72px 108px";
+    ? "minmax(160px,1fr) minmax(0,1.6fr) 0 124px"
+    : "minmax(220px,1.1fr) minmax(0,2.4fr) 120px 124px";
 
   const segments = [
     { key: "all", label: "All", count: rows.length },
@@ -95,44 +100,17 @@ export default function Tracker() {
   return (
     <Layout
       title="Tracker"
-      tight
-      toolbar={
-        <div className="relative flex flex-wrap items-center gap-x-3 gap-y-2.5 px-8 pt-[22px] pb-3.5">
-          <div className="flex min-w-0 gap-0.5 overflow-hidden rounded-[9px] bg-track p-0.5">
-            {segments.map((segment) => {
-              const on = filter === segment.key;
-              return (
-                <button
-                  type="button"
-                  key={segment.key}
-                  onClick={() => setFilter(segment.key)}
-                  className="flex h-[26px] items-center gap-1.5 rounded-[7px] border border-transparent px-2.5 text-[12.5px] font-medium whitespace-nowrap transition-[background-color,box-shadow,color]"
-                  style={{
-                    background: on ? "#fff" : "transparent",
-                    borderColor: on ? "rgba(0,0,0,0.06)" : "transparent",
-                    boxShadow: on ? "var(--shadow-seg)" : "none",
-                    color: on ? "#1D1D1F" : "#3A3A3C",
-                  }}
-                >
-                  <span>{segment.label}</span>
-                  <span className="font-mono text-[11px] text-text-4">
-                    {segment.count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="ml-auto box-border flex h-[30px] max-w-[280px] min-w-[180px] flex-[1_1_180px] items-center gap-[7px] rounded-control border border-line bg-surface px-2.5">
-            <Magnifier />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search roles, companies"
-              className="min-w-0 flex-1 border-0 bg-transparent text-[12.5px] outline-none"
-            />
-          </div>
-          <AddJob onAdded={() => setTick(tick + 1)} />
-        </div>
+      subtitle="The listings you are doing something about."
+      slot="tracker"
+      actions={
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="flex h-10 shrink-0 items-center gap-2 rounded-full bg-ink pr-4 pl-[14px] text-control text-ink-inverse transition-colors hover:bg-black motion-safe:active:scale-[0.96]"
+        >
+          <Icon path={paths.add} />
+          Add a job
+        </button>
       }
       panel={
         current ? (
@@ -147,12 +125,57 @@ export default function Tracker() {
         ) : null
       }
     >
+      {adding ? (
+        <AddJob
+          onCancel={() => setAdding(false)}
+          onAdded={() => {
+            setAdding(false);
+            setTick(tick + 1);
+          }}
+        />
+      ) : null}
+
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="flex min-w-0 gap-1 overflow-hidden rounded-full bg-track p-1">
+          {segments.map((segment) => {
+            const on = filter === segment.key;
+            return (
+              <button
+                type="button"
+                key={segment.key}
+                onClick={() => setFilter(segment.key)}
+                className="flex h-9 items-center gap-2 rounded-full border px-4 text-control whitespace-nowrap transition-[background-color,box-shadow,color]"
+                style={{
+                  background: on ? "var(--color-surface)" : "transparent",
+                  borderColor: on ? "rgba(23,23,23,0.06)" : "transparent",
+                  boxShadow: on ? "var(--shadow-seg)" : "none",
+                  color: on ? "var(--color-ink)" : "var(--color-ink-2)",
+                }}
+              >
+                <span>{segment.label}</span>
+                <span className="font-mono text-tag text-ink-3">
+                  {segment.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="ml-auto box-border flex h-10 max-w-[300px] min-w-[200px] flex-[1_1_200px] items-center gap-2 rounded-full border border-line-strong bg-surface px-4">
+          <Magnifier />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search roles, companies"
+            aria-label="Search roles, companies"
+            className="min-w-0 flex-1 border-0 bg-transparent text-control text-ink outline-none"
+          />
+        </div>
+      </div>
+
       {!loaded ? null : rows.length === 0 ? (
-        <div className="animate-in rounded-panel border border-line bg-surface px-8 py-16 text-center">
-          <div className="text-[17px] font-semibold tracking-[-0.012em]">
-            Nothing tracked yet
-          </div>
-          <p className="mx-auto mt-2.5 max-w-[420px] text-[13px] leading-[1.5] text-text-3 text-pretty">
+        <div className="card animate-in rounded-2xl px-8 py-12 text-center">
+          <div className="text-section text-ink">Nothing tracked yet</div>
+          <p className="mx-auto mt-3 max-w-[460px] text-lead text-ink-2 text-pretty">
             The tracker holds the listings you are doing something about. Save
             one from the board and it appears here, with its status history — or
             add a job you found somewhere else.
@@ -160,21 +183,18 @@ export default function Tracker() {
           <button
             type="button"
             onClick={() => navigate("/listings")}
-            className="mt-5 inline-flex h-[30px] items-center rounded-control bg-accent px-3.5 text-[13px] font-medium text-white hover:bg-accent-hover"
+            className="mt-6 inline-flex h-10 items-center rounded-full bg-ink px-4 text-control text-ink-inverse transition-colors hover:bg-black motion-safe:active:scale-[0.96]"
           >
             Browse all listings
           </button>
         </div>
       ) : (
-        <div
-          onClick={() => setMenu(null)}
-          className="rounded-panel border border-line bg-surface"
-        >
+        <div onClick={() => setMenu(null)} className="card rounded-2xl p-3">
           <ColumnHead
             columns={columns}
             labels={["Company", "Role", "Posted", "Status"]}
           />
-          {groups.map((group, groupIndex) => (
+          {groups.map((group) => (
             <div key={group.key}>
               <div
                 onClick={() =>
@@ -184,49 +204,43 @@ export default function Tracker() {
                       : [...collapsed, group.key],
                   )
                 }
-                className="flex h-[34px] items-center gap-2 border-b border-line-soft bg-head-2 pr-4 pl-3 text-text-4"
-                style={{
-                  borderTop:
-                    groupIndex === 0 ? "none" : "1px solid rgba(0,0,0,0.06)",
-                }}
+                className="sticky top-0 z-10 flex h-12 cursor-pointer items-center gap-3 rounded-lg bg-surface-sunk px-6 text-ink-3"
               >
-                <Chevron size={12} flip={!collapsed.includes(group.key)} />
+                <Chevron size={14} flip={!collapsed.includes(group.key)} />
                 <span
                   className="size-2 rounded-full"
                   style={{ background: group.dot }}
                 />
-                <span className="text-[12.5px] font-semibold text-text">
+                <span className="text-label text-ink uppercase">
                   {group.label}
                 </span>
-                <span className="font-mono text-[11.5px]">
-                  {group.rows.length}
-                </span>
+                <span className="font-mono text-tag">{group.rows.length}</span>
               </div>
               {collapsed.includes(group.key)
                 ? null
-                : group.rows.map((listing, index) => (
+                : group.rows.map((listing) => (
                     <div
                       key={listing.id}
                       onClick={() => setSelected(listing.id)}
-                      className="relative grid h-12 items-center gap-4 pr-4 pl-[30px] transition-colors duration-[var(--duration-hover)] hover:bg-row-hover"
+                      className="relative grid cursor-pointer items-center gap-4 border-t border-line-soft pr-4 pl-6 transition-colors duration-[var(--duration-hover)] hover:bg-row-hover"
                       style={{
                         gridTemplateColumns: columns,
-                        borderTop:
-                          index === 0
-                            ? "none"
-                            : "1px solid var(--color-line-row)",
+                        height: "var(--row-h)",
                         background:
                           selected === listing.id
                             ? "var(--color-selected)"
                             : undefined,
                       }}
                     >
+                      {selected === listing.id ? (
+                        <span className="absolute top-1/2 left-0 h-10 w-[2px] -translate-y-1/2 bg-ink" />
+                      ) : null}
                       <CompanyCell listing={listing} />
                       <RoleCell listing={listing} bold={false} />
-                      <span className="font-mono text-[11.5px] whitespace-nowrap text-text-3">
-                        {ago(listing.posted_at)}
+                      <span className="truncate font-mono text-meta text-ink-3">
+                        {panelOpen ? "" : ago(listing.posted_at)}
                       </span>
-                      <div className="flex justify-end">
+                      <div className="flex justify-start">
                         <StatusPill
                           value={listing.status}
                           wide
@@ -245,7 +259,7 @@ export default function Tracker() {
                         <StatusMenu
                           value={listing.status}
                           onPick={(next) => move(listing.id, next)}
-                          style={{ right: 16, top: 40 }}
+                          style={{ right: 16, top: 48 }}
                         />
                       ) : null}
                     </div>
@@ -253,7 +267,7 @@ export default function Tracker() {
             </div>
           ))}
           {matching.length === 0 ? (
-            <div className="animate-in px-4 py-10 text-center text-text-3">
+            <div className="animate-in px-4 py-12 text-center text-lead text-ink-2">
               No tracked listings match “{query}”.
             </div>
           ) : null}

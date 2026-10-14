@@ -16,16 +16,16 @@ export function StatusPill({
   return (
     <div
       onClick={onClick}
-      className="box-border flex h-[22px] items-center gap-1.5 rounded-[11px] px-2.5 text-[12px] font-medium"
+      className="box-border flex h-7 items-center gap-2 rounded-full px-3 text-control"
       style={{
         background: current.bg,
         color: current.fg,
-        width: wide ? 108 : undefined,
+        width: wide ? 124 : undefined,
         cursor: onClick ? "pointer" : "default",
       }}
     >
       <span
-        className="size-1.5 shrink-0 rounded-full"
+        className="size-2 shrink-0 rounded-full"
         style={{ background: current.dot }}
       />
       <span className="truncate">{current.label}</span>
@@ -53,7 +53,7 @@ export function StatusMenu({
   return (
     <div
       onClick={(event) => event.stopPropagation()}
-      className="absolute z-30 w-44 animate-pop rounded-menu border border-line-strong bg-surface p-[5px] shadow-menu"
+      className="absolute z-30 w-50 animate-pop overflow-auto overscroll-contain rounded-lg border border-line-strong bg-surface p-1 shadow-float"
       style={style}
     >
       {options.map((option) => (
@@ -63,10 +63,10 @@ export function StatusMenu({
             event.stopPropagation();
             onPick(option.key);
           }}
-          className="flex h-7 items-center gap-2.5 rounded-sm px-2.5 text-[12.5px] hover:bg-accent/10"
+          className="flex h-10 cursor-pointer items-center gap-3 rounded-md px-3 text-control text-ink hover:bg-hover"
         >
           <span
-            className="size-[7px] rounded-full"
+            className="size-2 shrink-0 rounded-full"
             style={{ background: option.dot }}
           />
           <span>{option.label}</span>

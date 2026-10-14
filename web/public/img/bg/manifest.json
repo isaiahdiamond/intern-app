@@ -1,0 +1,14 @@
+{
+  "note": "Backgrounds offered in Settings. `tone` says which ink a page title takes over this image: light means the image is bright and the title is --color-ink, dark means the title is --color-ink-inverse. `ratio` is the measured worst-case contrast for that choice in the title zone, and nothing below 4.5 ships.",
+  "backgrounds": [
+    { "key": "meadow", "label": "Meadow",   "tone": "light", "ratio": 13.6 },
+    { "key": "coast",  "label": "Coast",    "tone": "light", "ratio": 9.0 },
+    { "key": "dunes",  "label": "Dunes",    "tone": "light", "ratio": 8.9 },
+    { "key": "alpine", "label": "Alpine",   "tone": "light", "ratio": 6.9 },
+    { "key": "forest", "label": "Forest",   "tone": "light", "ratio": 10.6 },
+    { "key": "clouds", "label": "Clouds",   "tone": "light", "ratio": 7.0 },
+    { "key": "snow",   "label": "Snow",     "tone": "light", "ratio": 15.2 },
+    { "key": "dusk",   "label": "Dusk",     "tone": "dark",  "ratio": 7.9 },
+    { "key": "silk",   "label": "Silk",     "tone": "dark",  "ratio": 10.8 }
+  ]
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Filters, Listing, Page } from "@/lib/api";
-import { ago, get, saveStatus, status } from "@/lib/api";
+import { ago, get, saveStatus, status, statuses } from "@/lib/api";
 import Attribution from "@/components/Attribution";
 import DetailPanel from "@/components/DetailPanel";
 import { External, Magnifier } from "@/components/Icon";
@@ -8,7 +8,7 @@ import FilterMenu from "@/components/FilterMenu";
 import type { Option } from "@/components/FilterMenu";
 import Layout from "@/components/Layout";
 import { ColumnHead, CompanyCell, RoleCell } from "@/components/Row";
-import { StatusMenu } from "@/components/StatusPill";
+import { StatusMenu, StatusPill } from "@/components/StatusPill";
 
 const perPage = 50;
 
@@ -34,6 +34,7 @@ export default function Listings() {
   const [roles, setRoles] = useState<string[]>([]);
   const [levels, setLevels] = useState<string[]>([]);
   const [educations, setEducations] = useState<string[]>([]);
+  const [shown, setShown] = useState<string[]>([]);
   const [sort, setSort] = useState("newest");
   const [rows, setRows] = useState<Listing[]>([]);
   const [total, setTotal] = useState(0);
@@ -74,6 +75,7 @@ export default function Listings() {
     for (const role of roles) params.append("role", role);
     for (const level of levels) params.append("level", level);
     for (const education of educations) params.append("education", education);
+    for (const key of shown) params.append("status", key);
     return `/api/listings?${params}`;
   }
 
@@ -89,7 +91,7 @@ export default function Listings() {
     load();
     // `url` is rebuilt every render, so depending on it would reload forever.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, industry, roles, levels, educations, sort]);
+  }, [query, industry, roles, levels, educations, shown, sort]);
 
   async function loadMore() {
     const result = await get<Page>(url(page + 1));
@@ -103,6 +105,15 @@ export default function Listings() {
     const saved = await saveStatus(id, next);
     setMenu(null);
     if (!saved) return;
+    if (filters)
+      setFilters({ ...filters, board_status_counts: saved.board_counts });
+    const leaves = shown.length ? !shown.includes(next) : next === "hidden";
+    if (leaves) {
+      setRows(rows.filter((row) => row.id !== id));
+      setTotal(total - 1);
+      if (selected === id) setSelected(null);
+      return;
+    }
     setRows(
       rows.map((row) => (row.id === id ? { ...row, status: next } : row)),
     );
@@ -154,19 +165,28 @@ export default function Listings() {
     count: null,
     on: sort === key,
   }));
+  const statusOptions: Option[] = statuses.map((item) => ({
+    key: item.key,
+    label: item.key === "hidden" ? "Ignored" : item.label,
+    count: filters?.board_status_counts?.[item.key] ?? 0,
+    on: shown.includes(item.key),
+  }));
 
   const dirty =
     industry !== "" ||
     roles.length > 0 ||
     levels.length > 0 ||
-    educations.length > 0;
+    educations.length > 0 ||
+    shown.length > 0;
   const columns = panelOpen
-    ? "minmax(0,1fr) minmax(0,1.4fr) 56px 110px"
-    : "minmax(140px,1fr) minmax(0,2.2fr) 72px 110px";
+    ? "minmax(160px,1fr) minmax(0,1.6fr) 0 112px 44px"
+    : "minmax(220px,1.1fr) minmax(0,2.4fr) 120px 112px 44px";
 
   return (
     <Layout
       title="All listings"
+      subtitle="Everything the sources have collected, newest first."
+      slot="listings"
       panel={
         current ? (
           <DetailPanel
@@ -180,213 +200,211 @@ export default function Listings() {
         ) : null
       }
     >
-      <div
-        onClick={() => setMenu(null)}
-        className="rounded-panel border border-line bg-surface"
-      >
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2.5 border-b border-line-soft px-3.5 py-3">
-          <div className="flex max-w-full min-w-0 shrink-0 flex-wrap items-center gap-2">
-            <FilterMenu
-              label="Industry"
-              value={industry}
-              open={menu === "industry"}
-              active={industry !== ""}
-              options={industryOptions}
-              onToggle={() => setMenu(menu === "industry" ? null : "industry")}
-              onPick={(key) => setIndustry(industry === key ? "" : key)}
-            />
-            <FilterMenu
-              label="Role"
-              value={
-                roles.length === 1
-                  ? roles[0]
-                  : roles.length
-                    ? `${roles.length} selected`
-                    : ""
-              }
-              open={menu === "role"}
-              active={roles.length > 0}
-              muted={searching}
-              options={roleOptions}
-              onToggle={() => setMenu(menu === "role" ? null : "role")}
-              onPick={(key) =>
-                setRoles(
-                  roles.includes(key)
-                    ? roles.filter((name) => name !== key)
-                    : [...roles, key],
-                )
-              }
-            />
-            <FilterMenu
-              label="Level"
-              value={
-                levels.length === 1
-                  ? (levelLabels[levels[0]] ?? levels[0])
-                  : levels.length
-                    ? `${levels.length} selected`
-                    : ""
-              }
-              open={menu === "level"}
-              active={levels.length > 0}
-              muted={searching}
-              options={levelOptions}
-              onToggle={() => setMenu(menu === "level" ? null : "level")}
-              onPick={(key) =>
-                setLevels(
-                  levels.includes(key)
-                    ? levels.filter((name) => name !== key)
-                    : [...levels, key],
-                )
-              }
-            />
-            <FilterMenu
-              label="Degree"
-              value={
-                educations.length === 1
-                  ? (educationLabels[educations[0]] ?? educations[0])
-                  : educations.length
-                    ? `${educations.length} selected`
-                    : ""
-              }
-              open={menu === "education"}
-              active={educations.length > 0}
-              muted={searching}
-              options={educationOptions}
-              onToggle={() =>
-                setMenu(menu === "education" ? null : "education")
-              }
-              onPick={(key) =>
-                setEducations(
-                  educations.includes(key)
-                    ? educations.filter((name) => name !== key)
-                    : [...educations, key],
-                )
-              }
-            />
-            <FilterMenu
-              label="Sort"
-              value={sort}
-              open={menu === "sort"}
-              active={sort !== "newest"}
-              muted={searching}
-              options={sortOptions}
-              onToggle={() => setMenu(menu === "sort" ? null : "sort")}
-              onPick={(key) => {
-                setSort(key);
-                setMenu(null);
+      <div onClick={() => setMenu(null)} className="card rounded-2xl p-3">
+        <div className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-3 px-3 py-3">
+          <FilterMenu
+            label="Industry"
+            value={industry}
+            open={menu === "industry"}
+            active={industry !== ""}
+            options={industryOptions}
+            onToggle={() => setMenu(menu === "industry" ? null : "industry")}
+            onPick={(key) => setIndustry(industry === key ? "" : key)}
+          />
+          <FilterMenu
+            label="Role"
+            value={
+              roles.length === 1
+                ? roles[0]
+                : roles.length
+                  ? `${roles.length} selected`
+                  : ""
+            }
+            open={menu === "role"}
+            active={roles.length > 0}
+            muted={searching}
+            options={roleOptions}
+            onToggle={() => setMenu(menu === "role" ? null : "role")}
+            onPick={(key) =>
+              setRoles(
+                roles.includes(key)
+                  ? roles.filter((name) => name !== key)
+                  : [...roles, key],
+              )
+            }
+          />
+          <FilterMenu
+            label="Level"
+            value={
+              levels.length === 1
+                ? (levelLabels[levels[0]] ?? levels[0])
+                : levels.length
+                  ? `${levels.length} selected`
+                  : ""
+            }
+            open={menu === "level"}
+            active={levels.length > 0}
+            muted={searching}
+            options={levelOptions}
+            onToggle={() => setMenu(menu === "level" ? null : "level")}
+            onPick={(key) =>
+              setLevels(
+                levels.includes(key)
+                  ? levels.filter((name) => name !== key)
+                  : [...levels, key],
+              )
+            }
+          />
+          <FilterMenu
+            label="Degree"
+            value={
+              educations.length === 1
+                ? (educationLabels[educations[0]] ?? educations[0])
+                : educations.length
+                  ? `${educations.length} selected`
+                  : ""
+            }
+            open={menu === "education"}
+            active={educations.length > 0}
+            muted={searching}
+            options={educationOptions}
+            onToggle={() => setMenu(menu === "education" ? null : "education")}
+            onPick={(key) =>
+              setEducations(
+                educations.includes(key)
+                  ? educations.filter((name) => name !== key)
+                  : [...educations, key],
+              )
+            }
+          />
+          <FilterMenu
+            label="Status"
+            value={
+              shown.length === 1
+                ? (statusOptions.find((item) => item.key === shown[0])?.label ??
+                  shown[0])
+                : shown.length
+                  ? `${shown.length} selected`
+                  : ""
+            }
+            open={menu === "status"}
+            active={shown.length > 0}
+            muted={searching}
+            options={statusOptions}
+            onToggle={() => setMenu(menu === "status" ? null : "status")}
+            onPick={(key) =>
+              setShown(
+                shown.includes(key)
+                  ? shown.filter((name) => name !== key)
+                  : [...shown, key],
+              )
+            }
+          />
+          <FilterMenu
+            label="Sort"
+            value={sort}
+            open={menu === "sort"}
+            active={sort !== "newest"}
+            muted={searching}
+            options={sortOptions}
+            onToggle={() => setMenu(menu === "sort" ? null : "sort")}
+            onPick={(key) => {
+              setSort(key);
+              setMenu(null);
+            }}
+          />
+          {dirty ? (
+            <button
+              type="button"
+              onClick={() => {
+                setIndustry("");
+                setRoles([]);
+                setLevels([]);
+                setEducations([]);
+                setShown([]);
               }}
-            />
-            {dirty ? (
-              <span
-                onClick={() => {
-                  setIndustry("");
-                  setRoles([]);
-                  setLevels([]);
-                  setEducations([]);
-                }}
-                className="cursor-pointer px-1 text-[12.5px] whitespace-nowrap text-accent-text hover:underline"
-              >
-                Clear
-              </span>
-            ) : null}
-            <span className="ml-1.5 truncate font-mono text-[11.5px] whitespace-nowrap text-text-4">
-              {rows.length.toLocaleString()} of {total.toLocaleString()}
-              {searching ? " · searching every listing" : ""}
-            </span>
-          </div>
-          <div className="ml-auto box-border flex h-[30px] max-w-[260px] min-w-[180px] flex-[1_1_180px] items-center gap-[7px] rounded-control border border-line-soft bg-bg px-2.5">
+              className="h-10 rounded-full px-3 text-control text-ink-3 whitespace-nowrap hover:bg-hover"
+            >
+              Clear
+            </button>
+          ) : null}
+
+          <div className="ml-auto box-border flex h-10 max-w-[300px] min-w-[200px] flex-[1_1_200px] items-center gap-2 rounded-full border border-line bg-surface-sunk px-4">
             <Magnifier />
             <input
               value={typed}
               onChange={(event) => setTyped(event.target.value)}
               placeholder="Search roles, companies"
-              className="min-w-0 flex-1 border-0 bg-transparent text-[12.5px] outline-none"
+              aria-label="Search roles, companies"
+              className="min-w-0 flex-1 border-0 bg-transparent text-control text-ink outline-none"
             />
           </div>
         </div>
 
+        <div className="px-3 pb-3 font-mono text-meta text-ink-3">
+          {rows.length.toLocaleString()} of {total.toLocaleString()}
+          {searching ? " · searching every listing" : ""}
+        </div>
+
         <ColumnHead
           columns={columns}
-          labels={["Company", "Role", "Posted", "Track"]}
+          labels={["Company", "Role", "Posted", "Status", ""]}
         />
 
-        {rows.map((listing, index) => {
-          const tracked = listing.status !== "new";
-          const tone = status(listing.status);
+        {rows.map((listing) => {
+          const isTracked = listing.status !== "new";
           return (
             <div
               key={listing.id}
               onClick={() => setSelected(listing.id)}
-              className="relative grid h-12 items-center gap-4 pr-3.5 pl-[30px] transition-colors duration-[var(--duration-hover)] hover:bg-row-hover"
+              className="group relative grid cursor-pointer items-center gap-4 border-t border-line-soft pr-4 pl-6 transition-colors duration-[var(--duration-hover)] hover:bg-row-hover"
               style={{
                 gridTemplateColumns: columns,
-                borderTop:
-                  index === 0 ? "none" : "1px solid var(--color-line-row)",
+                height: "var(--row-h)",
                 background:
                   selected === listing.id ? "var(--color-selected)" : undefined,
               }}
             >
-              {tracked ? null : (
-                <span className="absolute top-1/2 left-3 -mt-[3px] size-1.5 rounded-full bg-accent" />
+              {selected === listing.id ? (
+                <span className="absolute top-1/2 left-0 h-10 w-[2px] -translate-y-1/2 bg-ink" />
+              ) : null}
+              {isTracked ? null : (
+                <span className="absolute top-1/2 left-2 size-1.5 -translate-y-1/2 rounded-full bg-accent" />
               )}
               <CompanyCell listing={listing} />
-              <RoleCell listing={listing} bold={!tracked} />
-              <span className="font-mono text-[11.5px] whitespace-nowrap text-text-3">
-                {ago(listing.posted_at)}
+              <RoleCell listing={listing} bold={!isTracked} />
+              <span className="truncate font-mono text-meta text-ink-3">
+                {panelOpen ? "" : ago(listing.posted_at)}
               </span>
-              <div className="flex items-center justify-end gap-1.5">
-                <div
+              <div className="flex justify-start">
+                <StatusPill
+                  value={listing.status}
+                  chevron
                   onClick={(event) => {
                     event.stopPropagation();
-                    if (tracked)
-                      setMenu(
-                        menu === `row${listing.id}` ? null : `row${listing.id}`,
-                      );
-                    else move(listing.id, "saved");
+                    setMenu(
+                      menu === `row${listing.id}` ? null : `row${listing.id}`,
+                    );
                   }}
-                  title={
-                    tracked ? `In tracker · ${tone.label}` : "Add to tracker"
-                  }
-                  className="flex size-7 items-center justify-center rounded-[7px] text-accent-text transition-[background-color,filter] hover:brightness-95"
-                  style={{
-                    background: tracked ? tone.bg : "rgba(10,132,255,0.10)",
-                  }}
-                >
-                  {tracked ? (
-                    <span
-                      className="size-[9px] rounded-full"
-                      style={{ background: tone.dot }}
-                    />
-                  ) : (
-                    <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 12 12"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path d="M6 2v8M2 6h8" strokeLinecap="round" />
-                    </svg>
-                  )}
-                </div>
-                <a
-                  href={listing.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                  title="Open the original listing"
-                  className="box-border flex h-7 items-center gap-[5px] rounded-[7px] border border-line-strong bg-surface px-2.5 text-[12.5px] font-medium text-text no-underline hover:bg-bg hover:no-underline"
-                >
-                  Listing
-                  <External />
-                </a>
+                />
               </div>
+              <a
+                href={listing.url}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(event) => event.stopPropagation()}
+                title="Open the original listing"
+                aria-label="Open the original listing"
+                className="flex size-9 items-center justify-center rounded-full text-ink-3 opacity-0 transition-opacity hover:bg-hover focus-visible:opacity-100 group-hover:opacity-100"
+              >
+                <External size={14} />
+              </a>
               {menu === `row${listing.id}` ? (
                 <StatusMenu
                   value={listing.status}
+                  includeNew
                   onPick={(next) => move(listing.id, next)}
-                  style={{ right: 92, top: 40 }}
+                  style={{ right: 56, top: 48 }}
                 />
               ) : null}
             </div>
@@ -394,17 +412,17 @@ export default function Listings() {
         })}
 
         {loaded && rows.length === 0 ? (
-          <div className="animate-in px-4 py-10 text-center text-text-3">
+          <div className="animate-in px-4 py-12 text-center text-lead text-ink-2">
             No listings match these filters.
           </div>
         ) : null}
 
         {more ? (
-          <div className="flex justify-center border-t border-line-row p-3.5">
+          <div className="flex justify-center border-t border-line-soft p-4">
             <button
               type="button"
               onClick={loadMore}
-              className="box-border flex h-[30px] items-center rounded-control border border-line-strong bg-surface px-3.5 text-[12.5px] font-medium hover:bg-bg"
+              className="h-10 rounded-full border border-line-strong bg-surface px-4 text-control text-ink hover:bg-hover"
             >
               Load {perPage} more
             </button>

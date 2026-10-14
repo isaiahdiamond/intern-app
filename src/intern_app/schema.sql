@@ -193,3 +193,12 @@ CREATE TABLE IF NOT EXISTS page_misses (
     reason     TEXT NOT NULL DEFAULT '',
     tried_at   TEXT NOT NULL
 );
+
+-- Preferences that are about the app rather than about the job search, kept as
+-- key and value so adding one needs no migration. The profile table is for who
+-- the user is; this is for how they like the app to look and behave.
+CREATE TABLE IF NOT EXISTS settings (
+    key        TEXT PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);

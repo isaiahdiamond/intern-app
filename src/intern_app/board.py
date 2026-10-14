@@ -15,6 +15,12 @@ from intern_app.db import utcnow
 
 STATUSES = ("new", "saved", "applied", "interviewing", "rejected", "offer", "hidden")
 
+# `hidden` is the ignore shelf: a listing the user has deliberately pushed off
+# the board. It is the only status the list hides by default, because every
+# other one is information the user wants while scanning — seeing "Applied"
+# next to a role is how you avoid applying to it twice.
+IGNORED = "hidden"
+
 # Statuses that mean "I am doing something about this", which is the tracker.
 ACTIVE = ("saved", "applied", "interviewing", "rejected", "offer")
 
@@ -123,10 +129,29 @@ def _new_filters(
     roles: list[str] | None = None,
     levels: list[str] | None = None,
     educations: list[str] | None = None,
+    statuses: list[str] | None = None,
 ) -> tuple[list[str], dict[str, object]]:
-    """The WHERE clauses and parameters shared by the list and its count."""
-    where = ["COALESCE(t.status, 'new') = 'new'", "l.copy_number = 1"]
+    """The WHERE clauses and parameters shared by the list and its count.
+
+    With no `statuses` the list shows everything except the ignore shelf. A
+    tracked listing stays on the board carrying its status, so that scrolling
+    past a role you already applied to tells you so.
+    """
+    # A manual entry is something the user brought in from outside, so it
+    # belongs to the tracker and not to the feed of things to discover.
+    where = ["l.copy_number = 1", "l.source != 'manual'"]
     params: dict[str, object] = {"unranked": UNRANKED}
+
+    if statuses:
+        keys = []
+        for index, status in enumerate(statuses):
+            key = f"status_{index}"
+            params[key] = status
+            keys.append(f":{key}")
+        where.append(f"COALESCE(t.status, 'new') IN ({', '.join(keys)})")
+    else:
+        where.append("COALESCE(t.status, 'new') != :ignored")
+        params["ignored"] = IGNORED
 
     if industry:
         where.append("COALESCE(NULLIF(c.industry, 'Unknown'), '') = :industry")
@@ -163,11 +188,12 @@ def list_new(
     roles: list[str] | None = None,
     levels: list[str] | None = None,
     educations: list[str] | None = None,
+    statuses: list[str] | None = None,
     sort: str = DEFAULT_SORT,
     page: int = 1,
     per_page: int = DEFAULT_PER_PAGE,
 ) -> list[sqlite3.Row]:
-    """One page of listings I have not acted on, best-matching industry first.
+    """One page of the board, best-matching industry first.
 
     Paging is not a nicety here. Ordering puts the top-ranked industry first,
     and there are over a thousand listings in it, so a single capped page could
@@ -176,7 +202,7 @@ def list_new(
     `days` limits to recently posted when set, which matters because a source
     will happily return a posting from last year.
     """
-    where, params = _new_filters(industry, days, roles, levels, educations)
+    where, params = _new_filters(industry, days, roles, levels, educations, statuses)
     params["limit"] = max(1, per_page)
     params["offset"] = max(0, (max(1, page) - 1) * max(1, per_page))
 
@@ -197,9 +223,10 @@ def count_new(
     roles: list[str] | None = None,
     levels: list[str] | None = None,
     educations: list[str] | None = None,
+    statuses: list[str] | None = None,
 ) -> int:
     """How many listings match, so the pager knows where it ends."""
-    where, params = _new_filters(industry, days, roles, levels, educations)
+    where, params = _new_filters(industry, days, roles, levels, educations, statuses)
     sql = f"""
         {SELECT_LISTINGS}
         WHERE {" AND ".join(where)}
@@ -348,6 +375,38 @@ def status_counts(conn: sqlite3.Connection) -> dict[str, int]:
         """
     ).fetchone()[0]
     return counts
+
+
+def board_status_counts(conn: sqlite3.Connection) -> dict[str, int]:
+    """How many board rows sit at each status, for the filter chips.
+
+    Built on SELECT_LISTINGS rather than on its own query, because the dedupe
+    picks one copy of a repeated posting and the two have to pick the same one.
+    A chip reading 9 must mean nine rows appear when it is chosen.
+    `status_counts` answers a different question, about the tracker.
+    """
+    # Suppression is justified: the only interpolation is a module constant.
+    sql = f"""
+        SELECT status, COUNT(*) AS n
+        FROM ({SELECT_LISTINGS} WHERE l.copy_number = 1 AND l.source != 'manual')
+        GROUP BY status
+    """  # noqa: S608
+    rows = conn.execute(sql, {"unranked": UNRANKED}).fetchall()
+    return {row["status"]: row["n"] for row in rows}
+
+
+def ignore_listing(conn: sqlite3.Connection, listing_id: int) -> None:
+    """Push a listing onto the ignore shelf, off the board.
+
+    Ignoring is a tracker status rather than a delete, so the reason it left
+    is recoverable and the row can come back.
+    """
+    set_status(conn, listing_id, IGNORED)
+
+
+def restore_listing(conn: sqlite3.Connection, listing_id: int) -> None:
+    """Take a listing back off the ignore shelf."""
+    set_status(conn, listing_id, "new")
 
 
 def level_counts(conn: sqlite3.Connection) -> dict[str, int]:

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Listing } from "@/lib/api";
 import { ago, fullDate, status } from "@/lib/api";
 import { paths } from "@/lib/icons";
@@ -38,8 +38,13 @@ export default function DetailPanel({
   onClose: () => void;
   onStatus: (next: string) => void;
 }) {
+  const header = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState(false);
   const next = nextStatus[listing.status];
+
+  useEffect(() => {
+    header.current?.focus();
+  }, []);
 
   const props: {
     label: string;
@@ -104,23 +109,29 @@ export default function DetailPanel({
   }
 
   return (
-    <div className="flex h-full w-panel flex-col">
-      <div className="flex h-[52px] shrink-0 items-center gap-1.5 border-b border-line-soft pr-3.5 pl-6">
-        <span className="font-mono text-[11.5px] text-text-4">{position}</span>
-        <div className="ml-auto flex gap-0.5 text-text-3">
+    <div className="flex h-full flex-col" style={{ width: "var(--panel-w)" }}>
+      <div
+        ref={header}
+        tabIndex={-1}
+        className="flex h-16 shrink-0 items-center gap-1 border-b border-line-soft pr-4 pl-6 outline-none"
+      >
+        <span className="font-mono text-meta text-ink-3">{position}</span>
+        <div className="ml-auto flex gap-1 text-ink-3">
           <button
             type="button"
             onClick={onPrev}
             aria-label="Previous listing"
-            className="flex size-7 items-center justify-center rounded-[7px] hover:bg-black/5"
+            title="Previous listing"
+            className="flex size-9 items-center justify-center rounded-full hover:bg-hover"
           >
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 12 12"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}
+              aria-hidden="true"
             >
               <path
                 d="M3 7.5l3-3 3 3"
@@ -133,15 +144,17 @@ export default function DetailPanel({
             type="button"
             onClick={onNext}
             aria-label="Next listing"
-            className="flex size-7 items-center justify-center rounded-[7px] hover:bg-black/5"
+            title="Next listing"
+            className="flex size-9 items-center justify-center rounded-full hover:bg-hover"
           >
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 12 12"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}
+              aria-hidden="true"
             >
               <path
                 d="M3 4.5l3 3 3-3"
@@ -154,15 +167,17 @@ export default function DetailPanel({
             type="button"
             onClick={onClose}
             aria-label="Close panel"
-            className="flex size-7 items-center justify-center rounded-[7px] hover:bg-black/5"
+            title="Close panel"
+            className="flex size-9 items-center justify-center rounded-full hover:bg-hover"
           >
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 12 12"
               fill="none"
               stroke="currentColor"
               strokeWidth={1.5}
+              aria-hidden="true"
             >
               <path d="M3 3l6 6M9 3l-6 6" strokeLinecap="round" />
             </svg>
@@ -170,48 +185,46 @@ export default function DetailPanel({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto overscroll-contain px-6 pt-6 pb-8">
-        <div className="flex size-10 items-center justify-center rounded-menu bg-tile text-[20px]">
+      <div className="min-h-0 flex-1 overflow-auto overscroll-contain px-6 pt-6 pb-12">
+        <div className="flex size-12 items-center justify-center rounded-md bg-tile text-[22px]">
           🏢
         </div>
-        <h2 className="mt-3.5 mb-0 text-[20px] leading-[1.25] font-semibold tracking-[-0.018em] text-pretty">
+        <h2 className="mt-4 mb-0 text-section text-ink text-pretty">
           {listing.display_title}
         </h2>
-        <div className="mt-1 text-[13px] text-text-3">{listing.company}</div>
+        <div className="mt-1 text-body text-ink-3">{listing.company}</div>
 
-        <div className="mt-[18px] flex gap-2">
+        <div className="mt-5 flex gap-2">
           <a
             href={listing.url}
             target="_blank"
             rel="noreferrer"
-            className="flex h-[30px] items-center gap-1.5 rounded-control bg-accent px-3.5 text-[13px] font-medium text-white no-underline hover:bg-accent-hover hover:no-underline"
+            className="flex h-10 items-center gap-2 rounded-full bg-ink pr-4 pl-[14px] text-control text-ink-inverse no-underline transition-colors hover:bg-black hover:no-underline motion-safe:active:scale-[0.96]"
           >
             Open posting
-            <External size={11} />
+            <External />
           </a>
           <button
             type="button"
             onClick={() => onStatus(next ?? "hidden")}
-            className="flex h-[30px] items-center rounded-control bg-track px-3.5 text-[13px] font-medium hover:bg-[rgba(118,118,128,0.18)]"
+            className="flex h-10 items-center rounded-full bg-track px-4 text-control text-ink transition-colors hover:bg-ink/10"
           >
             {next ? `Mark ${status(next).label.toLowerCase()}` : "Archive"}
           </button>
         </div>
 
-        <div className="mt-[26px] text-[11.5px] font-semibold text-text-4">
-          Properties
-        </div>
-        <div className="mt-2 flex flex-col">
+        <div className="mt-8 text-label text-ink-3 uppercase">Properties</div>
+        <div className="mt-3 flex flex-col">
           {props.map((prop) => (
-            <div key={prop.label} className="flex min-h-8 items-center py-1">
-              <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">
+            <div key={prop.label} className="flex min-h-10 items-center py-1">
+              <span className="w-30 shrink-0 text-label text-ink-3 uppercase">
                 {prop.label}
               </span>
-              <span className="mr-2 shrink-0 text-text-4">
-                <Icon path={prop.icon} size={14} />
+              <span className="mr-2 shrink-0 text-ink-3">
+                <Icon path={prop.icon} />
               </span>
               <span
-                className="min-w-0 text-[13px] break-words"
+                className="min-w-0 text-body text-ink-2 break-words"
                 style={{
                   fontFamily: prop.mono ? "var(--font-mono)" : undefined,
                 }}
@@ -219,15 +232,15 @@ export default function DetailPanel({
                 {prop.value}
               </span>
               {prop.meta ? (
-                <span className="ml-2 shrink-0 font-mono text-[11px] whitespace-nowrap text-text-4">
+                <span className="ml-2 shrink-0 font-mono text-tag whitespace-nowrap text-ink-3">
                   {prop.meta}
                 </span>
               ) : null}
             </div>
           ))}
 
-          <div className="relative flex h-8 items-center">
-            <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">
+          <div className="relative flex h-10 items-center">
+            <span className="w-30 shrink-0 text-label text-ink-3 uppercase">
               Status
             </span>
             <StatusPill
@@ -245,23 +258,23 @@ export default function DetailPanel({
                   setMenu(false);
                   onStatus(key);
                 }}
-                style={{ left: 104, top: 30 }}
+                style={{ left: 120, top: 36 }}
               />
             ) : null}
           </div>
 
-          <div className="flex h-8 items-center">
-            <span className="w-[104px] shrink-0 text-[12.5px] text-text-4">
+          <div className="flex h-10 items-center">
+            <span className="w-30 shrink-0 text-label text-ink-3 uppercase">
               Link
             </span>
-            <span className="mr-2 shrink-0 text-text-4">
-              <Icon path={paths.link} size={14} />
+            <span className="mr-2 shrink-0 text-ink-3">
+              <Icon path={paths.link} />
             </span>
             <a
               href={listing.url}
               target="_blank"
               rel="noreferrer"
-              className="truncate text-[13px]"
+              className="truncate text-body"
               title={listing.url}
             >
               {listing.url}
@@ -269,13 +282,13 @@ export default function DetailPanel({
           </div>
         </div>
 
-        <div className="my-5 mb-[18px] h-px bg-line-soft" />
-        <div className="text-[11.5px] font-semibold text-text-4">
-          Raw posting title
+        <div className="my-6 h-px bg-line-soft" />
+        <div className="text-label text-ink-3 uppercase">Raw posting title</div>
+        <div className="mt-2 text-body text-ink-2 text-pretty">
+          {listing.title}
         </div>
-        <div className="mt-2 text-[13px] text-pretty">{listing.title}</div>
 
-        <div className="mt-[18px] flex items-center gap-2.5 rounded-menu bg-bg px-3.5 py-3 text-[12.5px] text-text-2">
+        <div className="mt-5 rounded-md bg-surface-sunk px-4 py-3 text-body text-ink-2">
           Skill extraction has not run on this listing, so there are no parsed
           requirements yet.
         </div>

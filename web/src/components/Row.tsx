@@ -7,22 +7,20 @@ import { titleTags } from "@/lib/api";
 // for 404s, and the tile below shows through.
 export function CompanyCell({
   listing,
-  size = 28,
+  size = 36,
 }: {
   listing: Listing;
   size?: number;
 }) {
-  const radius = size >= 34 ? 9 : 7;
   const [broken, setBroken] = useState(false);
   return (
-    <div className="flex min-w-0 items-center gap-2.5">
+    <div className="flex min-w-0 items-center gap-3">
       <div
-        className="flex shrink-0 items-center justify-center overflow-hidden bg-tile"
+        className="flex shrink-0 items-center justify-center overflow-hidden bg-tile text-[16px]"
         style={{
           width: size,
           height: size,
-          borderRadius: radius,
-          fontSize: size >= 34 ? 14 : 13,
+          borderRadius: size > 36 ? "var(--radius-md)" : "var(--radius-sm)",
         }}
       >
         {broken || !listing.has_icon ? (
@@ -31,24 +29,20 @@ export function CompanyCell({
           <img
             src={`/api/icon/${encodeURIComponent(listing.company)}`}
             alt=""
+            aria-hidden="true"
             loading="lazy"
             onError={() => setBroken(true)}
-            style={{ width: size - 8, height: size - 8, objectFit: "contain" }}
+            style={{
+              width: size - 10,
+              height: size - 10,
+              objectFit: "contain",
+            }}
           />
         )}
       </div>
-      <div className="flex min-w-0 flex-col gap-px">
-        <span
-          className="truncate"
-          style={{
-            fontSize: size >= 34 ? 13.5 : 13,
-            fontWeight: size >= 34 ? 600 : 500,
-            letterSpacing: size >= 34 ? "-0.01em" : undefined,
-          }}
-        >
-          {listing.company}
-        </span>
-        <span className="truncate text-[12px] text-text-3">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="truncate text-row text-ink">{listing.company}</span>
+        <span className="truncate text-meta text-ink-3">
           {listing.location}
         </span>
       </div>
@@ -58,7 +52,7 @@ export function CompanyCell({
 
 export function Tag({ label }: { label: string }) {
   return (
-    <span className="flex h-[18px] shrink-0 items-center rounded-[5px] border border-line-soft bg-black/[0.035] px-1.5 font-mono text-[10.5px] whitespace-nowrap text-text-2">
+    <span className="flex h-[22px] shrink-0 items-center rounded-xs border border-line-soft bg-ink/4 px-2 font-mono text-tag whitespace-nowrap text-ink-2">
       {label}
     </span>
   );
@@ -72,17 +66,19 @@ export function RoleCell({
   bold: boolean;
 }) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2 overflow-hidden">
       <span
-        className="min-w-0 truncate text-[13px]"
+        className="min-w-0 truncate text-row text-ink"
         style={{ fontWeight: bold ? 600 : 500 }}
         title={listing.title}
       >
         {listing.display_title}
       </span>
-      {titleTags(listing).map((label) => (
-        <Tag key={label} label={label} />
-      ))}
+      <div className="flex min-w-0 shrink-[9999] items-center gap-2 overflow-hidden">
+        {titleTags(listing).map((label) => (
+          <Tag key={label} label={label} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -96,14 +92,11 @@ export function ColumnHead({
 }) {
   return (
     <div
-      className="grid h-[34px] items-center gap-4 border-b border-line-soft bg-head-2 pr-4 pl-[30px] text-[11.5px] font-medium text-text-4"
+      className="grid h-11 items-center gap-4 rounded-lg bg-surface-sunk px-6 text-label text-ink-3 uppercase"
       style={{ gridTemplateColumns: columns }}
     >
-      {labels.map((label, index) => (
-        <span
-          key={label}
-          style={{ textAlign: index === labels.length - 1 ? "right" : "left" }}
-        >
+      {labels.map((label) => (
+        <span key={label} className="truncate">
           {label}
         </span>
       ))}

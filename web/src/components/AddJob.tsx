@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { tracked } from "@/lib/api";
+import { paths } from "@/lib/icons";
+import { Icon } from "./Icon";
 
-export default function AddJob({ onAdded }: { onAdded: () => void }) {
-  const [open, setOpen] = useState(false);
+export default function AddJob({
+  onCancel,
+  onAdded,
+}: {
+  onCancel: () => void;
+  onAdded: () => void;
+}) {
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
   const [location, setLocation] = useState("");
@@ -22,7 +29,7 @@ export default function AddJob({ onAdded }: { onAdded: () => void }) {
     setState("applied");
     setNotes("");
     setError("");
-    setOpen(false);
+    onCancel();
   }
 
   async function save() {
@@ -63,30 +70,15 @@ export default function AddJob({ onAdded }: { onAdded: () => void }) {
     onAdded();
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="flex h-[30px] shrink-0 items-center gap-1.5 rounded-control bg-accent px-3 text-[12.5px] font-medium text-white hover:bg-accent-hover"
-      >
-        <span className="text-[14px] leading-none">+</span>
-        Add a job
-      </button>
-    );
-  }
-
   return (
-    <div className="mb-4 rounded-panel border border-line bg-surface p-5">
-      <div className="text-[14px] font-semibold tracking-[-0.01em]">
-        Add a job from outside
-      </div>
-      <p className="mt-1 text-[12.5px] text-text-3">
+    <div className="card mb-6 animate-in rounded-2xl p-6">
+      <div className="text-section text-ink">Add a job from outside</div>
+      <p className="mt-2 mb-0 text-body text-ink-3">
         A referral, a careers page, a recruiter email — anything that did not
         come through a source.
       </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-5 grid grid-cols-2 gap-4">
         <Field
           label="Role"
           value={title}
@@ -129,21 +121,21 @@ export default function AddJob({ onAdded }: { onAdded: () => void }) {
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-2">
-        <span className="text-[11px] font-medium tracking-[0.04em] text-text-5 uppercase">
-          Status
-        </span>
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        <span className="mr-2 text-label text-ink-3 uppercase">Status</span>
         {tracked.map((item) => (
           <button
             key={item.key}
             type="button"
             onClick={() => setState(item.key)}
-            className="flex h-[24px] items-center rounded-[11px] px-2.5 text-[12px] font-medium"
+            className="flex h-7 items-center rounded-full px-3 text-control"
             style={{
               background: state === item.key ? item.bg : "transparent",
-              color: state === item.key ? item.fg : "#6E6E73",
+              color: state === item.key ? item.fg : "var(--color-ink-3)",
               border:
-                state === item.key ? "none" : "1px solid var(--color-line)",
+                state === item.key
+                  ? "1px solid transparent"
+                  : "1px solid var(--color-line-strong)",
             }}
           >
             {item.label}
@@ -152,24 +144,25 @@ export default function AddJob({ onAdded }: { onAdded: () => void }) {
       </div>
 
       {error ? (
-        <div className="animate-in mt-3 text-[12.5px] text-[#B3261E]">
+        <div className="mt-4 flex animate-in items-center gap-2 rounded-md bg-[rgba(179,38,30,0.08)] px-3 py-2 text-body text-[#B3261E]">
+          <Icon path={paths.warn} />
           {error}
         </div>
       ) : null}
 
-      <div className="mt-5 flex items-center gap-2">
+      <div className="mt-6 flex items-center gap-2">
         <button
           type="button"
           onClick={save}
           disabled={saving || !title.trim() || !company.trim()}
-          className="h-[30px] rounded-control bg-accent px-3.5 text-[13px] font-medium text-white hover:bg-accent-hover disabled:opacity-40"
+          className="h-10 rounded-full bg-ink px-4 text-control text-ink-inverse transition-colors hover:bg-black disabled:cursor-not-allowed disabled:opacity-45 enabled:motion-safe:active:scale-[0.96]"
         >
           {saving ? "Adding…" : "Add to tracker"}
         </button>
         <button
           type="button"
           onClick={reset}
-          className="h-[30px] rounded-control border border-line px-3.5 text-[13px] font-medium text-text-2 hover:bg-hover"
+          className="h-10 rounded-full border border-line-strong bg-surface px-4 text-control text-ink hover:bg-hover"
         >
           Cancel
         </button>
@@ -190,15 +183,13 @@ function Field({
   placeholder: string;
 }) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-medium tracking-[0.04em] text-text-5 uppercase">
-        {label}
-      </span>
+    <label className="flex flex-col gap-2">
+      <span className="text-label text-ink-3 uppercase">{label}</span>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-[30px] rounded-control border border-line bg-surface px-2.5 text-[13px] outline-none"
+        className="h-10 rounded-md border border-line bg-surface-sunk px-4 text-control text-ink outline-none"
       />
     </label>
   );

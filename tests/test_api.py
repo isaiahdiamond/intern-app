@@ -262,3 +262,74 @@ def test_the_form_options_are_served_for_the_dropdowns(client):
 
     assert [item["key"] for item in body["degrees"]] == ["undergrad", "masters", "phd"]
     assert [item["key"] for item in body["seeking"]] == ["intern", "coop", "new_grad"]
+
+
+def test_a_tracked_listing_keeps_its_place_on_the_board(client):
+    """The point of showing status on the board is to stop a second apply.
+
+    A listing used to leave the board the moment it was tracked, so the board
+    could never tell you that you had already been there.
+    """
+    listing_id = client.get("/api/listings").json()["listings"][0]["id"]
+
+    client.post("/api/status", json={"listing_id": listing_id, "status": "applied"})
+
+    rows = client.get("/api/listings").json()["listings"]
+    assert [row["status"] for row in rows if row["id"] == listing_id] == ["applied"]
+
+
+def test_ignoring_a_listing_removes_it_and_the_filter_brings_it_back(client):
+    """Ignore has to hide the row everywhere except the shelf it went to."""
+    listing_id = client.get("/api/listings").json()["listings"][0]["id"]
+
+    client.post("/api/status", json={"listing_id": listing_id, "status": "hidden"})
+
+    board = client.get("/api/listings").json()
+    assert listing_id not in [row["id"] for row in board["listings"]]
+
+    shelf = client.get("/api/listings?status=hidden").json()
+    assert [row["id"] for row in shelf["listings"]] == [listing_id]
+    assert shelf["total"] == 1
+
+
+def test_the_board_counts_follow_a_status_change(client):
+    """The chip has to be right the moment the row moves, without a refetch."""
+    listing_id = client.get("/api/listings").json()["listings"][0]["id"]
+
+    reply = client.post("/api/status", json={"listing_id": listing_id, "status": "hidden"}).json()
+
+    assert reply["board_counts"]["hidden"] == 1
+    assert client.get("/api/filters").json()["board_status_counts"]["hidden"] == 1
+
+
+def test_an_unknown_status_filter_is_ignored_rather_than_obeyed(client):
+    """A junk value must not silently empty the board."""
+    body = client.get("/api/listings?status=notastatus").json()
+
+    assert body["total"] == 2
+
+
+def test_a_background_choice_survives_the_round_trip(client):
+    """The picker is only worth having if the choice is still there tomorrow."""
+    assert client.get("/api/settings").json()["background"] == "meadow"
+
+    saved = client.post("/api/settings", json={"key": "background", "value": "coast"}).json()
+
+    assert saved["background"] == "coast"
+    assert client.get("/api/settings").json()["background"] == "coast"
+
+
+def test_an_unknown_setting_is_refused(client):
+    """A typo must not write a key nothing reads, which would fail silently."""
+    reply = client.post("/api/settings", json={"key": "theme", "value": "dark"})
+
+    assert reply.status_code == 400
+    assert "unknown setting" in reply.json()["detail"]
+
+
+def test_a_background_with_no_image_behind_it_is_refused(client):
+    """A stored key with no file would render a blank page with no clue why."""
+    reply = client.post("/api/settings", json={"key": "background", "value": "volcano"})
+
+    assert reply.status_code == 400
+    assert "unknown background" in reply.json()["detail"]

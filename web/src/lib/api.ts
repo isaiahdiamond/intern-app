@@ -42,6 +42,7 @@ export type Filters = {
   status_counts: Record<string, number>;
   level_counts: Record<string, number>;
   education_counts: Record<string, number>;
+  board_status_counts: Record<string, number>;
   roles: string[];
   sorts: string[];
   statuses: string[];
@@ -80,9 +81,9 @@ export const statuses: {
   {
     key: "new",
     label: "New",
-    fg: "#0066CC",
-    bg: "rgba(10,132,255,0.10)",
-    dot: "#0A84FF",
+    fg: "#171717",
+    bg: "rgba(23,23,23,0.07)",
+    dot: "#171717",
   },
   {
     key: "saved",
@@ -115,15 +116,15 @@ export const statuses: {
   {
     key: "rejected",
     label: "Rejected",
-    fg: "#6E6E73",
-    bg: "rgba(0,0,0,0.05)",
+    fg: "#666666",
+    bg: "rgba(23,23,23,0.05)",
     dot: "#AEAEB2",
   },
   {
     key: "hidden",
-    label: "Archived",
-    fg: "#8E8E93",
-    bg: "rgba(0,0,0,0.04)",
+    label: "Ignored",
+    fg: "#8A8A8A",
+    bg: "rgba(23,23,23,0.04)",
     dot: "#C7C7CC",
   },
 ];
@@ -131,13 +132,13 @@ export const statuses: {
 const unknown = {
   key: "new" as StatusKey,
   label: "Unknown",
-  fg: "#8E8E93",
-  bg: "rgba(0,0,0,0.04)",
-  dot: "#C7C7CC",
+  fg: "#666666",
+  bg: "rgba(23,23,23,0.05)",
+  dot: "#AEAEB2",
 };
 
 // Everything the tracker holds, in the order a search moves through them.
-// Archived is not one of them: it takes a listing off both lists.
+// Ignored is not one of them: it is the shelf a listing goes to instead.
 export const tracked = statuses.filter(
   (status) => status.key !== "new" && status.key !== "hidden",
 );
@@ -170,7 +171,10 @@ export async function saveStatus(id: number, next: string) {
       body: JSON.stringify({ listing_id: id, status: next }),
     });
     if (!response.ok) return null;
-    return (await response.json()) as { counts: Record<string, number> };
+    return (await response.json()) as {
+      counts: Record<string, number>;
+      board_counts: Record<string, number>;
+    };
   } catch {
     return null;
   }

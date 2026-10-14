@@ -16,6 +16,7 @@ export function Icon({
       stroke="currentColor"
       strokeWidth={stroke}
       className="shrink-0"
+      aria-hidden="true"
     >
       <path d={path} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -23,7 +24,7 @@ export function Icon({
 }
 
 export function Chevron({
-  size = 10,
+  size = 14,
   flip = false,
 }: {
   size?: number;
@@ -39,6 +40,7 @@ export function Chevron({
       strokeWidth={1.5}
       className="shrink-0 transition-transform"
       style={{ transform: flip ? "rotate(180deg)" : "none" }}
+      aria-hidden="true"
     >
       <path d="M3 4.5l3 3 3-3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -48,14 +50,15 @@ export function Chevron({
 export function Check({ on }: { on: boolean }) {
   return (
     <svg
-      width={12}
-      height={12}
+      width={14}
+      height={14}
       viewBox="0 0 12 12"
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.5}
-      className="ml-auto text-accent"
+      strokeWidth={1.75}
+      className="ml-auto text-ink"
       style={{ opacity: on ? 1 : 0 }}
+      aria-hidden="true"
     >
       <path
         d="M2.5 6.2l2.4 2.3 4.6-5"
@@ -66,7 +69,7 @@ export function Check({ on }: { on: boolean }) {
   );
 }
 
-export function External({ size = 10 }: { size?: number }) {
+export function External({ size = 12 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -76,6 +79,7 @@ export function External({ size = 10 }: { size?: number }) {
       stroke="currentColor"
       strokeWidth={1.5}
       className="shrink-0 opacity-70"
+      aria-hidden="true"
     >
       <path
         d="M4 2.5h5.5V8M9.5 2.5L3 9"
@@ -89,13 +93,14 @@ export function External({ size = 10 }: { size?: number }) {
 export function Magnifier() {
   return (
     <svg
-      width={14}
-      height={14}
+      width={16}
+      height={16}
       viewBox="0 0 16 16"
       fill="none"
       stroke="currentColor"
       strokeWidth={1.5}
-      className="shrink-0 text-text-4"
+      className="shrink-0 text-ink-3"
+      aria-hidden="true"
     >
       <circle cx="7" cy="7" r="4.5" />
       <path d="M10.5 10.5L14 14" strokeLinecap="round" />
