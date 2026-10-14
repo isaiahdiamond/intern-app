@@ -74,7 +74,7 @@ All tokens are `@theme` entries in `web/src/index.css`, so Tailwind generates `b
 | --- | --- | --- |
 | `--color-page` | `#FAFAFA` | the page background, and the base color under every backdrop and scrim |
 | `--color-surface` | `#FFFFFF` | cards, rows, the toolbar, the detail panel, menus — opaque, on pages with no backdrop |
-| `--color-surface-veil` | `rgba(255,255,255,0.92)` | the same surfaces on a page that has a backdrop. 0.92 is the floor; never lower it |
+| `--color-surface-veil` | `rgba(255,255,255,0.94)` | the same surfaces on a page that has a backdrop. 0.94 is the floor; never lower it. The page scrim is light (§3.1), so the card is the only thing standing between a photograph and a line of text |
 | `--color-surface-sunk` | `#F4F4F4` | table headers, group headers, the inside of an inset search field |
 | `--color-tile` | `#EFEFEF` | company icon tile, chart stubs, avatar fallbacks |
 | `--color-rail` | `#171717` | the dark left rail |
@@ -82,7 +82,7 @@ All tokens are `@theme` entries in `web/src/index.css`, so Tailwind generates `b
 | `--color-rail-active` | `rgba(255,255,255,0.14)` | rail icon active fill |
 
 Cards on a backdrop page use `--color-surface-veil` **plus** `backdrop-filter: blur(20px)
-saturate(1.05)`. The blur is what makes 0.92 read as solid rather than as a smeared photo. Where
+saturate(1.05)`. The blur is what makes 0.94 read as solid rather than as a smeared photo. Where
 `backdrop-filter` is unsupported, the fallback is `--color-surface` at full opacity — specify both.
 
 ### 2.2 Ink
@@ -125,22 +125,38 @@ else. This is why the accent is a number token and not a button color.
 and for the boundary of any input, checkbox or control the user must find. Disabled text is exempt,
 which is the only reason `--color-ink-4` exists.
 
-**Check against the worst case, not against white.** A card is `rgba(255,255,255,0.92)` over an
-unknown photograph. The darkest that composite can be is white at 0.92 over pure black:
+**Check against the worst case, not against white.** A card is `rgba(255,255,255,0.94)` over an
+unknown photograph. The darkest that composite can be is white at 0.94 over pure black:
 
 ```
-0.92 × 255 = 234.6  →  #EAEAEA
+0.94 × 255 = 239.7  →  #EFEFEF
 ```
 
-So **every text color is measured against `#EAEAEA`, not `#FFFFFF`.** Results:
+Measured on the approved backdrop the card lands at 17.1:1 for `--color-ink`, well inside this. The
+table below keeps the pure-black worst case anyway, because the next backdrop may be brighter.
 
-| color | on `#EAEAEA` | verdict |
+So **every text color is measured against `#EFEFEF`, not `#FFFFFF`.** Results:
+
+| color | on `#EFEFEF` | verdict |
 | --- | --- | --- |
 | `--color-ink` `#171717` | 14.9:1 | pass |
 | `--color-ink-2` `#323232` | 10.7:1 | pass |
 | `--color-ink-3` `#666666` | 4.8:1 | pass, with no margin — do not darken the page or lighten this token |
 | `--color-ink-4` `#8A8A8A` | 2.9:1 | fails; non-text only, as stated |
 | `--color-accent-ink` `#B83300` | 5.0:1 | pass |
+
+**Text directly on the backdrop.** Page titles, the date beside them, and the "Jobs by Adzuna"
+line sit on the photograph, not on a card. On a backdrop page they are `--color-ink-inverse`
+`#FFFFFF`, never an ink token. Measured on the approved asset through `--scrim-page`, white reaches
+**4.7:1** against the brightest part of its top third, so it passes at every size rather than only
+at display sizes. Two rules follow and both are load-bearing:
+
+- A backdrop whose top third measures brighter than **L 0.18** through the scrim is rejected and
+  re-generated. That is the threshold at which white text drops under 4.5:1.
+- No body text, table row, form label or control ever sits on the backdrop. Those live on cards.
+  The backdrop carries titles and nothing else.
+
+On a page with no backdrop, titles are `--color-ink` as usual.
 
 **How to verify a screen:** open devtools, set the backdrop `<img>` to `background: #000` with
 `opacity: 1` and no scrim, then run the contrast checker on every text node on the page. If anything
@@ -203,16 +219,22 @@ Every backdrop page renders exactly this structure. It is three layers and no mo
 | `.backdrop` | `position: fixed; inset: 0 0 0 var(--rail-w); z-index: 0; overflow: hidden; pointer-events: none` |
 | `.backdrop-fallback` | the slot's gradient, `position: absolute; inset: 0` |
 | `.backdrop-img` | `width/height: 100%; object-fit: cover; filter: saturate(0.80) blur(10px); transform: scale(1.04)` — the scale hides the blur's soft edge. Fades in once on load (§7) |
-| `.backdrop-scrim` | `background: linear-gradient(180deg, rgba(250,250,250,0.80) 0%, rgba(250,250,250,0.92) 55%, var(--color-page) 100%)` |
+| `.backdrop-scrim` | `background: var(--scrim-page)` |
 
 Page content sits in a sibling at `z-index: 1`. The 10px blur is on the image, not a
 `backdrop-filter`, because it must composite once rather than on every scroll frame.
+
+**Why the veil is 15% and not 85%.** An earlier draft of this document veiled the backdrop at
+0.80–0.92. Measured against the approved asset, that leaves 0.3–0.8% visible variation: the image is
+gone and the page is flat off-white. A page backdrop only exists if you can see it. Readability is
+not the scrim's job here — it is the cards' job, and they are opaque. So the veil is light enough
+that the photograph reads, and the discipline moves to §3.3.
 
 **Scrim tokens**
 
 | token | value |
 | --- | --- |
-| `--scrim-page` | `linear-gradient(180deg, rgba(250,250,250,0.80) 0%, rgba(250,250,250,0.92) 55%, #FAFAFA 100%)` |
+| `--scrim-page` | `linear-gradient(180deg, rgba(250,250,250,0.12) 0%, rgba(250,250,250,0.15) 55%, rgba(250,250,250,0.20) 100%)` |
 | `--scrim-image-card` | `linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.62) 100%)` |
 | `--backdrop-filter` | `saturate(0.80) blur(10px)` |
 | `--backdrop-scale` | `1.04` |
@@ -227,14 +249,19 @@ image is decoration too, because its number is real text beside it.
 Nine slots. Each has a name, a ratio, a subject direction, its scrim, and a fallback gradient that
 ships whether or not the image does.
 
+**Two are shipped**: `backdrop-dashboard` and `hero-card-dashboard`, both in `web/public/img/`. The
+other seven run on their fallback gradients and must look deliberate that way — that is the whole
+reason the fallbacks are specified. Do not treat a gradient slot as unfinished.
+
 ---
 
-**`backdrop-dashboard`** — 16:10, 2560×1600, file `img/backdrop-dashboard.jpg`
+**`backdrop-dashboard`** — 16:9, 1920×1086, file `img/backdrop-dashboard.jpg` — **asset shipped**
 
-*Subject / mood:* a quiet early-morning interior at a desk height, shot wide and far — window light,
-soft neutral walls, no faces, no screens, no text, nothing readable. Low contrast, warm-neutral, the
-visual temperature of the first coffee. The frame must be busy nowhere; the top third especially must
-stay flat, because the KPI row sits over it.
+*Subject / mood:* abstract deep-green silk folds dissolving into black, soft volumetric light, no
+object, no horizon, no face. The frame must be busy nowhere; the top third especially must stay
+flat, because the title and the KPI row sit over it.
+*Measured:* raw luminance 0.002–0.025; through `--scrim-page`, white title text reaches 4.7:1.
+Replacing this asset means re-measuring against the L 0.18 ceiling in §2.3.
 *Scrim:* `--scrim-page`.
 *Fallback:* `radial-gradient(120% 90% at 18% -10%, #F2EFEA 0%, #FAFAFA 55%, #FAFAFA 100%)`
 
@@ -289,7 +316,7 @@ no text.
 
 ---
 
-**`hero-card-dashboard`** — 3:2, 960×640, file `img/hero-card-dashboard.jpg`
+**`hero-card-dashboard`** — 3:2, 960×638, file `img/hero-card-dashboard.jpg` — **asset shipped**
 
 The one place text sits on a photograph. Modelled on Juney's "€82.6k Total cashflow" card: a
 full-bleed image card at the end of the KPI row, carrying the headline count of new listings.
@@ -300,8 +327,9 @@ and even.** The scrim darkens it further; it must not be doing the whole job alo
 *Scrim:* `--scrim-image-card`, as an `::after` filling the card.
 *Text allowed on it:* the number at `--text-display` 40px/600 in `--color-ink-inverse`, one label at
 16px/500 at `rgba(255,255,255,0.80)`, and up to two pill buttons. Nothing else, ever.
-*Floor:* white on the scrimmed lower third must measure ≥ 7:1. Check it on the approved asset, not on
-the fallback.
+*Floor:* white on the scrimmed lower third must measure ≥ 7:1. Check it on the approved asset, not
+on the fallback. The shipped asset measures **20.1:1 worst case** across its bottom 45%, before the
+scrim. A rejected candidate measured 1.6:1 there — it looked fine and was not. Measure, do not look.
 *Fallback:* `linear-gradient(145deg, #2E2E2E 0%, #171717 55%, #000000 100%)` — the card is designed
 dark, so the fallback is a dark card and the text does not move.
 
