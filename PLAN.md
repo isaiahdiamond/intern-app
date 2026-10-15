@@ -158,6 +158,13 @@ Labeled extraction data, `evals/run.py` prints metrics.
 **done means:** `python evals/run.py` prints extraction precision and recall
 against the labeled set, with the numbers logged in README.
 
+### 9. Auto-apply
+A browser extension that fills an application form from stored facts, flags
+what it cannot answer, and leaves the submit to me. Planned in full in
+**AUTOFILL.md**, including what is never auto-filled and why.
+**done means:** a real Greenhouse application is filled from my résumé facts,
+the EEO questions are untouched, the gaps are flagged, and I click submit.
+
 ## Later
 
 Not built now, listed so they are not forgotten: a `concepts` table and concept
